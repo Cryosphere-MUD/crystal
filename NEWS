@@ -1,0 +1,81 @@
+0.2.1
+  A -n command line option, which will stop local echoing of commands into
+  the scrollback.
+
+  A 'set' command will let you change this at runtime.  I might thing about
+  .rc file support.
+
+  SSL support.  This is done with the URL service 'telnets', for example -
+  telnets://ipv6.cryosphere.net:6765/.
+
+0.2
+  Scripting with lua, if installed.  See crystal.lua for demonstrations.
+
+  Cleaned up internals.  Split into many files now.
+
+  Fix bug with WILL TTYPE and WILL NAWS only being sent once ever.
+
+  Support for 'FLAG' - when you've connected to the 'flag' mud, do "charset
+  cp437" at the crystal prompt.  For best effects run in a Unicode terminal.
+  See <http://8bit.ath.cx/flag/> for documenation on this ad-hoc protocol.
+
+  Support for a made-up telnet MULTIPLEX option, used by the Cryosphere for
+  making subwindows to hold the current state of board games.   See 
+  <http://cryosphere.net/~rwb197/telnet-mplex.txt> for the documentation.
+
+  Slightly better terminal emulation - still nowhere near self-hosting,
+  but getting there.
+
+  Add support for broken LPmud-style prompts (where it assumes its talking
+  to tinyfugue, and that anything on a line before IAC GA/IAC EOR will
+  go into a separate prompt line).
+
+  Support the telnet SGA option, as is required by RFC 1123.
+
+  M-f and M-b for forward word and back word respectively.
+
+  IPv6 support is now fully working, and on by default.  This shouldn't break
+  if you don't have a 6 connection.
+
+0.1.6.1
+  Test for -lncurses as well as -lcurses.
+
+  New "match" command for highlighting stuff on screen.
+ 
+  Some bugfixes.
+
+0.1.6
+
+  Since some muds have broken IAC handling, be more conservative in what 
+  we send.
+
+  Fix it so we send DO/DONT ECHO as appropriate instead of just seeming
+  to ignore these.
+
+  Should now work on transparent/translucent terminals.
+
+  More attributes (dim, strikethrough, inverse, hidden) supported.
+
+  Started to gettextize.
+
+0.1.5.1
+
+  works on Red Hat 8.0
+
+0.1.5
+
+  new "log" command.
+
+  you can run it with different parameters -
+    crystal telnet://wherever:port/
+    crystal wherever:port
+    crystal wherever port
+  'port' can also be a service name.
+
+  you can now type infinite stuff on one line
+
+  various portability fixes.
+
+0.1.4
+
+  First version with automake/autoconf.

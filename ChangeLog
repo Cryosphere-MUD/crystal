@@ -1,0 +1,413 @@
+2005-05-09  Abigail Brady  <morwen@evilmagic.org>
+
+	* Socket.cc: Hopefully fix a FreeBSD runtime problem.
+
+2005-04-10  Abigail Brady  <morwen@evilmagic.org>
+
+	* Socket.cc: Fix AMD64 compile issue.
+	
+2004-01-05  Paul Lettington <plett@evilmagic.org>
+
+	* Added debian package making lovelyness.
+
+2003-10-22  Abigail Brady  <morwen@evilmagic.org>
+
+	* crystal.cc: Add 'exit' as an alias for 'quit'.
+
+2003-10-06  Abigail Brady  <morwen@evilmagic.org>
+
+	* io.cc: More rxvt codes.
+
+2003-09-15  Abigail Brady  <morwen@evilmagic.org>
+
+	* io.cc: Some enter fun.
+
+	* crystal.cc: Patch from Dan Oppenheim to make history behaviour
+	nicer.
+
+2003-06-06  Abigail Brady  <morwen@evilmagic.org>
+
+	* io.cc: Add support for FreeBSD keyboard input.
+
+	* io.cc: If terminfo tells us that "delete" generates DEL, honour
+	that.
+	
+2003-05-24  Abigail Brady  <morwen@evilmagic.org>
+
+	* *: Fix a bunch of warnings.
+	
+	* cryotel.cc: Add a 'set' command, to configure neverecho at runtime.
+
+	* cryotel.cc, crystal.h: Rewrite how commands are done.
+
+	* io.h: Fix segfault on the console.
+
+2003-05-23  Abigail Brady  <morwen@evilmagic.org>
+
+	* Socket.cc: SSL_free when needed.
+
+	* If we are using telnets, default to using the right port.
+
+2003-05-22  Abigail Brady  <morwen@evilmagic.org>
+
+	* Socket.cc, Socket.h, cryotel.cc, crystal.h acconfig.h, configure.in: 
+	SSL support. Use stelnet://host:port on the command line.  It should
+	work for talking to HTTPS servers, also stelnet muds.  Uses configure
+	to probe for -lssl.
+
+2003-05-19  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Putty wants us to send 'enacs' out before using any
+	alternate chars.
+
+2003-05-14  Abigail Brady  <morwen@evilmagic.org>
+
+	* *.cc, *.h: Abolish "using namespace std" and use std:: as 
+	appropriate when needed instead.
+
+2003-05-14  Abigail Brady  <morwen@evilmagic.org>
+
+	* scripting.cc: get_host, which returns the host name we are connected 
+	to.
+
+	* cryotel.cc, crystal.h: Allow local echo to be turned off.
+
+2003-05-07  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Better titlebar setting.
+
+	Dumplog command that does both dump and log.
+
+2003-04-26  Abigail Brady  <morwen@evilmagic.org>
+
+	* io.cc: Use 256-colour terminal if there is a TERM256 env var set.
+
+	* cryotel.cc: If there's an address list, and one of the address
+	returns -1 for connect() immediately, move to the next one straight
+	away.
+
+	* cryotel.cc: When the connection to the mud is list, put a newline
+	in our buffer if row != 0.  This stops the problem with prompts
+	appearing randomly in the buffer after /// unable to connect lines.
+	
+	* io.cc, grid.cc: Fix 256-colour backgrounds.
+
+2003-01-20  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Make connecting (both commandline parameters, and 
+	at runtime) non-blocking.
+
+2003-01-10  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Crash better if we get an unknown terminal type.
+
+2003-01-02  Abigail Brady  <morwen@evilmagic.org>
+
+	* scripting.cc: Remove the hooks before we reload the config file.
+
+2002-12-31  Abigail Brady  <morwen@evilmagic.org>
+
+	* *: Add primitive lua scripting.  Sample file in crystal.lua, should
+	be installed to ~/.crystal.lua.  
+
+2002-12-28  Abigail Brady  <morwen@evilmagic.org>
+
+	* Socket.h: Make it compile under g++ 3.2.
+
+2002-12-27  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc, Socket.cc, Socket.h: Modify resolv to return a list of 
+	addresses.
+
+	* Socket.c, Socket.cc, cryotel.cc: Fix the URL parsing to work on 6 
+	addresses.  Make the connect command be able to take exactly the same
+	things as are passable on the command line.
+
+	* Socket.cc, Socket.h: Add InAddr::create, to make an InAddr from a 
+	sockaddr. (either 4 or 6).
+
+	* io.cc: Don't try to print ISO-8859-1 characters in an ASCII locale.
+
+	* io.cc, wcwidth.c: If wcwidth() returns 0, use Markus's wcwidth 
+	function instead.
+
+2002-12-21  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Make m-f and m-b do word navigation.
+
+	* cryotel.cc: Fix problem with vanishing password prompts.
+
+2002-12-17  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Kill the stored prompt on connect.
+
+2002-12-16  Abigail Brady  <morwen@evilmagic.org>
+
+	* grid.cc: Fix bogus handling of [H in regular windows.
+
+2002-12-14  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Fix the lots of bloody spaces everywhere issue, we now
+	clear lines as appropriate. (This did work in 0.1.6.1, but was broken
+	when overlaid windows were done).
+
+2002-12-08  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Totally rewrite the key dispatcher. Keybindings coming 
+	soon!
+
+2002-12-07  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Look up service names 
+
+	* cryotel.cc: Fix screen display in character mode.
+
+	* NEWS: update for 0.1.7
+	
+	* cryotel.cc: Separate out terminal handling code into io.{cc,h}
+
+	* *.cc: Make lots of files.
+	
+	* cryotel.cc: Add 'FLAG' support - interpret the characters between
+	\0 \and \x1f interestingly for CP437.
+
+	See <http://8bit.ath.cx/flag/>
+
+	The other thing we need to do to support this 'standard', is to have
+	it so that inverted bright text makes a bright background - which
+	may be possible if we use the xterm 100m codes.
+
+2002-12-06  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Experimental support for the telnet MULTIPLEX option,
+	which displays a small slave window on the screen.  F12 toggles it
+	on/off.
+
+	* cryotel.cc: Initialise subneg_data properly.
+
+2002-12-05  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Only respond to DO NAWS once.
+
+2002-11-29  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Recognise, ignore ISO 2022 codes for setting Latin1 and
+	Latin2.
+
+	* cryotel.cc: Support CUL and CUU with parameters.  Like unix telnet,
+	assume that if the remote ends wants SGA, then we want to use charmode.
+	If LINEMODE is negotiated, we assume it doesn't.
+
+2002-11-22  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Add support for some LPmuds broken prompt handling.
+	This is enabled by default because it's implemented in such a way
+	that it doesn't actually break any muds I've tested it on.
+
+	If it does break your mud, please let me know, and I'll make it
+	a default-to-off option instead.
+
+	* cryotel.cc: Support the SGA option, as is required by RFC 1123.
+
+2002-11-19  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: There's now a "match" command that inverts text that
+	matches the given string. "match" on its own to turn off.  The tab
+	key scrolls no the next instance of this string.
+	
+2002-11-18  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Fix crashbug when you press a function key with no
+	connection.
+
+2002-11-17  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Make the subnegotation infrastructure a bit more
+	generic.
+
+2002-11-15  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Kill a bitfield that was giving Paul Lettington's
+	compiler some problems.
+
+	* cryotel.cc: Far better error messageing, including actual error 
+	messages now for connections not specified on command line.
+
+	* cryotel.cc: Workaround a problem with MCCP not giving us all
+	the available data right away.
+
+2002-11-14  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Send valid TTYPE responses. Oops.
+
+	* Socket.cc: Add IPV6 support.
+
+2002-11-12  Abigail Brady  <morwen@evilmagic.org>
+
+	* Socket.cc, Socket.h: Make InAddr4 private to Socket.cc. Will stop
+	problems creeping in for when we convert to 6 eventually.
+
+	* cryotel.cc: Fix problem reported by Owen Cliffe - it was not 
+	interpreting the $<3> style delays in terminfo.
+
+2002-11-10  Abigail Brady  <morwen@evilmagic.org>
+
+	* Socket.cc: Fix crash when attempting to resolve nonexistant host.
+
+2002-11-09  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Answer WILL and WONT echo with DO and DONT echo. Without
+	this, crystal broke on Delusion.
+
+	* cryotel.cc: Add support for dim, strikethrough, inverse, hidden
+	attributes.
+
+	* cryotel.cc: Disable line mode for the moment, as it caused problems
+	with some muds.
+
+2002-11-02  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Initialise the terminal info stuff earlier.
+
+2002-10-27  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Fix crash bug when you resize after disconnecting from
+	a mud with NAWS support.
+
+2002-10-22  Abigail Brady  <morwen@evilmagic.org>
+
+	* *: gettextize.
+
+2002-10-21  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Cope where black != background default and white != 
+	foreground default.
+
+	* cryotel.cc: Change it so IAC WILL LINEMODE isn't sent until we 
+	recieve	some IAC code from the mud.
+
+2002-10-20  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Escape IAC characters within IAC SB NAWS. Doh.
+
+	* cryotel.cc: Fix linking problems in Red Hat 8.0, this time properly.
+
+2002-10-17  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Fix compile problems in Red Hat 8.0.
+
+2002-10-15  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Allow ./crystal host [servicename] (defaults to telnet),
+	and also ./crystal telnet://host:port/ and ./crystal host:port
+
+	* cryotel.cc: Add a "log" command, to log all output to a logfile.
+
+	* cryotel.cc: Fix problem in dodown that made it possible to 
+	accidentally wipe the line you are editing.
+
+	Add a few more beeps.
+
+	Specify what the escape character is when you connect to a host, so
+	it is harder to get stuck.
+
+	* cryotel.cc: Fix up problem with cursor migrating to bottom right of
+	the screen when editing long lines.
+
+2002-10-11  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Send post-typing-echo newline after a short delay in
+	any event. Helps with lagged connections.
+
+2002-10-10  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Further character mode support. We enable character mode
+	if the other end sends IAC DONT LINEMODE.
+
+	Ignore NUL.
+
+	* cryotel.cc: Start of support for character mode.  Understand BS
+	(backspace) code.
+
+	Fix bug with command-mode in password mode.
+
+2002-10-09  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: And fix up info() again to display before the current 
+	unfinished line.
+
+	* cryotel.cc: Reduce flicker by only sending the post-typing-echo
+	newline when new data recieves from the mud. (Or other data is placed
+	on the grid)
+	
+	* cryotel.cc: No stars on password lines.
+
+	* cryotel.cc: Simplify the prompt handling code a great deal.
+
+2002-10-07  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Fix problem with input line.
+
+2002-10-02  Abigail Brady  <morwen@evilmagic.org>
+
+	* configure.in, *.cc: Actually make use of config.h.
+
+	* cryotel.cc: Make 'buffer' a wstring. Make wstring a rope<wchar_t> not
+	a basic_string.
+
+	* Socket.cc, Socket.h: Remove lots of cruft we never used.
+
+	* cryotel.cc: Fix in gcc 2.95. Thanks Zub.
+
+	* configure.in: Link against -liconv if it's there and has iconv_open.
+	Supposedly needed on Red Hat 7.2.  Thanks to Ensignyu.
+
+	* cryotel.cc: Fix problem reported by David Mehrmann, #include <string>
+	needs explicitly putting in on gcc 3.
+	
+2002-10-01  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Doh.  This is last change before 0.1.4.
+
+	* cryotel.cc: Sort out prompt/info interaction.
+
+2002-09-30  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Start off data at bottom of screen always.
+	
+	* cryotel.cc: Add a "z" command, to suspend. Restructure some code.
+
+	* cryotel.cc: Add a "close" command, and echo commandmode commands into the display.
+
+2002-09-29  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Fix handling of CUU and DECSEL.
+
+2002-09-28  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Don't quit on ^C.
+
+2002-09-28  Stuart Brady  <stuart@convex.org.uk>
+
+	* cryotel.cc: Added ^W command to kill words, additional keys
+	 for delete-char and next/previous history item (^D and ^N/^P).
+
+2002-09-28  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Make use of acsc property along with smacs/rmacs.
+
+2002-09-25  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: The prompt should never appear on screen twice.
+
+	* configure.in, Makefile.am: automake/autoconf
+	
+2002-09-24  Abigail Brady  <morwen@evilmagic.org>
+
+	* cryotel.cc: Use terminfo for some purposes. Fuller use to come.
+
+	Make ESC[m mean ESC[0m
+
+	Fix cryotel:256c/cryotel swap.
+	
+

@@ -1,0 +1,72 @@
+TODO
+
+* test on muds that aren't cryosphere
+* better line editor
+* customisable key bindings
+* don't crash with stupidly long prompts
+* scripting language support. triggers, custom commands.
+* support for more than one mud in a window?
+* better screen redraw - the current system sucks.
+
+
+* evil plan with prompt interspersing as follows -
+
+  we get sent >IAC GA
+  user enters "blah", we send "blah\r\n"
+  we display >blah
+  user enters "foo", we send "foo\r\n"
+
+  we display >blah
+             foo
+  
+  we get sent "]IAC GA". we go back in the buffer, and alter what we
+  have to >blah
+          ]foo
+
+  finally we get sent >IAC GA, so we display
+
+          >blah
+          ]foo
+          >
+
+  way to do this - if we were expecting an EOR/GA but didn't get one yet, 
+  then rather than sending the echoed text to the buffer, put it in a list.
+  this list is hooked into the display routines magically.
+  then when an IAC EOR/GA happens, if we have something at the start of the 
+  list, remove it from the list, and echo it after the IAC EOR/GA.
+
+  Obviously this doesn't work in unterminated prompt mode. But that's ok.
+
+DONE
+
+* don't use fixed-width buffer for entering text
+* make disconnected go into command mode
+* MCCP support
+* 256-color mode
+* don't pad short lines with spaces, it confuses xterm's selection
+* proper support for doublewidth characters
+* fix problem with not resetting colour before drawing font
+* only send xterm titles to "xterm", "xterm-color" or "screen"
+* look up hostnames
+* hostname/port selection in arg
+* have ^]quit work as in telnet
+* bell support (Don't try it at the moment, it just puts the bleep in the buffer and then keeps refreshing it)
+* blank lines just disappear - why?
+* is select() working properly?
+* support for resizing screen
+* scrollback
+* remove curses
+* support for underlines
+* notice when connection closes
+* figure out why the first prompt doesn't always get displayed (problem with eor handshaking probably - fixed at cryo end)
+* get rid of pager prompts (mud sends a magic escape code)
+* support for tabs
+* input scrolling has broken in wide windows
+* colour in prompt
+* unicode support
+* escape 0xff (y with umlaut)
+* remove flickering
+* make it so that if you hit "ESC" it doesn't sit there waiting forever for the next control character.  Argh.
+* logging
+* blocking connect looks silly. clear the command.
+* local echo off

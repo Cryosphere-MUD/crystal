@@ -1,0 +1,60 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(Socket.cc)
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+
+PACKAGE=crystal
+VERSION=0.2.2
+
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION, no-define)
+
+dnl Checks for libraries.
+
+dnl Checks for header files.
+AC_ISC_POSIX
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h sys/ioctl.h sys/time.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+dnl Checks for library functions.
+AC_PROG_GCC_TRADITIONAL
+AC_PROG_CXX
+AC_CHECK_FUNCS(select socket strerror strstr)
+
+AC_CHECK_LIB(curses, main, [LIBS=" -lcurses "], AC_CHECK_LIB(ncurses, main, [LIBS=" -lncurses "], AC_MSG_ERROR([No curses])))
+
+AC_CHECK_LIB(z, main, [LIBS=$LIBS" -lz "; AC_DEFINE(HAVE_ZLIB)], AC_MSG_WARN([No zlib - MCCP support will not be built]))
+
+AC_CHECK_LIB(iconv, iconv_open, [LIBS=$LIBS" -liconv"], )
+
+AC_CHECK_LIB(ssl, SSL_new, [LIBS=$LIBS" -lssl"; AC_DEFINE(HAVE_SSL)], AC_MSG_WARN([No openssl - SSL support will not be built]))
+
+AC_ARG_ENABLE(scripting, [Whether to build lua scripting (default: yes)], have_scripting=$enableval, have_scripting="yes")
+
+if test "$have_scripting" = "yes"; then
+  have_lua="no"
+  AC_CHECK_LIB(lua, lua_open,
+    [have_lua="yes"; LIBS=$LIBS" -llua -llualib" ])
+
+  AC_CHECK_LIB(lua40, lua_open,
+    [have_lua="yes"; LIBS=$LIBS" -llua40 -llualib40"; CXXFLAGS="$CXXFLAGS -I/usr/include/lua40"])
+
+  if test "x$have_lua" = "xyes"; then
+    AC_DEFINE(HAVE_LUA)
+  else
+    AC_MSG_WARN([No lua - scripting won't be built.])
+  fi
+fi
+
+AC_OUTPUT(Makefile crystal.spec)
+

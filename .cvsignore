@@ -1,0 +1,13 @@
+crystal
+config.cache
+configure
+Makefile
+config.h
+Makefile.in
+aclocal.m4
+config.log
+.deps
+config.status
+config.h.in
+stamp-h
+stamp-h.in

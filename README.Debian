@@ -1,0 +1,17 @@
+Installation instructions for Debian users
+--------------------------------------------
+
+If you've downloaded one of the released versions and are reading this then you
+probably shouldn't be. You almost certainly want to download and install one of
+the pre-packaged .deb files from http://evilmagic.org/crystal/
+
+If you got this from CVS and want to make a snapshot, type "make debsnap". It
+will make a package with a <upstream_version>-0.<timestamp> version.
+
+You will need the fakeroot and debhelper packages installed.
+
+(If you are me and are making a real release package then you want to update
+debian/changelog.real properly and type "make debrelease". The Makefile pixies
+will do the rest)
+
+After running make, you will find a perfect (well, probably) .deb file in ../

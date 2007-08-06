@@ -1,0 +1,30 @@
+Source: crystal
+Section: games
+Priority: optional
+Maintainer: Paul Lettington <paul@plett.co.uk>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.0
+
+Package: crystal
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: The Crystal MUD Client
+ We got sick of all unix mud clients being unsatisfactory in various ways,
+ so we wrote Crystal.
+ .
+ Features:
+  * line editor with full history
+  * split-screen scrollback
+  * xterm titlebar setting
+  * unicode support in unicode terminals (special fonts supplied)
+  * full character set conversion support
+  * DEC linedrawing characters
+  * ansi colour support and xterm-256-colour support (also, underline, italic, 
+    fraktur) where applicable
+  * window size and terminal type negotiation
+  * MCCP (compression) support
+  * logging/dumping
+  * full ipv6 support
+  * tinyfugue-style prompt grabbing for broken lp muds
+  * support for the telnet Multiplex protocol
+  * simple scripting support using lua

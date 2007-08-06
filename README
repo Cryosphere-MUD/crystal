@@ -1,0 +1,30 @@
+If you use unix there are three options for mud clients.
+
+  1. gui ones.     these invariably suck.
+  2. telnet.       this rules but has no line editing feature, and other 
+                   ugliness.
+  3. console ones. these invariably suck.
+
+So we've set out to make a new mud client. It's as close to telnet as possible,
+except -
+
+  * if stuff is sent to your screen it doesn't break the input line
+  * you can use left arrow, right arrow, ^A, ^E and so in to edit the line
+  * the input line scrolls left and right if it gets too big
+  * you can page up and page down for scrollback.  This works in a split-screen
+    fashion, so you can 
+  * you can cursor up and down for a history.
+  * there are a bunch of other commands
+
+We aim to eventually have perfect ansi and telnet handling, but right now it's
+just Good Enough (and better than 99% of mud clients out there).
+
+We implement from telnet everything that's mandatory, and also
+
+  EOR/GA - lp prompt grabbing
+  NAWS - window size
+  TTYPE - terminal type identification
+  MCCP - mud compression
+
+It links against openssl if available, and will then be able to connect to
+telnets muds too.

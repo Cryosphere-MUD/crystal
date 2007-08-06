@@ -1,0 +1,145 @@
+# English (IPA) translation 
+# Copyright (C) 2002 Abigail Brady.
+# Abigail Brady <orange@cryosphere.org> 2002.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: crystal CVS\n"
+"POT-Creation-Date: 2002-10-22 14:11+0100\n"
+"PO-Revision-Date: 2002-10-21 23:49+1000\n"
+"Last-Translator: Abi Brady <orange@cryosphere.org>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: cryotel.cc:767 cryotel.cc:1928
+msgid "crystal> "
+msgstr "krɪstəl> "
+
+#: cryotel.cc:1039
+#, c-format
+msgid "%s - Crystal"
+msgstr "%s - krɪstəl"
+
+#: cryotel.cc:1813
+msgid "/// you aren't connected.\n"
+msgstr "/// ju ɑnt kənɛktɪd\n"
+
+#: cryotel.cc:1819
+msgid "/// connection closed.\n"
+msgstr "/// kənɛkʃn kləʊzd\n"
+
+#: cryotel.cc:1823
+msgid ""
+"/// connect <host> <port>  -- connect to a given host/port\n"
+"/// close                  -- close the current connection\n"
+"/// quit                   -- exit\n"
+"/// z                      -- suspend\n"
+"/// dump <file>            -- dump the backbuffer to a file. appends.\n"
+"/// log <file>             -- sets logfile as specified. appends.\n"
+"/// charset <charset>      -- interprets data from the mud as given charset\n"
+msgstr ""
+"/// connect <həʊst> <pɔt> - kənɛkt tu ə gɪvən həʊst ɔ pɔt\n"
+"/// close - kləʊz ðə kərənt kənɛkʃn\n"
+"/// quit - kwɪt\n"
+"/// z - sʌspɛnd\n"
+"/// dump <faɪl> - dʌmp bækbʌfə tu ə faɪl. əpɛndz\n"
+"/// log <faɪl> - sɛts lɒgfaɪl æz spɛsɪfaɪd. əpɛndz\n"
+"/// charset <tʃɑsɛt> - ɪntəprɪts deɪtə frɒm ðə mʌd æz gɪvən "
+"tsɑsɛt\n"
+
+#: cryotel.cc:1831
+msgid "/// compress               -- show MCCP compression status \n"
+msgstr "/// compress - ʃəʊ MCCP kəmprɛʃn steɪtəs\n"
+
+#: cryotel.cc:1840
+#, c-format
+msgid "/// wire:%li bytes data:%li bytes.\n"
+msgstr "/// waɪə:%li baɪts deɪtə:%li baɪts\n"
+
+#: cryotel.cc:1842
+msgid "/// no compression\n"
+msgstr "/// nəʊ kəmprɛʃ\n"
+
+#: cryotel.cc:1867
+#, c-format
+msgid "/// charset '%s' selected\n"
+msgstr "/// tʃɑsɛt  ˈ%sˈ sɛlɛktɪd\n"
+
+#: cryotel.cc:1887
+msgid "/// closing old logfile.\n"
+msgstr "/// kləʊsɪŋ əʊld lɒgfaɪl\n"
+
+#: cryotel.cc:1893
+#, c-format
+msgid "/// couldn't open '%s' for appending.\n"
+msgstr "/// kʌdənt əʊpən ˈ%sˈ fɔ əpɛndɪŋ\n"
+
+#: cryotel.cc:1895
+#, c-format
+msgid "/// logging to end of '%s'.\n"
+msgstr "/// lɒgɪŋ tu ɛnd əv ˈ%sˈ\n"
+
+#: cryotel.cc:1948
+msgid "/// don't understand that command\n"
+msgstr "/// dəunt ʌndəstænd ðæt kəmænd\n"
+
+#: cryotel.cc:2304
+#, c-format
+msgid "/// connecting to %s:%i\n"
+msgstr "/// kənɛktɪŋ tu %s:%i\n"
+
+#: cryotel.cc:2330
+#, c-format
+msgid "/// connected to %s:%i\n"
+msgstr "/// kənektɪd tu %:s%i\n"
+
+#: cryotel.cc:2334
+#, c-format
+msgid "/// escape character is '%s'\n"
+msgstr "/// ɪskeɪp kæræktə ɪz ˈ%sˈ\n"
+
+#: cryotel.cc:2338
+#, c-format
+msgid "telnet://%s:%i - Crystal"
+msgstr "telnet://%s:%i - crystal"
+
+#: cryotel.cc:2355
+#, c-format
+msgid "/// couldn't open '%s' to dump to\n"
+msgstr "/// kʌdnt əʊpən ˈ%sˈ tu dʌmp tu\n"
+
+#: cryotel.cc:2358
+#, c-format
+msgid "/// dumping scroll history to '%s'\n"
+msgstr "/// dʌmpɪŋ skrəʊl hɪstəri tu ˈ%sˈ\n"
+
+#: cryotel.cc:2364
+#, c-format
+msgid "---=== Dump generated on %s by crystal ===---\n"
+msgstr "---=== dʌmp dʒɛnəreɪtɪd ɒn %s by krɪstəl ===---\n"
+
+#: cryotel.cc:2371
+msgid "---=== End of dump ===---\n"
+msgstr "---==== ɛnd əv dʌmp ===---\n"
+
+#: cryotel.cc:2425
+msgid "/// connection closed by foreign host.\n"
+msgstr "/// kənɛkʃn kləʊzd baɪ fɒrɪn həʊst\n"
+
+#: cryotel.cc:2515
+#, c-format
+msgid "%s: Bad port - '%s'.\n"
+msgstr "%s: bæd pɔt - ˈ%sˈ\n"
+
+#: cryotel.cc:2522
+#, c-format
+msgid "%s: Unknown host.\n"
+msgstr "%s: ʌnəʊn həʊst\n"
+
+#: cryotel.cc:2527
+#, c-format
+msgid "%s: Unable to connect to remote host: %s\n"
+msgstr "%s: ʌneɪbl tu kənɛkt tu rimeʊt həʊst: %s\n"

@@ -1,0 +1,1 @@
+shlibs:Depends=libc6 (>= 2.3.2-1), liblua40 (>= 4.0-12), liblualib40 (>= 4.0-12), libncurses5 (>= 5.3.20030510-1), libssl0.9.7, libstdc++2.10-glibc2.2 (>= 1:2.95.4-15), zlib1g (>= 1:1.1.4)
