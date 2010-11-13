@@ -65,7 +65,7 @@ void grid_t::place(const cell_t *ri) {
     set(row, col, *i);
     col++;
     if (wcwidth(i->ch)==2) {
-      set(row, col, mkchar(-i->ch));
+      set(row, col, cell_t(-i->ch));
       col++;
     } 
 }
@@ -147,7 +147,7 @@ void grid_t::wterminal(wchar_t ch) {
 	scs = 0;
       }
 	
-      cell_t a = mkchar(ch, inten, forecol, backcol, scs, ul, it, fr, os, inv);
+      cell_t a = cell_t(ch, inten, forecol, backcol, scs, ul, it, fr, os, inv);
       place(&a);
       
       //      grid_changed = 1;
@@ -500,7 +500,7 @@ void infoc(grid_t *grid, wchar_t w) {
       grid->eraseline(0);
     }
     for (size_t i=0;i<isf.length();i++) {
-      cell_t c = mkchar(isf[i]);
+      cell_t c = cell_t(isf[i]);
       grid->place(&c);
     }
     

@@ -6,6 +6,7 @@
 #include <curses.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <stdlib.h>
 
 #include <libintl.h>
 
@@ -65,8 +66,8 @@ struct cell_t {
   wchar_t ch;
   Int inten;
   unsigned char fc;
-  bool scs:1;
   unsigned char bc;
+  bool scs:1;
   bool ul:1;
   bool it:1;
   bool fr:1;
@@ -99,20 +100,20 @@ struct cell_t {
   bool operator != (const cell_t &o) const {
     return !operator==(o);
   }
+  cell_t(wchar_t ch = '\0', Int inten = I_NORM, int fc = COL_DEFAULT, int bc = COL_DEFAULT, int scs = 0, int ul = 0, int it = 0, int fr = 0, int os = 0, int inv = 0)
+  : ch(ch),
+    inten(inten),
+    fc(fc),
+    bc(bc),
+    scs(scs),
+    ul(ul),
+    it(it),
+    fr(fr),
+    os(os),
+    inv(inv)
+  {
+  }
 };
-
-
-inline cell_t mkchar(wchar_t ch, Int inten, int fc, int bc, int scs, int ul, int it, int fr, int os, int in)
-{
-  cell_t i = { ch, inten, fc, scs, bc, ul, it, fr, os, in };
-  return i;
-}
-
-inline cell_t mkchar(wchar_t ch)
-{
-  cell_t i = { ch, I_NORM, COL_DEFAULT, 0, COL_DEFAULT, 0, 0, 0, 0, 0 };
-  return i;
-}
 
 extern const cell_t blank;
 extern const cell_t blank2;

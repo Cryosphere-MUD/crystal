@@ -81,6 +81,7 @@ public:
     lastprompt = 0;
     nlw = 0;
     row = 0;
+    col = 0;
     visible = 1;
     changed = 0;
 

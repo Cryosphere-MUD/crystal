@@ -126,8 +126,8 @@ size_t real_wcwidth(wchar_t u) {
   return 1;
 }
 
-const struct cell_t blank = {' ', I_NORM, COL_DEFAULT, 0, COL_DEFAULT, 0 };
-const struct cell_t blank2 = {0, I_NORM, COL_DEFAULT, 0, COL_DEFAULT, 0 };
+const struct cell_t blank(' ');
+const struct cell_t blank2('\0');
 
 conn_t::conn_t(grid_t *gr) {
   never_echo = 0;
@@ -354,7 +354,7 @@ void display_buffer(conn_t *conn) {
       conn->show_lines_at(start, 1, (tty.HEIGHT-4));
       conn->show_lines_at((grid.row-5)>0?grid.row-5:0, tty.HEIGHT-4, 5);
       for (int i=0;i<tty.WIDTH;i++) {
-	wantbuffer[tty.HEIGHT-5][i] = mkchar('=', I_BOLD, COL_WHITE, COL_RED, 0, 0, 0, 0, 0, 0);
+	wantbuffer[tty.HEIGHT-5][i] = cell_t('=', I_BOLD, COL_WHITE, COL_RED, 0, 0, 0, 0, 0, 0);
       }
     } else {
       if (grid.row<tty.HEIGHT)
@@ -384,7 +384,7 @@ void display_buffer(conn_t *conn) {
       int s=mbtowc(&c, str, max);
       if (s<=0)
 	break;
-      crealprompt += mkchar(c);
+      crealprompt += cell_t(c);
       str += s;
       max -= s;
     }
@@ -425,9 +425,9 @@ void display_buffer(conn_t *conn) {
   if (!(conn->telnet && conn->telnet->allstars) || commandmode) {
     while (alen && wid) {
       if (real_wcwidth(*a)<=wid) {
-	wantbuffer[tty.HEIGHT][i++] = mkchar(*a);
+	wantbuffer[tty.HEIGHT][i++] = cell_t(*a);
 	if (real_wcwidth(*a)==2)
-	  wantbuffer[tty.HEIGHT][i++] = mkchar(-*a);
+	  wantbuffer[tty.HEIGHT][i++] = cell_t(-*a);
       } else
 	break;
       wid -= real_wcwidth(*a);
@@ -440,9 +440,9 @@ void display_buffer(conn_t *conn) {
     wid--;
   }
   if (alen) {
-    wantbuffer[tty.HEIGHT][i++] = mkchar('>');
+    wantbuffer[tty.HEIGHT][i++] = cell_t('>');
   } else
-    wantbuffer[tty.HEIGHT][i++] = mkchar(' ');
+    wantbuffer[tty.HEIGHT][i++] = cell_t(' ');
 
   show_want();
 
@@ -1088,7 +1088,7 @@ void conn_t::doenter()
       a += conn->grid->get(conn->grid->row, i).ch;
     }
     for (size_t i=0;i<wproper.length();i++) {
-      cell_t c = mkchar(wproper[i]);
+      cell_t c = cell_t(wproper[i]);
       conn->grid->place(&c);
     }
     conn->grid->wantnewline();

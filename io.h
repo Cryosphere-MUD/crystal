@@ -1,6 +1,8 @@
 #ifndef IO_H
 #define IO_H
 
+#include <string.h>
+
 #include "common.h"
 
 struct mterm {
