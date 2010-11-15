@@ -350,7 +350,7 @@ url::url(const char *s) : has_username(false), has_password(false)
 
   const char *srv = 0, *lasth = 0;
 
-  if (char *u=strchr(s, '@')) {
+  if (const char *u=strchr(s, '@')) {
     printf("We have a username part.\n");
     username = std::string(s, u-s);
     has_username = true;
