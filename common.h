@@ -8,9 +8,13 @@
 #include <sys/ioctl.h>
 #include <stdlib.h>
 
-#include <libintl.h>
-
 extern struct termios oldti;
+
+#ifdef __APPLE__
+typedef const char* iconv_inptr_t;
+#else
+typedef char* iconv_inptr_t;
+#endif
 
 #define debug_fprintf(a) ;
 

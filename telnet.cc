@@ -92,7 +92,7 @@ void decode(conn_t *conn, grid_t *grid, int ch) {
   }
 
   static char ibuf[10] = {0};
-  char *in=ibuf;
+  iconv_inptr_t in=ibuf;
   static size_t inb = 0;
 
   if (!i || cur_cset != conn->mud_cset) {

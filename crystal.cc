@@ -69,8 +69,6 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-#include <libintl.h>
-
 #undef lines
 #undef newline
 #undef grid
@@ -1045,7 +1043,7 @@ void conn_t::doenter()
 	cur_cset = conn->mud_cset;
       }
       wchar_t ic = sb;
-      char *ibuf = (char*)&ic;
+      iconv_inptr_t ibuf = (iconv_inptr_t)&ic;
       size_t ilen = 4;
       char o[11];
       char *obuf = o;
