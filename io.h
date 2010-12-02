@@ -64,8 +64,8 @@ struct mterm {
     }
   }
   
-  std::string getinfo(char *name, const char *def=0) {
-    const char *i = tigetstr(name);
+  std::string getinfo(const char *name, const char *def=0) {
+    const char *i = tigetstr((char*)name);
     if (i && strstr(i, "$<")) {
       std::string q = i;
       q = q.substr(0, strstr(i, "$<")-i);

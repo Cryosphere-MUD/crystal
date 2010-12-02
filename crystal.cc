@@ -859,7 +859,7 @@ void cmd_dumplog(conn_t *conn, const cmd_args &arg)
     file_log(conn, cfilename.c_str());
 }
 
-struct {
+struct option_t {
   const char *name;
   bool (conn_t::*option);
 } options[] = {
@@ -907,7 +907,7 @@ void cmd_set(conn_t *conn, const cmd_args &arg)
     infof(conn->grid, "/// no option of %ls\n", s.c_str());
 }
 
-struct {
+struct cmd_t {
   const wchar_t *commandname;
   void (*function)(conn_t *conn, const std::vector<my_wstring> &);
   const char *args;
