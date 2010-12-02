@@ -144,7 +144,7 @@ conn_t::conn_t(grid_t *gr) {
   telnet = 0;
 
   buffer = L"";
-  c = 0;
+  cursor = 0;
   
   cutbuffer = L"";
   logfile = 0;
@@ -324,7 +324,7 @@ void display_buffer(conn_t *conn) {
   const wchar_t *a = conn->buffer.data();
   int alen = conn->buffer.length();
 
-  const int col = conn->c;
+  const int col = conn->cursor;
   const wchar_t *txt = a;
 
   int scroll = 0;
@@ -404,8 +404,8 @@ void display_buffer(conn_t *conn) {
     prlen = (tty.WIDTH-20);
 
   size_t wid = tty.WIDTH-5;
-  if (conn->c+prlen>=wid) {
-    scroll = conn->c-wid+1+prlen;
+  if (conn->cursor + prlen>=wid) {
+    scroll = conn->cursor-wid+1+prlen;
     a += scroll;
     alen -= scroll;
   }
@@ -554,22 +554,22 @@ std::string mks(const my_wstring &w) {
 }
 
 void conn_t::dokillword() {
-  int orig=c;
-  if (c) {
-    while(c && isspace(buffer[c-1]))
-      c--;
-    while(c && !isspace(buffer[c-1]))
-      c--;
+  int orig=cursor;
+  if (cursor) {
+    while(cursor && isspace(buffer[cursor-1]))
+      cursor--;
+    while(cursor && !isspace(buffer[cursor-1]))
+      cursor--;
 
     my_wstring extra = buffer.substr(orig);
-    buffer = buffer.substr(0, c);
+    buffer = buffer.substr(0, cursor);
     buffer += extra;
   }
 }
 
 void conn_t::dodelete() {
-  if (c < buffer.length()) {
-    buffer.erase(c, 1);
+  if (cursor < buffer.length()) {
+    buffer.erase(cursor, 1);
   } else {
     tty.beep();
   }
@@ -577,9 +577,9 @@ void conn_t::dodelete() {
 
 void conn_t::dobackspace()
 {
-  if (c) {
-    buffer.erase(c-1, 1);
-    c--;
+  if (cursor) {
+    buffer.erase(cursor-1, 1);
+    cursor--;
   } else {
     tty.beep();
   }
@@ -600,7 +600,7 @@ void conn_t::doscrollend() {
 void conn_t::doprevhistory() {
   if (chist() && chist()->back()) {
     buffer = chist()->get();
-    c = buffer.length();
+    cursor = buffer.length();
   }
   else
     tty.beep();
@@ -610,12 +610,12 @@ void conn_t::donexthistory()
 {
   if (chist()) {
     if (chist()->next()) {
-	    buffer = chist()->get();
-	  }
-	  else {
-	    buffer = L"";
-	  }
-	  c = buffer.length();
+      buffer = chist()->get();
+    }
+    else {
+      buffer = L"";
+    }
+    cursor = buffer.length();
   }
   else
     tty.beep();
@@ -623,52 +623,52 @@ void conn_t::donexthistory()
 
 void conn_t::doprevchar()
 {
-  if (c)
-    c--;
+  if (cursor)
+    cursor--;
   else
     tty.beep();
 }
 
 void conn_t::doprevword()
 {
-  while (c && !isalnum(buffer[c-1])) {
-    c--;
+  while (cursor && !isalnum(buffer[cursor-1])) {
+    cursor--;
   }
-  while (c && isalnum(buffer[c-1])) {
-    c--;
+  while (cursor && isalnum(buffer[cursor-1])) {
+    cursor--;
   }
 }
 
 void conn_t::donextword()
 {
-  while (c<buffer.length() && !isalnum(buffer[c])) {
-    c++;
+  while (cursor<buffer.length() && !isalnum(buffer[cursor])) {
+    cursor++;
   }
-  while (c<buffer.length() && isalnum(buffer[c])) {
-    c++;
+  while (cursor<buffer.length() && isalnum(buffer[cursor])) {
+    cursor++;
   }
 }
 
 void conn_t::donextchar()
 {
-  c++;
-  if (c>buffer.length()) {
-    c = buffer.length();
+  cursor++;
+  if (cursor>buffer.length()) {
+    cursor = buffer.length();
     tty.beep();
   }
 }
 
 void conn_t::dofirstchar() {
-  c = 0;
+  cursor = 0;
 }
 
 void conn_t::doclearline() {
   buffer = L"";
-  c = 0;
+  cursor = 0;
 }
 
 void conn_t::dolastchar() {
-  c = buffer.length();
+  cursor = buffer.length();
 }
 
 void conn_t::dorefresh() {
@@ -677,16 +677,16 @@ void conn_t::dorefresh() {
 }
 
 void conn_t::dotranspose() {
-  if (c>1 && buffer.length()==c) {
-    wchar_t tmp = buffer[c-1];
-    buffer[c-1] = buffer[c-2];
-    buffer[c-2] = tmp;
+  if (cursor>1 && buffer.length()==cursor) {
+    wchar_t tmp = buffer[cursor-1];
+    buffer[cursor-1] = buffer[cursor-2];
+    buffer[cursor-2] = tmp;
     grid->changed = 1;
-  } else if (c>0) {
-    wchar_t tmp = buffer[c];
-    buffer[c] = buffer[c-1];
-    buffer[c-1] = tmp;
-    c++;
+  } else if (cursor>0) {
+    wchar_t tmp = buffer[cursor];
+    buffer[cursor] = buffer[cursor-1];
+    buffer[cursor-1] = tmp;
+    cursor++;
     grid->changed = 1;
   } else {
     tty.beep();
@@ -695,13 +695,13 @@ void conn_t::dotranspose() {
 
 void conn_t::doinsertchar(wchar_t ch)
 {
-  if (c == buffer.length()) {
+  if (cursor == buffer.length()) {
     buffer += ch;
   } else {
-    buffer = buffer.substr(0, c) + ch + buffer.substr(c);
+    buffer = buffer.substr(0, cursor) + ch + buffer.substr(cursor);
   }
   grid->changed = 1;
-  c++;
+  cursor++;
 }
 
 typedef std::vector<my_wstring> cmd_args;
@@ -1128,19 +1128,19 @@ void conn_t::doscrollup()
 }
 
 void conn_t::docutfromhere() {
-  cutbuffer=buffer.substr(c);
-  buffer = buffer.substr(0, c);
+  cutbuffer=buffer.substr(cursor);
+  buffer = buffer.substr(0, cursor);
 }
 
 void conn_t::docuttohere() {
-  cutbuffer = buffer.substr(0, c);
-  buffer = buffer.substr(c);
-  c = 0;
+  cutbuffer = buffer.substr(0, cursor);
+  buffer = buffer.substr(cursor);
+  cursor = 0;
 }
 
 void conn_t::dopaste() 
 {
-  buffer.insert(c, cutbuffer);
+  buffer.insert(cursor, cutbuffer);
 }
 
 void conn_t::docommandmode()

@@ -31,7 +31,7 @@ public:
   telnet_state *telnet;
 
   my_wstring buffer;
-  size_t c;
+  size_t cursor;
 
   my_wstring cutbuffer;
 
