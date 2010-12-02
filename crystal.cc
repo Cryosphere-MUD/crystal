@@ -1521,6 +1521,19 @@ int main(int argc, char **argv) {
     conn.mud_cset = "UTF-8";
   }
 
+  if (argv[1] && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-v"))) {
+    printf("crystal %s\n", VERSION);
+    return 0;
+  }
+
+  if (argv[1] && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))) {
+    printf("Usage: crystal [-n] <hostname> <port>\n");
+    printf("       crystal [-n] telnets://hostname:port/\n");
+    printf("Options:\n");
+    printf("       -n never echo locally.\n");
+    return 0;
+  }
+
   if (argv[1] && strcmp(argv[1], "-n")==0) {
     conn.never_echo = 1;
     argv++;
