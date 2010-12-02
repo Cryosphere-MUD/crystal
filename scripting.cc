@@ -104,7 +104,7 @@ void tomud_echo(std::string proper)
       a += conn->grid->get(conn->grid->row, i).ch;
     }    
     for (size_t i=0;i<proper.length();i++) {
-      cell_t c = mkchar(proper[i]);
+      cell_t c = proper[i];
       conn->grid->place(&c);
     }
     conn->grid->wantnewline();
