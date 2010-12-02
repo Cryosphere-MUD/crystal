@@ -317,10 +317,10 @@ my_wstring mterm::convert_input(int i) {
     { L"\033[7~", L"home"}, // rxvt
     { L"\033[8~", L"end"}, // rxvt
 
-    { L"\033[Oa", L"control-up"}, // rxvt
-    { L"\033[Ob", L"control-down"}, // rxvt
-    { L"\033[Oc", L"control-right"}, // rxvt
-    { L"\033[Od", L"control-left"}, // rxvt
+    { L"\033[Oa", L"c-up"}, // rxvt
+    { L"\033[Ob", L"c-down"}, // rxvt
+    { L"\033[Oc", L"c-right"}, // rxvt
+    { L"\033[Od", L"c-left"}, // rxvt
 
     /* THIS BLOCK RXVT NUMERIC KEYPAD */
     { L"\033[Ok", L"+"}, // rxvt
@@ -433,6 +433,10 @@ my_wstring mterm::convert_input(int i) {
     { L"\033OQ", L"fn.2"},
     { L"\033OR", L"fn.3"},
     { L"\033OS", L"fn.4"},
+
+    { L"\033<", L"m-<"},
+    { L"\033>", L"m->"},
+
     { NULL, NULL }
   };
 

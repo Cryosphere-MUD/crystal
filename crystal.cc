@@ -1188,8 +1188,11 @@ struct keybinding_t {
   { L"left",      &conn_t::doprevchar },
   { L"right",     &conn_t::donextchar },
 
-  { L"home",      &conn_t::doscrollstart },
-  { L"end",       &conn_t::doscrollend },
+  { L"m-<",      &conn_t::doscrollstart },
+  { L"m->",       &conn_t::doscrollend },
+
+  { L"home",      &conn_t::dofirstchar },
+  { L"end",       &conn_t::dolastchar },
 
   { L"delete",    &conn_t::dodelete },
 
