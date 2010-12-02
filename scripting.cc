@@ -19,9 +19,13 @@ namespace scripting {
 };
 
 #else
+
 extern "C" {
+
 #include "lua.h"
 #include "lualib.h"
+#include "lauxlib.h"
+
 }
 
 lua_State *l = 0;
@@ -30,7 +34,44 @@ int badlua = 0;
 namespace scripting {
 
   grid_t *ergrid = 0;
-  
+
+#ifdef HAVE_LUA50  
+  void set_lua_error(lua_State* L, const char *errorString)
+  {
+    lua_pushstring(L, errorString);
+    lua_error(L);
+  }
+
+  void do_lua_call(lua_State* L, int args, int rets)
+  {
+    if (lua_pcall(L, args, rets, 0) != 0) {
+      std::string s = lua_tostring(L, -1);
+      infof(ergrid, "lua error: %s\n", s.c_str());
+      badlua = 1;
+    }
+  }
+
+  lua_State* do_lua_open()
+  {
+    return lua_open();
+  }
+#else
+  void set_lua_error(lua_State* L, const char *errorString)
+  {
+    lua_error(L, errorString);
+  }    
+
+  void do_lua_call(lua_State* L, int args, int rets)
+  {
+    lua_call(L, args, rets);
+  }
+
+  lua_State* do_lua_open()
+  {
+    return lua_open(100);
+  }
+#endif
+
   void kill_lua() {
     l = 0;
   }
@@ -57,7 +98,7 @@ namespace scripting {
       if (now < next)
 	return;
     lua_getglobal(l, callwhat.c_str());
-    lua_call(l, 0, 0);
+    do_lua_call(l, 0, 0);
     next = now + howoften;
     }
   };
@@ -119,10 +160,10 @@ void tomud_echo(std::string proper)
 
 static int lua_tomud(lua_State *L) {
   if (lua_gettop(L)!=1) {
-    lua_error(L, "Bad number of args to tomud");
+    set_lua_error(L, "Bad number of args to tomud");
   }
   if (!lua_isstring(L, 1)) {
-    lua_error(L, "Wanted std::string for tomud.");
+    set_lua_error(L, "Wanted std::string for tomud.");
   }
   if (ergrid && ergrid->conn && ergrid->conn->telnet) {
     std::string s = lua_tostring(L, 1);
@@ -134,10 +175,10 @@ static int lua_tomud(lua_State *L) {
 
 static int lua_tomud_echo(lua_State *L) {
   if (lua_gettop(L)!=1) {
-    lua_error(L, "Bad number of args to tomud");
+    set_lua_error(L, "Bad number of args to tomud");
   }
   if (!lua_isstring(L, 1)) {
-    lua_error(L, "Wanted std::string for tomud.");
+    set_lua_error(L, "Wanted std::string for tomud.");
   }
   if (ergrid && ergrid->conn && ergrid->conn->telnet) {
     std::string s = lua_tostring(L, 1);
@@ -148,10 +189,10 @@ static int lua_tomud_echo(lua_State *L) {
 
 static int lua_info(lua_State *L) {
   if (lua_gettop(L)!=1) {
-    lua_error(L, "Bad number of args to tomud");
+    set_lua_error(L, "Bad number of args to tomud");
   }
   if (!lua_isstring(L, 1)) {
-    lua_error(L, "Wanted std::string for tomud.");
+    set_lua_error(L, "Wanted std::string for tomud.");
   }
   if (ergrid) {
     infof(ergrid, "/// %s", lua_tostring(L, 1));
@@ -162,13 +203,13 @@ static int lua_info(lua_State *L) {
 static int lua_register_auto(lua_State *L)
 {
   if (lua_gettop(L)!=2) {
-    lua_error(L, "Bad number of args to register_auto");
+    set_lua_error(L, "Bad number of args to register_auto");
   }
   if (!lua_isstring(L, 1)) {
-    lua_error(L, "Bad arg 1 to register_auto");
+    set_lua_error(L, "Bad arg 1 to register_auto");
   }
   if (!lua_isnumber(L, 2)) {
-    lua_error(L, "Bad arg 2 to register_auto");
+    set_lua_error(L, "Bad arg 2 to register_auto");
   }
   timer a;
   a.callwhat = lua_tostring(L, 1);
@@ -196,7 +237,7 @@ void dotrigger(const my_wstring &s) {
   if (trig.length()) {
     lua_getglobal(l, trig.c_str());
     lua_pushstring(l, rs.c_str());
-    lua_call(l, 1, 0);
+    do_lua_call(l, 1, 0);
   }
   triggered = 0;
   kill_if_bad();
@@ -215,7 +256,7 @@ void doprompt(const my_wstring &s) {
   if (prompt.length()) {
     lua_getglobal(l, prompt.c_str());
     lua_pushstring(l, rs.c_str());
-    lua_call(l, 1, 0);
+    do_lua_call(l, 1, 0);
   }
   triggered = 0;
   kill_if_bad();
@@ -224,10 +265,10 @@ void doprompt(const my_wstring &s) {
 static int lua_register_trig(lua_State *L)
 {
   if (lua_gettop(L)!=1) {
-    lua_error(L, "Bad number of args to register_auto");
+    set_lua_error(L, "Bad number of args to register_auto");
   }
   if (!lua_isstring(L, 1)) {
-    lua_error(L, "Bad arg 1 to register_auto");
+    set_lua_error(L, "Bad arg 1 to register_auto");
   }
   trig = lua_tostring(L, 1);
   return 0;
@@ -236,10 +277,10 @@ static int lua_register_trig(lua_State *L)
 static int lua_register_host(lua_State *L)
 {
   if (lua_gettop(L)!=1) {
-    lua_error(L, "Bad number of args to register_auto");
+    set_lua_error(L, "Bad number of args to register_auto");
   }
   if (!lua_isstring(L, 1)) {
-    lua_error(L, "Bad arg 1 to register_auto");
+    set_lua_error(L, "Bad arg 1 to register_auto");
   }
   host = lua_tostring(L, 1);
   return 0;
@@ -248,10 +289,10 @@ static int lua_register_host(lua_State *L)
 static int lua_register_prompt(lua_State *L)
 {
   if (lua_gettop(L)!=1) {
-    lua_error(L, "Bad number of args to register_auto");
+    set_lua_error(L, "Bad number of args to register_auto");
   }
   if (!lua_isstring(L, 1)) {
-    lua_error(L, "Bad arg 1 to register_auto");
+    set_lua_error(L, "Bad arg 1 to register_auto");
   }
   prompt = lua_tostring(L, 1);
   return 0;
@@ -287,7 +328,7 @@ void start()
   host = "";
   prompt = "";
  
-  l = lua_open(100);
+  l = do_lua_open();
   badlua = 0;
 
   lua_baselibopen(l);
@@ -311,7 +352,6 @@ void start()
   std::string f = getenv("HOME");
   f += "/.crystal.lua";
   lua_dofile(l, f.c_str());
-  
   if (badlua) {
     lua_close(l);
     l = 0;
@@ -329,7 +369,7 @@ std::string lookup_host(const std::string &h)
   if (host.length()) {
     lua_getglobal(l, host.c_str());
     lua_pushstring(l, h.c_str());
-    lua_call(l, 1, 1);
+    do_lua_call(l, 1, 1);
     const char *s = lua_tostring(l, 1);
     lua_pop(l, 1);
     if (s)

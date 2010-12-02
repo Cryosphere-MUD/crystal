@@ -1504,6 +1504,24 @@ void main_loop(conn_t *conn)
 
 struct termios oldti;
 
+conn_t* cleanupConn;
+
+void cleanup()
+{
+  if (cleanupConn) {
+    conn_t& conn = *cleanupConn;
+
+    if (conn.logfile) {
+      fclose(conn.logfile);
+      conn.logfile = 0;
+    }
+    
+    tcsetattr(0, TCSADRAIN, &oldti);
+    
+    cleanupConn = 0;
+  }
+}
+
 int main(int argc, char **argv) {
   char *pname = argv[0];
 
@@ -1588,16 +1606,15 @@ int main(int argc, char **argv) {
   cfmakeraw(&ti);
   tcsetattr(0, TCSADRAIN, &ti);
 
+  cleanupConn = &conn;
+  atexit(cleanup);
+
   signal(SIGWINCH, winch);
 
   main_loop(&conn);
 
-  if (conn.logfile) {
-    fclose(conn.logfile);
-    conn.logfile = 0;
-  }
-
-  tcsetattr(0, TCSADRAIN, &oldti);
+  cleanup();
   printf("\n");
+
   return 0;
 }
