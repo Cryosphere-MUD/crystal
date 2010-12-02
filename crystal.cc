@@ -618,16 +618,13 @@ void conn_t::donexthistory()
   if (chist()) {
     if (chist()->next()) {
       buffer = chist()->get();
-      cursor = buffer.length();
     }
-    else if (!nofuture) {
-      buffer = future;
+    else {
+      buffer = nofuture ? L"" : future;
       future = L"";
       nofuture = true;
-      cursor = buffer.length();
     }
-    else
-      tty.beep();
+    cursor = buffer.length();
   }
   else
     tty.beep();
