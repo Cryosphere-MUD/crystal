@@ -33,6 +33,9 @@ public:
   my_wstring buffer;
   size_t cursor;
 
+  my_wstring future;
+  bool nofuture;
+
   my_wstring cutbuffer;
 
   FILE *logfile;

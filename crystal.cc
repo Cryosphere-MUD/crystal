@@ -131,6 +131,8 @@ conn_t::conn_t(grid_t *gr) {
   never_echo = 0;
   quit = 0;
 
+  nofuture = true;
+
   addrs = 0;
   addr_i = 0;
 
@@ -599,6 +601,11 @@ void conn_t::doscrollend() {
 
 void conn_t::doprevhistory() {
   if (chist() && chist()->back()) {
+    if (nofuture) {
+      future = buffer;
+      nofuture = false;
+    }
+
     buffer = chist()->get();
     cursor = buffer.length();
   }
@@ -611,11 +618,16 @@ void conn_t::donexthistory()
   if (chist()) {
     if (chist()->next()) {
       buffer = chist()->get();
+      cursor = buffer.length();
     }
-    else {
-      buffer = L"";
+    else if (!nofuture) {
+      buffer = future;
+      future = L"";
+      nofuture = true;
+      cursor = buffer.length();
     }
-    cursor = buffer.length();
+    else
+      tty.beep();
   }
   else
     tty.beep();
@@ -1078,6 +1090,7 @@ void conn_t::doenter()
     // put the commandline in the history if it isn't a password
     chist()->insert(wproper);
   }
+  nofuture = true;
 
   if (toecho) {
     // echo the commandline if appropriate
