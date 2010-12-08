@@ -297,12 +297,37 @@ void doprompt(const my_wstring &s) {
 static int lua_register_trig(lua_State *L)
 {
   if (lua_gettop(L)!=1) {
-    set_lua_error(L, "Bad number of args to register_auto");
+    set_lua_error(L, "Bad number of args to register_trig");
   }
   if (!lua_isstring(L, 1)) {
-    set_lua_error(L, "Bad arg 1 to register_auto");
+    set_lua_error(L, "Bad arg 1 to register_trig");
   }
   trig = lua_tostring(L, 1);
+  return 0;
+}
+
+static int lua_bind_key(lua_State *L)
+{
+  if (lua_gettop(L)!=2) {
+    set_lua_error(L, "Bad number of args to bind_key");
+  }
+  if (!lua_isstring(L, 1)) {
+    set_lua_error(L, "Bad arg 1 to bind_key");
+  }
+  if (!lua_isstring(L, 2)) {
+    set_lua_error(L, "Bad arg 2 to bind_key");
+  }
+  const char* key = lua_tostring(L, 1);
+  const char* cmd = lua_tostring(L, 2);
+  conn_t *conn = ergrid->conn;
+
+  my_wstring wkey;
+  while (*key) {
+    wkey += *key;
+    key++;
+  }
+
+  conn->addbinding(wkey.c_str(), cmd);
   return 0;
 }
 
@@ -373,6 +398,7 @@ void start()
   lua_register(l, "register_trig",lua_register_trig);
   lua_register(l, "register_prompt",lua_register_prompt);
   lua_register(l, "register_host",lua_register_host);
+  lua_register(l, "bind_key",lua_bind_key);
 
   lua_register(l, "get_host",lua_get_host);
   lua_register(l, "get_port",lua_get_port);

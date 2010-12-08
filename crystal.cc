@@ -1228,64 +1228,74 @@ struct keybinding_t {
   const wchar_t *s;
   const char* cmdname;
 
+  keybinding_t(const wchar_t* s, const char* cmdname) : s(s), cmdname(cmdname)
+  {
+  }
+
   keybinding_method_t command()
   {
     return keycommand_t::findcommand(cmdname);
   }
-} keys[] = {
-  { L"c-]",       "commandmode" },
-
-  { L"backspace", "backspace" },
-  { L"tab",       "findnext" },
-
-  { L"c-a",       "firstchar" },
-  { L"c-b",       "prevchar" },
-  { L"c-c",       "clearline" },
-  { L"c-d",       "delete" },
-  { L"c-e",       "lastchar" },
-  { L"c-f",       "nextchar" },
-  { L"c-k",       "cutfromhere" },
-  { L"c-l",       "refresh" },
-  { L"c-n",       "nexthistory" },
-  { L"c-p",       "prevhistory" },
-  { L"c-t",       "transpose" },
-  { L"c-u",       "cuttohere" },
-  { L"c-w",       "killword" },
-  { L"c-y",       "paste" },
-
-  { L"c-z",       "suspend" },
-
-  { L"m-b",       "prevword" },
-  { L"m-f",       "nextword" },
-
-  { L"return",    "enter" },
-
-  { L"up",        "prevhistory" },
-  { L"wn",      "nexthistory" },
-  { L"left",      "prevchar" },
-  { L"right",     "nextchar" },
-
-  { L"m-<",       "scrollstart" },
-  { L"m->",       "scrollend" },
-
-  { L"home",      "firstchar" },
-  { L"end",       "lastchar" },
-
-  { L"delete",    "delete" },
-
-  { L"pagedown",  "scrolldown" },
-  { L"pageup",    "scrollup" },
-
-  { L"fn.12",     "toggleslave" },
-  { 0, }
 };
 
-void conn_t::checkbindings()
+struct keybinding_t initkeys[34] = {
+  keybinding_t( L"c-]",       "commandmode" ),
+  keybinding_t( L"backspace", "backspace" ),
+  keybinding_t( L"tab",       "findnext" ),
+  keybinding_t( L"c-a",       "firstchar" ),
+  keybinding_t( L"c-b",       "prevchar" ),
+  keybinding_t( L"c-c",       "clearline" ),
+  keybinding_t( L"c-d",       "delete" ),
+  keybinding_t( L"c-e",       "lastchar" ),
+  keybinding_t( L"c-f",       "nextchar" ),
+  keybinding_t( L"c-k",       "cutfromhere" ),
+  keybinding_t( L"c-l",       "refresh" ),
+  keybinding_t( L"c-n",       "nexthistory" ),
+  keybinding_t( L"c-p",       "prevhistory" ),
+  keybinding_t( L"c-t",       "transpose" ),
+  keybinding_t( L"c-u",       "cuttohere" ),
+  keybinding_t( L"c-w",       "killword" ),
+  keybinding_t( L"c-y",       "paste" ),
+  keybinding_t( L"c-z",       "suspend" ),
+  keybinding_t( L"m-b",       "prevword" ),
+  keybinding_t( L"m-f",       "nextword" ),
+  keybinding_t( L"return",    "enter" ),
+  keybinding_t( L"up",        "prevhistory" ),
+  keybinding_t( L"wn",        "nexthistory" ),
+  keybinding_t( L"left",      "prevchar" ),
+  keybinding_t( L"right",     "nextchar" ),
+  keybinding_t( L"m-<",       "scrollstart" ),
+  keybinding_t( L"m->",       "scrollend" ),
+  keybinding_t( L"home",      "firstchar" ),
+  keybinding_t( L"end",       "lastchar" ),
+  keybinding_t( L"delete",    "delete" ),
+  keybinding_t( L"pagedown",  "scrolldown" ),
+  keybinding_t( L"pageup",    "scrollup" ),
+  keybinding_t( L"fn.12",     "toggleslave" ),
+  keybinding_t( NULL, NULL ),
+};
+
+std::map<my_wstring, keybinding_method_t> keys;
+
+void conn_t::addbinding(const wchar_t* key, const char* cmd)
 {
-  for (size_t i=0;keys[i].s;i++) {
-    keybinding_method_t handler = keys[i].command();
+  keybinding_t binding(key, cmd);
+  keybinding_method_t handler = binding.command();
+  if (!handler) {
+    infof(grid, _("/// missing handler for %ls (%s)\n"), key, cmd);
+  } else {
+    keys[key] = handler;
+  }
+}
+
+void conn_t::initbindings()
+{
+  for (size_t i=0;initkeys[i].s;i++) {
+    keybinding_method_t handler = initkeys[i].command();
     if (!handler) {
-      infof(grid, _("/// missing handler for %ls (%s)\n"), keys[i].s, keys[i].cmdname);
+      infof(grid, _("/// missing handler for %ls (%s)\n"), initkeys[i].s, initkeys[i].cmdname);
+    } else {
+      keys[initkeys[i].s] = handler;
     }
   }
 }
@@ -1297,15 +1307,13 @@ void conn_t::dispatch_key(const my_wstring &s)
     return;
   }
   
-  for (size_t i=0;keys[i].s;i++) {
-    if (keys[i].s == s) {
-      keybinding_method_t handler = keys[i].command();
-      if (handler)
-	(this->*handler)();
-      else
-	infof(grid, _("/// missing handler for %ls (%s)\n"), s.c_str(), keys[i].cmdname);
-      return;
-    }
+  if (keys.find(s) != keys.end()) {
+    keybinding_method_t handler = keys[s];
+    if (handler)
+      (this->*handler)();
+    else
+      infof(grid, _("/// missing handler for %ls\n"), s.c_str());
+    return;
   }
 
   if (s.length()>3 && s[0]=='f' && s[1]=='n' && s[2]=='.') {
@@ -1452,8 +1460,6 @@ void main_loop(conn_t *conn)
   conn->grid->changed = 1;
   bad_have = 1;
 
-  conn->checkbindings();
-  
   display_buffer(conn);
   
   while (!conn->quit) {
@@ -1626,6 +1632,8 @@ int main(int argc, char **argv) {
   grid_t grid(NULL);
   conn_t conn(&grid);
   grid.set_conn(&conn);
+  
+  conn.initbindings();
   
   scripting::set_grid(&grid);
   scripting::start();

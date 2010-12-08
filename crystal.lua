@@ -48,3 +48,5 @@ register_auto("auto", 60*30)
 register_trig("trig");
 register_prompt("prompt");
 register_host("host")
+
+register_key("c-a", "foo")

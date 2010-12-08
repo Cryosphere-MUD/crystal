@@ -115,8 +115,9 @@ public:
   ~conn_t();
   conn_t(grid_t *);
 
-  void checkbindings();
+  void initbindings();
   void dispatch_key(const my_wstring &s);
+  void addbinding(const wchar_t* key, const char* bind);
 };
 
 #endif
