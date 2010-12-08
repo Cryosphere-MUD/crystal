@@ -1,3 +1,12 @@
+0.2.4
+  Links against Lua 5 if available.  Note that it prefers Lua 5 over Lua 4, 
+  and this may break your .crystal.lua since various system functions have
+  been renamed in Lua 5.
+
+  Keybinding support.  The lua function 'bind_key' can be used in .crystal.lua.
+  (See the sample LUA script for usage)  To inspect and set the current
+  keybindings, the interactive command 'bind' can be used.
+
 0.2.3
   Build fixes for modern systems.
   Fix for uninitialised cell values.
