@@ -15,7 +15,7 @@ function auto()
 end
 
 function trig(s)
-  # in LUA 4 this is strfind, not string.find
+  -- in LUA 4 this is strfind, not string.find
   if (string.find(s, "^Muon the Barman gives a .* to you.$")) then
     tomud_echo("drink all");
   end
@@ -49,4 +49,5 @@ register_trig("trig");
 register_prompt("prompt");
 register_host("host")
 
+-- keyboard binding
 register_key("c-a", "foo")
