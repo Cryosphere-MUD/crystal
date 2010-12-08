@@ -103,7 +103,7 @@ public:
   void doscrollstart();
   void doscrollend();
   void triggerfn(const char *which);
-  void findnext();
+  void dofindnext();
 
   void doenter();
   void dosuspend();
@@ -115,6 +115,7 @@ public:
   ~conn_t();
   conn_t(grid_t *);
 
+  void checkbindings();
   void dispatch_key(const my_wstring &s);
 };
 

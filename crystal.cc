@@ -302,7 +302,7 @@ void conn_t::show_lines_at(int from, int to, int num)
   }
 }
 
-void conn_t::findnext()
+void conn_t::dofindnext()
 {
   for (int i=hardscroll;i<grid->row;i++) {
     my_wstring s;
@@ -1177,56 +1177,118 @@ void conn_t::docommandmode()
 
 typedef void (conn_t::*keybinding_method_t)();
 
+struct keycommand_t {
+
+  static std::map<std::string, keybinding_method_t> _commands;
+
+public:
+  keycommand_t(const char* cmdname, keybinding_method_t method) //: cmdname(cmdname), method(method)
+  {
+    _commands[cmdname] = method;
+  }
+  
+  static keybinding_method_t findcommand(const char* cmd)
+  {
+    return _commands[cmd];
+  }
+};
+
+std::map<std::string, keybinding_method_t> keycommand_t::_commands;
+
+#define DECLARE_COMMAND(str) keycommand_t str ## obj ( # str, &conn_t::do ## str ) ;
+
+DECLARE_COMMAND(commandmode)
+DECLARE_COMMAND(backspace)
+DECLARE_COMMAND(findnext)
+DECLARE_COMMAND(firstchar)
+DECLARE_COMMAND(prevchar)
+DECLARE_COMMAND(delete)
+DECLARE_COMMAND(lastchar)
+DECLARE_COMMAND(nextchar)
+DECLARE_COMMAND(cutfromhere)
+DECLARE_COMMAND(refresh)
+DECLARE_COMMAND(nexthistory)
+DECLARE_COMMAND(prevhistory)
+DECLARE_COMMAND(transpose)
+DECLARE_COMMAND(cuttohere)
+DECLARE_COMMAND(killword)
+DECLARE_COMMAND(paste)
+DECLARE_COMMAND(suspend)
+DECLARE_COMMAND(prevword)
+DECLARE_COMMAND(nextword)
+DECLARE_COMMAND(scrollstart)
+DECLARE_COMMAND(scrollend)
+DECLARE_COMMAND(scrollup)
+DECLARE_COMMAND(scrolldown)
+DECLARE_COMMAND(toggleslave)
+DECLARE_COMMAND(clearline)
+DECLARE_COMMAND(enter)
+
 struct keybinding_t {
   const wchar_t *s;
-  keybinding_method_t m;
+  const char* cmdname;
+
+  keybinding_method_t command()
+  {
+    return keycommand_t::findcommand(cmdname);
+  }
 } keys[] = {
-  { L"c-]",       &conn_t::docommandmode },
+  { L"c-]",       "commandmode" },
 
-  { L"backspace", &conn_t::dobackspace },
-  { L"tab",       &conn_t::findnext },
+  { L"backspace", "backspace" },
+  { L"tab",       "findnext" },
 
-  { L"c-a",       &conn_t::dofirstchar },
-  { L"c-b",       &conn_t::doprevchar },
-  { L"c-c",       &conn_t::doclearline },
-  { L"c-d",       &conn_t::dodelete },
-  { L"c-e",       &conn_t::dolastchar },
-  { L"c-f",       &conn_t::donextchar },
-  { L"c-k",       &conn_t::docutfromhere },
-  { L"c-l",       &conn_t::dorefresh },
-  { L"c-n",       &conn_t::donexthistory },
-  { L"c-p",       &conn_t::doprevhistory },
-  { L"c-t",       &conn_t::dotranspose },
-  { L"c-u",       &conn_t::docuttohere },
-  { L"c-w",       &conn_t::dokillword },
-  { L"c-y",       &conn_t::dopaste },
+  { L"c-a",       "firstchar" },
+  { L"c-b",       "prevchar" },
+  { L"c-c",       "clearline" },
+  { L"c-d",       "delete" },
+  { L"c-e",       "lastchar" },
+  { L"c-f",       "nextchar" },
+  { L"c-k",       "cutfromhere" },
+  { L"c-l",       "refresh" },
+  { L"c-n",       "nexthistory" },
+  { L"c-p",       "prevhistory" },
+  { L"c-t",       "transpose" },
+  { L"c-u",       "cuttohere" },
+  { L"c-w",       "killword" },
+  { L"c-y",       "paste" },
 
-  { L"c-z",       &conn_t::dosuspend },
+  { L"c-z",       "suspend" },
 
-  { L"m-b",       &conn_t::doprevword },
-  { L"m-f",       &conn_t::donextword },
+  { L"m-b",       "prevword" },
+  { L"m-f",       "nextword" },
 
-  { L"return",    &conn_t::doenter },
+  { L"return",    "enter" },
 
-  { L"up",        &conn_t::doprevhistory },
-  { L"down",      &conn_t::donexthistory },
-  { L"left",      &conn_t::doprevchar },
-  { L"right",     &conn_t::donextchar },
+  { L"up",        "prevhistory" },
+  { L"wn",      "nexthistory" },
+  { L"left",      "prevchar" },
+  { L"right",     "nextchar" },
 
-  { L"m-<",      &conn_t::doscrollstart },
-  { L"m->",       &conn_t::doscrollend },
+  { L"m-<",       "scrollstart" },
+  { L"m->",       "scrollend" },
 
-  { L"home",      &conn_t::dofirstchar },
-  { L"end",       &conn_t::dolastchar },
+  { L"home",      "firstchar" },
+  { L"end",       "lastchar" },
 
-  { L"delete",    &conn_t::dodelete },
+  { L"delete",    "delete" },
 
-  { L"pagedown",  &conn_t::doscrolldown },
-  { L"pageup",    &conn_t::doscrollup },
+  { L"pagedown",  "scrolldown" },
+  { L"pageup",    "scrollup" },
 
-  { L"fn.12",     &conn_t::dotoggleslave },
+  { L"fn.12",     "toggleslave" },
   { 0, }
 };
+
+void conn_t::checkbindings()
+{
+  for (size_t i=0;keys[i].s;i++) {
+    keybinding_method_t handler = keys[i].command();
+    if (!handler) {
+      infof(grid, _("/// missing handler for %ls (%s)\n"), keys[i].s, keys[i].cmdname);
+    }
+  }
+}
 
 void conn_t::dispatch_key(const my_wstring &s)
 {
@@ -1237,7 +1299,11 @@ void conn_t::dispatch_key(const my_wstring &s)
   
   for (size_t i=0;keys[i].s;i++) {
     if (keys[i].s == s) {
-      (this->*keys[i].m)();
+      keybinding_method_t handler = keys[i].command();
+      if (handler)
+	(this->*handler)();
+      else
+	infof(grid, _("/// missing handler for %ls (%s)\n"), s.c_str(), keys[i].cmdname);
       return;
     }
   }
@@ -1385,6 +1451,8 @@ void main_loop(conn_t *conn)
 
   conn->grid->changed = 1;
   bad_have = 1;
+
+  conn->checkbindings();
   
   display_buffer(conn);
   
