@@ -892,6 +892,8 @@ struct option_t {
   { NULL, }
 };
 
+void cmd_bind(conn_t *conn, const cmd_args &arg);
+
 void cmd_set(conn_t *conn, const cmd_args &arg)
 {
   if (arg.size() != 1 && arg.size() != 3) {
@@ -961,6 +963,7 @@ struct cmd_t {
   { L"help",     cmd_help, NULL, "brief summary of commands" },
 
   { L"set",      cmd_set, "[option value]", "shows current options or sets one" },
+  { L"bind",     cmd_bind, "[key value]", "shows or sets current keyboard bindings" },
 
   { L"z",        cmd_z, NULL, "suspend" },
   { NULL, }
@@ -1261,7 +1264,7 @@ struct keybinding_t initkeys[34] = {
   keybinding_t( L"m-f",       "nextword" ),
   keybinding_t( L"return",    "enter" ),
   keybinding_t( L"up",        "prevhistory" ),
-  keybinding_t( L"wn",        "nexthistory" ),
+  keybinding_t( L"down",      "nexthistory" ),
   keybinding_t( L"left",      "prevchar" ),
   keybinding_t( L"right",     "nextchar" ),
   keybinding_t( L"m-<",       "scrollstart" ),
@@ -1276,15 +1279,18 @@ struct keybinding_t initkeys[34] = {
 };
 
 std::map<my_wstring, keybinding_method_t> keys;
+std::map<my_wstring, std::string> keystr;
 
 void conn_t::addbinding(const wchar_t* key, const char* cmd)
 {
   keybinding_t binding(key, cmd);
   keybinding_method_t handler = binding.command();
+
   if (!handler) {
     infof(grid, _("/// missing handler for %ls (%s)\n"), key, cmd);
   } else {
     keys[key] = handler;
+    keystr[key] = cmd;
   }
 }
 
@@ -1296,6 +1302,7 @@ void conn_t::initbindings()
       infof(grid, _("/// missing handler for %ls (%s)\n"), initkeys[i].s, initkeys[i].cmdname);
     } else {
       keys[initkeys[i].s] = handler;
+      keystr[initkeys[i].s] = initkeys[i].cmdname;
     }
   }
 }
@@ -1320,6 +1327,34 @@ void conn_t::dispatch_key(const my_wstring &s)
     std::string cs = mks(s);
     triggerfn(cs.c_str()+3);
     return;
+  }
+}
+
+void cmd_bind(conn_t *conn, const cmd_args &arg)
+{
+  if (arg.size() != 1 && arg.size() != 3) {
+    infof(conn->grid, _("/// set [option value]\n"));
+    return;
+  }
+
+  if (arg.size() == 1) {
+    int wid = 0;
+    for (std::map<my_wstring, std::string>::const_iterator it = keystr.begin();
+	 it != keystr.end();
+	 it++) {
+      wid = std::max(wid, int(it->first.length()));
+    }
+
+    for (std::map<my_wstring, std::string>::const_iterator it = keystr.begin();
+	 it != keystr.end();
+	 it++) {
+      infof(conn->grid, "%*ls %s\n", wid, it->first.c_str(), it->second.c_str());
+    }
+  } else {
+    std::string cmd;
+    for (int i = 0; i < arg[2].size(); i++)
+      cmd += arg[2][i];
+    conn->addbinding(arg[1].c_str(), cmd.c_str());
   }
 }
 
