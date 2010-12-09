@@ -106,6 +106,7 @@ class grid_t;
 #include "crystal.h"
 #include "scripting.h"
 #include "commands.h"
+#include "commandeditor.h"
 
 mterm tty;
 
@@ -409,89 +410,6 @@ void conn_t::triggerfn(const char *fn) {
 }
 
 
-struct hlist {
-  std::map<int, my_wstring> hist;
-  int idx;
-  int max;
-  hlist() : idx(0), max(0) {
-  }
-
-  void insert(const my_wstring &blah) {
-    hist[max] = blah;
-    max++;
-    idx = max;
-  }
-
-  bool back() {
-    idx--;
-    if (idx < 0) {
-      idx = 0;
-      return 0;
-    }
-    return 1;
-  }
-
-  bool next() {
-    idx++;
-    if (idx >= max) {
-      idx = max;
-      return  0;
-    }
-    return 1;
-  }
-
-  const my_wstring &get() {
-    static const my_wstring blah = L"";
-    if (idx >= max || idx < 0) 
-      return blah;
-    return hist[idx];
-  }
-};
-
-
-hlist cmdhist;
-
-hlist *conn_t::chist() {
-  static hlist hist;
-  
-  if (commandmode)
-    return &cmdhist;
-
-  return &hist;
-}
-
-void conn_t::dokillword() {
-  int orig=cursor;
-  if (cursor) {
-    while(cursor && isspace(buffer[cursor-1]))
-      cursor--;
-    while(cursor && !isspace(buffer[cursor-1]))
-      cursor--;
-
-    my_wstring extra = buffer.substr(orig);
-    buffer = buffer.substr(0, cursor);
-    buffer += extra;
-  }
-}
-
-void conn_t::dodelete() {
-  if (cursor < buffer.length()) {
-    buffer.erase(cursor, 1);
-  } else {
-    tty.beep();
-  }
-}
-
-void conn_t::dobackspace()
-{
-  if (cursor) {
-    buffer.erase(cursor-1, 1);
-    cursor--;
-  } else {
-    tty.beep();
-  }
-}
-
 void conn_t::doscrollstart() {
   if (grid->row < tty.HEIGHT)
     return;
@@ -504,118 +422,9 @@ void conn_t::doscrollend() {
   grid->changed = 1;
 }
 
-void conn_t::doprevhistory() {
-  if (chist() && chist()->back()) {
-    if (nofuture) {
-      future = buffer;
-      nofuture = false;
-    }
-
-    buffer = chist()->get();
-    cursor = buffer.length();
-  }
-  else
-    tty.beep();
-}
-
-void conn_t::donexthistory()
-{
-  if (chist()) {
-    if (chist()->next()) {
-      buffer = chist()->get();
-    }
-    else {
-      buffer = nofuture ? L"" : future;
-      future = L"";
-      nofuture = true;
-    }
-    cursor = buffer.length();
-  }
-  else
-    tty.beep();
-}
-
-void conn_t::doprevchar()
-{
-  if (cursor)
-    cursor--;
-  else
-    tty.beep();
-}
-
-void conn_t::doprevword()
-{
-  while (cursor && !isalnum(buffer[cursor-1])) {
-    cursor--;
-  }
-  while (cursor && isalnum(buffer[cursor-1])) {
-    cursor--;
-  }
-}
-
-void conn_t::donextword()
-{
-  while (cursor<buffer.length() && !isalnum(buffer[cursor])) {
-    cursor++;
-  }
-  while (cursor<buffer.length() && isalnum(buffer[cursor])) {
-    cursor++;
-  }
-}
-
-void conn_t::donextchar()
-{
-  cursor++;
-  if (cursor>buffer.length()) {
-    cursor = buffer.length();
-    tty.beep();
-  }
-}
-
-void conn_t::dofirstchar() {
-  cursor = 0;
-}
-
-void conn_t::doclearline() {
-  buffer = L"";
-  cursor = 0;
-}
-
-void conn_t::dolastchar() {
-  cursor = buffer.length();
-}
-
 void conn_t::dorefresh() {
   grid->changed=1;
   tty.bad_have = 1;
-}
-
-void conn_t::dotranspose() {
-  if (cursor>1 && buffer.length()==cursor) {
-    wchar_t tmp = buffer[cursor-1];
-    buffer[cursor-1] = buffer[cursor-2];
-    buffer[cursor-2] = tmp;
-    grid->changed = 1;
-  } else if (cursor>0) {
-    wchar_t tmp = buffer[cursor];
-    buffer[cursor] = buffer[cursor-1];
-    buffer[cursor-1] = tmp;
-    cursor++;
-    grid->changed = 1;
-  } else {
-    tty.beep();
-  }
-}
-
-void conn_t::doinsertchar(wchar_t ch)
-{
-  if (cursor == buffer.length()) {
-    buffer += ch;
-  } else {
-    buffer = buffer.substr(0, cursor) + ch + buffer.substr(cursor);
-  }
-  grid->changed = 1;
-  cursor++;
 }
 
 void conn_t::dosuspend() {
@@ -767,22 +576,6 @@ void conn_t::doscrollup()
   if (hardscroll < 1)
     hardscroll = 1;
   grid->changed = 1;
-}
-
-void conn_t::docutfromhere() {
-  cutbuffer=buffer.substr(cursor);
-  buffer = buffer.substr(0, cursor);
-}
-
-void conn_t::docuttohere() {
-  cutbuffer = buffer.substr(0, cursor);
-  buffer = buffer.substr(cursor);
-  cursor = 0;
-}
-
-void conn_t::dopaste() 
-{
-  buffer.insert(cursor, cutbuffer);
 }
 
 void conn_t::docommandmode()

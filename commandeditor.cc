@@ -42,51 +42,15 @@
  */
 
 #include "crystal.h"
+#include "io.h"
+#include "grid.h"
+#include "commandeditor.h"
 
 #include <map>
 
-struct hlist {
-  std::map<int, my_wstring> hist;
-  int idx;
-  int max;
-  hlist() : idx(0), max(0) {
-  }
-
-  void insert(const my_wstring &blah) {
-    hist[max] = blah;
-    max++;
-    idx = max;
-  }
-
-  bool back() {
-    idx--;
-    if (idx < 0) {
-      idx = 0;
-      return 0;
-    }
-    return 1;
-  }
-
-  bool next() {
-    idx++;
-    if (idx >= max) {
-      idx = max;
-      return  0;
-    }
-    return 1;
-  }
-
-  const my_wstring &get() {
-    static const my_wstring blah = L"";
-    if (idx >= max || idx < 0) 
-      return blah;
-    return hist[idx];
-  }
-};
-
 hlist cmdhist;
 
-hlist *chist() {
+hlist *conn_t::chist() {
   static hlist hist;
   
   if (commandmode)
@@ -108,6 +72,8 @@ void conn_t::dokillword() {
     buffer += extra;
   }
 }
+
+extern mterm tty;
 
 void conn_t::dodelete() {
   if (cursor < buffer.length()) {
@@ -206,11 +172,6 @@ void conn_t::doclearline() {
 
 void conn_t::dolastchar() {
   cursor = buffer.length();
-}
-
-void conn_t::dorefresh() {
-  grid->changed=1;
-  tty.bad_have = 1;
 }
 
 void conn_t::dotranspose() {
