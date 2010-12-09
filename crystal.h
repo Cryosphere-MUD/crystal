@@ -34,13 +34,23 @@
 #define CRYSTAL_H
 
 #include <set>
+#include <string>
+
+#include "common.h"
 
 struct telnet_state;
 class grid_t;
 class InAddrList;
+class hlist;
 
 class conn_t {
 public:
+  //! are we in command mode (true) or mud mode (false)
+  bool commandmode;
+
+  //! the amount we have scrolled to in the buffer
+  int hardscroll;
+
   //! are we in never echo mode (default: no)
   bool never_echo;
 
@@ -123,6 +133,10 @@ public:
 
   void connect(const char *host, int port, bool ssl);
   bool file_log(const char *filename);
+
+  void display_buffer();
+
+  hlist *chist();
 
   std::set<my_wstring> hl_matches;
 };

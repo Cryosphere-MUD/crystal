@@ -38,12 +38,12 @@
 #include "common.h"
 
 struct mterm {
-  int utf8;
-  int xterm_title;
-  int col256;
-  int knowscroll;
+  bool utf8;
+  bool xterm_title;
+  bool col256;
+  bool knowscroll;
   std::string curtitle;
-  int titleset;
+  bool titleset;
 
   int ccs;
   int cfg;
@@ -54,7 +54,7 @@ struct mterm {
   int cinv;
   int cos;
   int cul;
-  int died;
+  bool died;
 
   void initcol()
   {
@@ -66,12 +66,20 @@ struct mterm {
     cfr = -1;
     cinv = -1;
     cos = -1;
-    died = 0;
-    bad_have = 1;
+    died = false;
   }
 
-  mterm() : utf8(0), xterm_title(0), col256(0), knowscroll(0), curtitle(""),
-  titleset(0), acsc(""), acsc_set(0) {
+  mterm() 
+  : utf8(false)
+  , xterm_title(false)
+  , col256(false)
+  , knowscroll(false)
+  , curtitle("")
+  , titleset(false)
+  , acsc("")
+  , acsc_set(0)
+  , bad_have(true)
+  {
     HEIGHT = 24;
     WIDTH = 80;
     initcol();
@@ -166,7 +174,7 @@ struct mterm {
   void plonk(const cell_t &g, bool allow_dead);
 
   cell_t wantbuffer[MAXHEIGHT][MAXWIDTH];
-  int bad_have;
+  bool bad_have;
   int evillines[MAXHEIGHT];
 
   void show_want();

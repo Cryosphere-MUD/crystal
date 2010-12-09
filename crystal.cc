@@ -154,6 +154,9 @@ conn_t::conn_t(grid_t *gr) {
   lp_prompts = 1;
   mud_cset = "ISO-8859-1";
 
+  commandmode = false;
+  hardscroll = 0;
+
   gr->set_conn(this);
   if (slave)
     slave->set_conn(this);
@@ -163,9 +166,6 @@ conn_t::~conn_t() {
   if (slave)
     delete slave;
 }
-
-int commandmode = 0;
-int hardscroll = 0;
 
 void conn_t::show_lines_at(int from, int to, int num)
 {
@@ -232,9 +232,11 @@ void conn_t::dofindnext()
   grid->changed = 1;
 }
 
-void display_buffer(conn_t *conn) {
+void conn_t::display_buffer() {
   if (info_to_stderr) 
     return;
+
+  conn_t* conn = this;
 
   grid_t &grid = *conn->grid;
 
@@ -449,7 +451,7 @@ struct hlist {
 
 hlist cmdhist;
 
-hlist *chist() {
+hlist *conn_t::chist() {
   static hlist hist;
   
   if (commandmode)
@@ -1039,7 +1041,7 @@ void conn_t::connect(const char *host, int port, bool ssl)
     grid->newline();
 
   infof(grid, _("/// resolving %s\n"), host, port);
-  display_buffer(this);
+  display_buffer();
 
   if (addrs)
     delete addrs;
@@ -1076,12 +1078,12 @@ bool conn_t::file_log(const char *filename)
 void main_loop(conn_t *conn) 
 {
   if (!conn->telnet)
-    commandmode = 1;
+    conn->commandmode = 1;
 
   conn->grid->changed = 1;
   tty.bad_have = 1;
 
-  display_buffer(conn);
+  conn->display_buffer();
   
   while (!conn->quit) {
     fd_set r, e, w;
@@ -1161,7 +1163,7 @@ void main_loop(conn_t *conn)
 	    if (pend && (conn->addr_i < conn->addrs->size())) {
 	      conn->addr_i++;
 	      if (try_addr(conn, conn->host.c_str(), conn->port, conn->ssl)) {
-		display_buffer(conn);
+		conn->display_buffer();
 		conn->grid->changed = 1;
 		fflush(stdout);
 		continue;
@@ -1171,12 +1173,12 @@ void main_loop(conn_t *conn)
 	  } else {
 	    info(conn->grid, _("/// connection closed by foreign host.\n"));
 	  }
-	  display_buffer(conn);
+	  conn->display_buffer();
 	  fflush(stdout);
 	  ok = 0;
 	  delete conn->telnet;
 	  conn->telnet = 0;
-	  commandmode = 1;
+	  conn->commandmode = 1;
 	  conn->grid->changed = 1;
 	  break;
 	} else if (bts!=-1) {
@@ -1194,7 +1196,7 @@ void main_loop(conn_t *conn)
 	if(foo) {
 	  wchar_t i = tty.getinput();
 
-	  if (conn->telnet && conn->telnet->charmode && !commandmode
+	  if (conn->telnet && conn->telnet->charmode && !conn->commandmode
 	      && i != 0x1d) {
 	    std::string p;
 	    p += i;
@@ -1206,7 +1208,7 @@ void main_loop(conn_t *conn)
 	  }
 
 	  if (!conn->telnet) {
-	    commandmode = 1;
+	    conn->commandmode = 1;
 	  }
 	  conn->grid->changed = 1;
 	} else {
@@ -1216,7 +1218,7 @@ void main_loop(conn_t *conn)
     }
 
     if (!conn->quit) {
-      display_buffer(conn);
+      conn->display_buffer();
       fflush(stdout);
     }
   }
