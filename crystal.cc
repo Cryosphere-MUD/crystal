@@ -772,8 +772,10 @@ void winch(int) {
   had_winch = 1;
 }
 
-void connected(conn_t *conn)
+void conn_t::connected()
 {
+  conn_t* conn = this;
+  
   infof(conn->grid, _("/// connected\n"));
   
   static int a = 0;
@@ -788,7 +790,10 @@ void connected(conn_t *conn)
     tty.title(_("telnet://%s:%i - Crystal"), conn->host.c_str(), conn->port);
 }
 
-bool try_addr(conn_t *conn, const char *host, int port, bool ssl) {
+bool conn_t::try_addr(const char *host, int port, bool ssl)
+{
+  conn_t* conn = this;
+
   if (!conn->addrs)
     return false;
 
@@ -808,13 +813,13 @@ bool try_addr(conn_t *conn, const char *host, int port, bool ssl) {
     delete s2;
 
     conn->addr_i++;
-    return try_addr(conn, host, port, ssl);
+    return try_addr(host, port, ssl);
   }
 
   infof(conn->grid, _("/// connecting to %s:%i\n"), addr->tostring().c_str(), port);
   
   if (s2->getpend()==0)
-    connected(conn);
+    connected();
   
   if (conn->telnet)
     delete conn->telnet;
@@ -848,7 +853,7 @@ void conn_t::connect(const char *host, int port, bool ssl)
   host = host;
   port = port;
   ssl = ssl;
-  try_addr(this, host, port, ssl);
+  try_addr(host, port, ssl);
 }
 
 bool conn_t::file_log(const char *filename)
@@ -941,7 +946,7 @@ void main_loop(conn_t *conn)
 
 	if (pend && !conn->telnet->s->getpend() && 
 	    !conn->telnet->s->getdead()) {
-	  connected(conn);
+	  conn->connected();
 	}
 
 	ok = 0;
@@ -955,7 +960,7 @@ void main_loop(conn_t *conn)
 	    infof(conn->grid, _("/// connection closed : %s.\n"), strerror(e));
 	    if (pend && (conn->addr_i < conn->addrs->size())) {
 	      conn->addr_i++;
-	      if (try_addr(conn, conn->host.c_str(), conn->port, conn->ssl)) {
+	      if (conn->try_addr(conn->host.c_str(), conn->port, conn->ssl)) {
 		conn->display_buffer();
 		conn->grid->changed = 1;
 		fflush(stdout);

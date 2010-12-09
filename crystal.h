@@ -136,6 +136,9 @@ public:
 
   void display_buffer();
 
+  void connected();
+  bool try_addr(const char *host, int port, bool ssl);
+
   hlist *chist();
 
   std::set<my_wstring> hl_matches;
