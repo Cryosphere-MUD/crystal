@@ -222,6 +222,79 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
   return;
 }
 
+void mterm::show_want() {
+  
+  int realy = -1;
+  int realx = -1;
+
+  if (knowscroll) {
+    for (int i=0;i<HEIGHT;i++) {
+      int notsame = 0, onebelow = 1;
+      for (int j=0;j<WIDTH;j++) {
+	if (wantbuffer[i][j]!=havebuffer[i+1][j]) {
+	  onebelow = 0;
+	}
+	if (wantbuffer[i][j] != havebuffer[i][j]) {
+	  notsame = 1;
+	}
+      }
+      if (notsame && onebelow) {
+	for (int j=0;j<WIDTH;j++) {
+	  havebuffer[i][j] = wantbuffer[i][j];
+	  havebuffer[i+1][j] = blank;
+	}
+	evillines[i] = 0;
+	evillines[i+1] = 1;
+	printf("\033[40m");
+	printf("\033[%i;%ir", i+1, i+2);
+	printf("\033[1S");
+	printf("\033[r");
+	continue;
+      }      
+    }
+  }
+  initcol();
+
+  for (int i=0;i<(HEIGHT+1);i++) {
+    int wanty = i+1;
+    int wantx = 1;
+    died = 0;
+    int thislen = -1;
+    for (int j=0;j<((i==HEIGHT)?WIDTH-1:WIDTH);j++) {
+      if (wantbuffer[i][j].ch)
+	thislen = j;
+    }
+
+    for (int j=0;j<((i==HEIGHT)?WIDTH-1:WIDTH);j++) {
+      if (havebuffer[i][j] == wantbuffer[i][j] && !bad_have
+      	  && !evillines[i]) {
+      	wantx++;
+	continue;
+      } else {
+	if (realy != wanty) {
+	  realy = wanty;
+	  realx = wantx;
+	  printf("\033[%i;%if", wanty, wantx);
+	} else if (realx != wantx) {
+	  if (wantx==(realx+1)) {
+	    printf("\033[C");
+	  } else {
+	    printf("\033[%i;%if", wanty, wantx);
+	  }
+	  realx = wantx;
+	}
+	
+	havebuffer[i][j] = wantbuffer[i][j];
+	wantx++;
+	realx++;
+	plonk(wantbuffer[i][j], j>=thislen);
+      }
+    }
+    evillines[i] = 0;
+  } 
+  bad_have = 0;
+}
+
 my_wstring mterm::convert_input(int i) {
   static my_wstring sofar = L"";
 

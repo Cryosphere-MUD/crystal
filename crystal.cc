@@ -167,92 +167,12 @@ conn_t::~conn_t() {
 int commandmode = 0;
 int hardscroll = 0;
 
-cell_t wantbuffer[MAXHEIGHT][MAXWIDTH];
-cell_t havebuffer[MAXHEIGHT][MAXWIDTH];
-
-int evillines[MAXHEIGHT] = { 0,  };
-
-int bad_have = 1;
-
-void show_want() {
-  
-  int realy = -1;
-  int realx = -1;
-
-  if (tty.knowscroll) {
-    for (int i=0;i<tty.HEIGHT;i++) {
-      int notsame = 0, onebelow = 1;
-      for (int j=0;j<tty.WIDTH;j++) {
-	if (wantbuffer[i][j]!=havebuffer[i+1][j]) {
-	  onebelow = 0;
-	}
-	if (wantbuffer[i][j] != havebuffer[i][j]) {
-	  notsame = 1;
-	}
-      }
-      if (notsame && onebelow) {
-	for (int j=0;j<tty.WIDTH;j++) {
-	  havebuffer[i][j] = wantbuffer[i][j];
-	  havebuffer[i+1][j] = blank;
-	}
-	evillines[i] = 0;
-	evillines[i+1] = 1;
-	printf("\033[40m");
-	printf("\033[%i;%ir", i+1, i+2);
-	printf("\033[1S");
-	printf("\033[r");
-	continue;
-      }      
-    }
-  }
-  tty.initcol();
-
-  for (int i=0;i<(tty.HEIGHT+1);i++) {
-    int wanty = i+1;
-    int wantx = 1;
-    tty.died = 0;
-    int thislen = -1;
-    for (int j=0;j<((i==tty.HEIGHT)?tty.WIDTH-1:tty.WIDTH);j++) {
-      if (wantbuffer[i][j].ch)
-	thislen = j;
-    }
-
-    for (int j=0;j<((i==tty.HEIGHT)?tty.WIDTH-1:tty.WIDTH);j++) {
-      if (havebuffer[i][j] == wantbuffer[i][j] && !bad_have
-      	  && !evillines[i]) {
-      	wantx++;
-	continue;
-      } else {
-	if (realy != wanty) {
-	  realy = wanty;
-	  realx = wantx;
-	  printf("\033[%i;%if", wanty, wantx);
-	} else if (realx != wantx) {
-	  if (wantx==(realx+1)) {
-	    printf("\033[C");
-	  } else {
-	    printf("\033[%i;%if", wanty, wantx);
-	  }
-	  realx = wantx;
-	}
-	
-	havebuffer[i][j] = wantbuffer[i][j];
-	wantx++;
-	realx++;
-	tty.plonk(wantbuffer[i][j], j>=thislen);
-      }
-    }
-    evillines[i] = 0;
-  } 
-  bad_have = 0;
-}
-
 void conn_t::show_lines_at(int from, int to, int num)
 {
   for (int i=0;i<num;i++) {
     if (i+from == grid->row && !(telnet && telnet->charmode)) {
       for (int j=0;j<tty.WIDTH;j++)
-	wantbuffer[i+to-1][j] = blank2;
+	tty.wantbuffer[i+to-1][j] = blank2;
       continue;
     }
     int mw = MIN(tty.WIDTH, grid->get_len(i+from));
@@ -260,7 +180,7 @@ void conn_t::show_lines_at(int from, int to, int num)
     if (tty.utf8) mw++;
     for (j=0;j<mw;j++) {
       cell_t g = grid->get(i+from, j);
-      wantbuffer[i+to-1][j] = g;
+      tty.wantbuffer[i+to-1][j] = g;
     }
 
     my_wstring s;
@@ -273,13 +193,13 @@ void conn_t::show_lines_at(int from, int to, int num)
       size_t l = s.find(*it);
       while (l != my_wstring::npos) {
 	for (size_t j=0;j<it->length();j++)
-	  wantbuffer[i+to-1][j+l].inv = !wantbuffer[i+to-1][j+l].inv;
+	  tty.wantbuffer[i+to-1][j+l].inv = !tty.wantbuffer[i+to-1][j+l].inv;
 	l = s.find(*it, l+1);
       }
     }
       
     while (j<tty.WIDTH) {
-      wantbuffer[i+to-1][j] = blank2;
+      tty.wantbuffer[i+to-1][j] = blank2;
       j++;
     }
   }
@@ -342,7 +262,7 @@ void display_buffer(conn_t *conn) {
       conn->show_lines_at(start, tty.HEIGHT-grid.row+1, tty.HEIGHT+1);
     else
       conn->show_lines_at(start, 1, tty.HEIGHT+1);
-    show_want();
+    tty.show_want();
     printf("\033[%i;%if", tty.HEIGHT+1, grid.col+1);
     return;
   }
@@ -352,7 +272,7 @@ void display_buffer(conn_t *conn) {
       conn->show_lines_at(start, 1, (tty.HEIGHT-4));
       conn->show_lines_at((grid.row-5)>0?grid.row-5:0, tty.HEIGHT-4, 5);
       for (int i=0;i<tty.WIDTH;i++) {
-	wantbuffer[tty.HEIGHT-5][i] = cell_t('=', I_BOLD, COL_WHITE, COL_RED, 0, 0, 0, 0, 0, 0);
+	tty.wantbuffer[tty.HEIGHT-5][i] = cell_t('=', I_BOLD, COL_WHITE, COL_RED, 0, 0, 0, 0, 0, 0);
       }
     } else {
       if (grid.row<tty.HEIGHT)
@@ -367,7 +287,7 @@ void display_buffer(conn_t *conn) {
     for (int i=0;i<conn->slave->height;i++) {
       for (int j=0;j<conn->slave->width;j++) {
 	if (tty.WIDTH-conn->slave->width+j>=0)
-	  wantbuffer[i][tty.WIDTH-conn->slave->width+j] = conn->slave->get(i, j);
+	  tty.wantbuffer[i][tty.WIDTH-conn->slave->width+j] = conn->slave->get(i, j);
       }
     }
   }
@@ -417,15 +337,15 @@ void display_buffer(conn_t *conn) {
     pl = tty.WIDTH-20;
 
   for (i=0;i<pl;i++)
-    wantbuffer[tty.HEIGHT][i] = crealprompt[i];
+    tty.wantbuffer[tty.HEIGHT][i] = crealprompt[i];
   
   wid -= prlen;
   if (!(conn->telnet && conn->telnet->allstars) || commandmode) {
     while (alen && wid) {
       if (real_wcwidth(*a)<=wid) {
-	wantbuffer[tty.HEIGHT][i++] = cell_t(*a);
+	tty.wantbuffer[tty.HEIGHT][i++] = cell_t(*a);
 	if (real_wcwidth(*a)==2)
-	  wantbuffer[tty.HEIGHT][i++] = cell_t(-*a);
+	  tty.wantbuffer[tty.HEIGHT][i++] = cell_t(-*a);
       } else
 	break;
       wid -= real_wcwidth(*a);
@@ -434,15 +354,15 @@ void display_buffer(conn_t *conn) {
     }
   }
   while (wid) {
-    wantbuffer[tty.HEIGHT][i++] = blank;
+    tty.wantbuffer[tty.HEIGHT][i++] = blank;
     wid--;
   }
   if (alen) {
-    wantbuffer[tty.HEIGHT][i++] = cell_t('>');
+    tty.wantbuffer[tty.HEIGHT][i++] = cell_t('>');
   } else
-    wantbuffer[tty.HEIGHT][i++] = cell_t(' ');
+    tty.wantbuffer[tty.HEIGHT][i++] = cell_t(' ');
 
-  show_want();
+  tty.show_want();
 
   int rcol=col;
 
@@ -665,7 +585,7 @@ void conn_t::dolastchar() {
 
 void conn_t::dorefresh() {
   grid->changed=1;
-  bad_have = 1;
+  tty.bad_have = 1;
 }
 
 void conn_t::dotranspose() {
@@ -705,9 +625,9 @@ void conn_t::dosuspend() {
   
   tty.grabwinsize();
 
-  bad_have = 1;
+  tty.bad_have = 1;
   grid->changed = 1;
-  show_want();
+  tty.show_want();
   if (tty.titleset) {
     tty.titleset = 0;
     tty.title("%s", tty.curtitle.c_str());
@@ -1159,7 +1079,7 @@ void main_loop(conn_t *conn)
     commandmode = 1;
 
   conn->grid->changed = 1;
-  bad_have = 1;
+  tty.bad_have = 1;
 
   display_buffer(conn);
   
@@ -1204,7 +1124,7 @@ void main_loop(conn_t *conn)
       sendwinsize(conn);
       had_winch = 0;
       conn->grid->changed = 1;
-      bad_have = 1;
+      tty.bad_have = 1;
     }
     
     for (int i=0;i<conn->grid->nlw;i++) {

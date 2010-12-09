@@ -67,6 +67,7 @@ struct mterm {
     cinv = -1;
     cos = -1;
     died = 0;
+    bad_have = 1;
   }
 
   mterm() : utf8(0), xterm_title(0), col256(0), knowscroll(0), curtitle(""),
@@ -74,6 +75,7 @@ struct mterm {
     HEIGHT = 24;
     WIDTH = 80;
     initcol();
+    memset(evillines, 0, sizeof(evillines));
   }
 
   void beep() {
@@ -163,8 +165,19 @@ struct mterm {
 
   void plonk(const cell_t &g, bool allow_dead);
 
+  cell_t wantbuffer[MAXHEIGHT][MAXWIDTH];
+  int bad_have;
+  int evillines[MAXHEIGHT];
+
+  void show_want();
+
   my_wstring convert_input(int i);
   int getinput();
+
+private:
+  cell_t havebuffer[MAXHEIGHT][MAXWIDTH];
+
+
 };
 
 #endif
