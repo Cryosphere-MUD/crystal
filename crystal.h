@@ -37,17 +37,15 @@
 #include <string>
 
 #include "common.h"
+#include "commandeditor.h"
 
 struct telnet_state;
 class grid_t;
 class InAddrList;
 class hlist;
 
-class conn_t {
+class conn_t : public commandeditor_t {
 public:
-  //! are we in command mode (true) or mud mode (false)
-  bool commandmode;
-
   //! the amount we have scrolled to in the buffer
   int hardscroll;
 
@@ -74,41 +72,11 @@ public:
 
   telnet_state *telnet;
 
-  my_wstring buffer;
-  size_t cursor;
-
-  my_wstring future;
-  bool nofuture;
-
-  my_wstring cutbuffer;
-
   FILE *logfile;
 
   std::string mud_cset;
 
-  void doprevhistory();
-  void donexthistory();
-
-  void doclearline();
   void dorefresh();
-  void dotranspose();
-  void doinsertchar(wchar_t);
-  void dobackspace();
-
-  void dolastchar();
-  void donextchar();
-  void doprevchar();
-  void dofirstchar();
-
-  void doprevword();
-  void donextword();
-  
-  void dokillword();
-  void dodelete();
-
-  void docutfromhere();
-  void docuttohere();
-  void dopaste();
 
   void doscrollup();
   void doscrolldown();
@@ -138,8 +106,6 @@ public:
 
   void connected();
   bool try_addr(const char *host, int port, bool ssl);
-
-  hlist *chist();
 
   std::set<my_wstring> hl_matches;
 };

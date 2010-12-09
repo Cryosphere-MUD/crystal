@@ -45,4 +45,47 @@ struct hlist {
 
 extern hlist cmdhist;
 
+class commandeditor_t {
+ public:
+  //! are we in command mode (true) or mud mode (false)
+  bool commandmode;
+  
+  my_wstring buffer;
+  size_t cursor;
+
+  my_wstring future;
+  bool nofuture;
+
+  my_wstring cutbuffer;
+
+  hlist *chist();
+
+  void doprevhistory();
+  void donexthistory();
+
+  void dokillword();
+  void dodelete();
+
+  void docutfromhere();
+  void docuttohere();
+  void dopaste();
+
+  void dolastchar();
+  void donextchar();
+  void doprevchar();
+  void dofirstchar();
+
+  void doprevword();
+  void donextword();
+
+  void dotranspose();
+
+  void doclearline();
+  void doinsertchar(wchar_t);
+  
+  void dobackspace();
+
+  
+};
+
 #endif

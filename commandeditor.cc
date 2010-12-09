@@ -50,7 +50,7 @@
 
 hlist cmdhist;
 
-hlist *conn_t::chist() {
+hlist *commandeditor_t::chist() {
   static hlist hist;
   
   if (commandmode)
@@ -59,7 +59,7 @@ hlist *conn_t::chist() {
   return &hist;
 }
 
-void conn_t::dokillword() {
+void commandeditor_t::dokillword() {
   int orig=cursor;
   if (cursor) {
     while(cursor && isspace(buffer[cursor-1]))
@@ -75,7 +75,7 @@ void conn_t::dokillword() {
 
 extern mterm tty;
 
-void conn_t::dodelete() {
+void commandeditor_t::dodelete() {
   if (cursor < buffer.length()) {
     buffer.erase(cursor, 1);
   } else {
@@ -83,7 +83,7 @@ void conn_t::dodelete() {
   }
 }
 
-void conn_t::dobackspace()
+void commandeditor_t::dobackspace()
 {
   if (cursor) {
     buffer.erase(cursor-1, 1);
@@ -93,7 +93,7 @@ void conn_t::dobackspace()
   }
 }
 
-void conn_t::doprevhistory() {
+void commandeditor_t::doprevhistory() {
   if (chist() && chist()->back()) {
     if (nofuture) {
       future = buffer;
@@ -107,7 +107,7 @@ void conn_t::doprevhistory() {
     tty.beep();
 }
 
-void conn_t::donexthistory()
+void commandeditor_t::donexthistory()
 {
   if (chist()) {
     if (chist()->next()) {
@@ -124,7 +124,7 @@ void conn_t::donexthistory()
     tty.beep();
 }
 
-void conn_t::doprevchar()
+void commandeditor_t::doprevchar()
 {
   if (cursor)
     cursor--;
@@ -132,7 +132,7 @@ void conn_t::doprevchar()
     tty.beep();
 }
 
-void conn_t::doprevword()
+void commandeditor_t::doprevword()
 {
   while (cursor && !isalnum(buffer[cursor-1])) {
     cursor--;
@@ -142,7 +142,7 @@ void conn_t::doprevword()
   }
 }
 
-void conn_t::donextword()
+void commandeditor_t::donextword()
 {
   while (cursor<buffer.length() && !isalnum(buffer[cursor])) {
     cursor++;
@@ -152,7 +152,7 @@ void conn_t::donextword()
   }
 }
 
-void conn_t::donextchar()
+void commandeditor_t::donextchar()
 {
   cursor++;
   if (cursor>buffer.length()) {
@@ -161,59 +161,59 @@ void conn_t::donextchar()
   }
 }
 
-void conn_t::dofirstchar() {
+void commandeditor_t::dofirstchar() {
   cursor = 0;
 }
 
-void conn_t::doclearline() {
+void commandeditor_t::doclearline() {
   buffer = L"";
   cursor = 0;
 }
 
-void conn_t::dolastchar() {
+void commandeditor_t::dolastchar() {
   cursor = buffer.length();
 }
 
-void conn_t::dotranspose() {
+void commandeditor_t::dotranspose() {
   if (cursor>1 && buffer.length()==cursor) {
     wchar_t tmp = buffer[cursor-1];
     buffer[cursor-1] = buffer[cursor-2];
     buffer[cursor-2] = tmp;
-    grid->changed = 1;
+    //    grid->changed = 1;
   } else if (cursor>0) {
     wchar_t tmp = buffer[cursor];
     buffer[cursor] = buffer[cursor-1];
     buffer[cursor-1] = tmp;
     cursor++;
-    grid->changed = 1;
+    //    grid->changed = 1;
   } else {
     tty.beep();
   }
 }
 
-void conn_t::doinsertchar(wchar_t ch)
+void commandeditor_t::doinsertchar(wchar_t ch)
 {
   if (cursor == buffer.length()) {
     buffer += ch;
   } else {
     buffer = buffer.substr(0, cursor) + ch + buffer.substr(cursor);
   }
-  grid->changed = 1;
+  //  grid->changed = 1;
   cursor++;
 }
 
-void conn_t::docutfromhere() {
+void commandeditor_t::docutfromhere() {
   cutbuffer=buffer.substr(cursor);
   buffer = buffer.substr(0, cursor);
 }
 
-void conn_t::docuttohere() {
+void commandeditor_t::docuttohere() {
   cutbuffer = buffer.substr(0, cursor);
   buffer = buffer.substr(cursor);
   cursor = 0;
 }
 
-void conn_t::dopaste() 
+void commandeditor_t::dopaste() 
 {
   buffer.insert(cursor, cutbuffer);
 }
