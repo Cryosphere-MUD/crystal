@@ -93,7 +93,7 @@ std::string mks(const my_wstring &w);
 
 size_t real_wcwidth(wchar_t ucs);
 
-enum Int {
+enum Intensity {
   I_UNK = -1,
   I_DIM = 0,
   I_NORM,
@@ -102,7 +102,7 @@ enum Int {
 
 struct cell_t { 
   wchar_t ch;
-  Int inten;
+  Intensity inten;
   unsigned char fc;
   unsigned char bc;
   bool scs:1;
@@ -138,7 +138,7 @@ struct cell_t {
   bool operator != (const cell_t &o) const {
     return !operator==(o);
   }
-  cell_t(wchar_t ch = '\0', Int inten = I_NORM, int fc = COL_DEFAULT, int bc = COL_DEFAULT, int scs = 0, int ul = 0, int it = 0, int fr = 0, int os = 0, int inv = 0)
+  cell_t(wchar_t ch = '\0', Intensity inten = I_NORM, int fc = COL_DEFAULT, int bc = COL_DEFAULT, int scs = 0, int ul = 0, int it = 0, int fr = 0, int os = 0, int inv = 0)
   : ch(ch),
     inten(inten),
     fc(fc),

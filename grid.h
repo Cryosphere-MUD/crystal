@@ -43,10 +43,11 @@
 
 struct ansi_context 
 {
+  // the escape mode
   int mode;
   std::list<int> pars;
   int par;
-  Int inten;
+  Intensity inten;
   int forecol, backcol, scs, ul, it, fr, inv, os, hidden, lastcr;
   std::string title;
   int defbc, deffc;

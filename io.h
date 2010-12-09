@@ -48,7 +48,7 @@ struct mterm {
   int ccs;
   int cfg;
   int cbg;
-  Int cint;
+  Intensity cint;
   int cit;
   int cfr;
   int cinv;
