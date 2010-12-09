@@ -387,13 +387,6 @@ void conn_t::docommandmode()
   commandmode = 1;
 }
 
-int had_winch = 0;
-
-void winch(int) {
-  tty.grabwinsize();
-  had_winch = 1;
-}
-
 void conn_t::connected()
 {
   conn_t* conn = this;
@@ -527,8 +520,10 @@ bool conn_t::disconnected(int bts, int pend)
   return false;
 }
 
-void main_loop(conn_t *conn) 
+void conn_t::main_loop()
 {
+  conn_t *conn = this;
+
   if (!conn->telnet)
     conn->commandmode = 1;
 
@@ -573,6 +568,8 @@ void main_loop(conn_t *conn)
     select(maxfd, &r, &w, &e, tmp);
 
     scripting::dotimers();
+
+    extern bool had_winch;
 
     if (had_winch) {
       sendwinsize(conn);
@@ -656,119 +653,3 @@ void main_loop(conn_t *conn)
 
 struct termios oldti;
 
-conn_t* cleanupConn;
-
-void cleanup()
-{
-  if (cleanupConn) {
-    conn_t& conn = *cleanupConn;
-
-    if (conn.logfile) {
-      fclose(conn.logfile);
-      conn.logfile = 0;
-    }
-    
-    tcsetattr(0, TCSADRAIN, &oldti);
-    
-    cleanupConn = 0;
-  }
-}
-
-int main(int argc, char **argv) {
-  char *pname = argv[0];
-
-  setlocale(LC_ALL, "");
-  const char *codeset = nl_langinfo(CODESET);
-
-  tty.getterm();
-
-  grid_t grid(NULL);
-  conn_t conn(&grid);
-  grid.set_conn(&conn);
-  
-  conn.initbindings();
-  
-  scripting::set_grid(&grid);
-  scripting::start();
-
-  if (strcmp(codeset, "UTF-8")==0) {
-    tty.utf8 = 1;
-    conn.mud_cset = "UTF-8";
-  }
-
-  if (argv[1] && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-v"))) {
-    printf("crystal %s\n", VERSION);
-    return 0;
-  }
-
-  if (argv[1] && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))) {
-    printf("Usage: crystal [-n] <hostname> <port>\n");
-    printf("       crystal [-n] telnets://hostname:port/\n");
-    printf("Options:\n");
-    printf("       -n never echo locally.\n");
-    return 0;
-  }
-
-  if (argv[1] && strcmp(argv[1], "-n")==0) {
-    conn.never_echo = 1;
-    argv++;
-    argc--;
-  }
-
-#ifdef I18N
-  bindtextdomain(PACKAGE, LOCALEDIR);
-  textdomain(PACKAGE);
-#endif
-  if (argc>1) {
-    url u = url(argv[1]);
-    if (argc>2) {
-      u.service = argv[2];
-    }
-
-    if (!valid_protocol(u.protocol)) {
-      fprintf(stderr, _("%s: Bad protocol - '%s'.\n"), pname, u.protocol.c_str());
-      exit(1);
-    }
-
-    int port = lookup_service(u.service);
-    if (port == -1) {
-      fprintf(stderr, _("%s: Bad port - '%s'.\n"), pname, u.service.c_str());
-      exit(1);
-    }
-
-    conn.connect(u.hostname.c_str(), port, u.protocol == "telnets");
-    if (!conn.telnet)
-      exit(1);
-
-    wchar_t blah[1000];
-    if (argc>2)
-      swprintf(blah, 1000, L"connect %s %s", argv[1], argv[2]);
-    else
-      swprintf(blah, 1000, L"connect %s", argv[1]);
-    cmdhist.insert(blah);
-  }
-
-  info_to_stderr = 0;
-
-  tty.grabwinsize();
-
-  setupterm(NULL, 0, NULL);
-  printf("%s", tty.getinfo("enacs", "").c_str());
-
-  struct termios ti;
-  tcgetattr(0, &oldti);
-  cfmakeraw(&ti);
-  tcsetattr(0, TCSADRAIN, &ti);
-
-  cleanupConn = &conn;
-  atexit(cleanup);
-
-  signal(SIGWINCH, winch);
-
-  main_loop(&conn);
-
-  cleanup();
-  printf("\n");
-
-  return 0;
-}

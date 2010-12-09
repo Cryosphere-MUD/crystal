@@ -111,6 +111,8 @@ class conn_t : public commandeditor_t {
   void connected();
   bool try_addr(const char *host, int port, bool ssl);
 
+  void main_loop();
+
   std::set<my_wstring> hl_matches;
 };
 
