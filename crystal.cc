@@ -863,6 +863,38 @@ bool conn_t::file_log(const char *filename)
   }
 }
 
+bool conn_t::disconnected(int bts, int pend)
+{
+  conn_t* conn = this;
+  tty.title(_("Disconnected - Crystal"));
+  if (conn->grid->col) {
+    conn->grid->newline();
+  }
+  if (bts==-1) {
+    int e = errno;
+    conn->grid->infof(_("/// connection closed : %s.\n"), strerror(e));
+    if (pend && (conn->addr_i < conn->addrs->size())) {
+      conn->addr_i++;
+      if (conn->try_addr(conn->host.c_str(), conn->port, conn->ssl)) {
+	conn->display_buffer();
+	conn->grid->changed = 1;
+	fflush(stdout);
+	return true;
+      }
+    }
+    
+  } else {
+    conn->grid->info(_("/// connection closed by foreign host.\n"));
+  }
+  conn->display_buffer();
+  fflush(stdout);
+  delete conn->telnet;
+  conn->telnet = 0;
+  conn->commandmode = 1;
+  conn->grid->changed = 1;
+  return false;
+}
+
 void main_loop(conn_t *conn) 
 {
   if (!conn->telnet)
@@ -941,34 +973,12 @@ void main_loop(conn_t *conn)
 
 	ok = 0;
 	if (bts == 0 || (bts==-1 && conn->telnet->s->getdead())) {
-	  tty.title(_("Disconnected - Crystal"));
-	  if (conn->grid->col) {
-	    conn->grid->newline();
+	  if (conn->disconnected(bts, pend))
+	    continue;
+	  else {
+	    ok = false;
+	    break;
 	  }
-	  if (bts==-1) {
-	    int e = errno;
-	    conn->grid->infof(_("/// connection closed : %s.\n"), strerror(e));
-	    if (pend && (conn->addr_i < conn->addrs->size())) {
-	      conn->addr_i++;
-	      if (conn->try_addr(conn->host.c_str(), conn->port, conn->ssl)) {
-		conn->display_buffer();
-		conn->grid->changed = 1;
-		fflush(stdout);
-		continue;
-	      }
-	    }
-
-	  } else {
-	    conn->grid->info(_("/// connection closed by foreign host.\n"));
-	  }
-	  conn->display_buffer();
-	  fflush(stdout);
-	  ok = 0;
-	  delete conn->telnet;
-	  conn->telnet = 0;
-	  conn->commandmode = 1;
-	  conn->grid->changed = 1;
-	  break;
 	} else if (bts!=-1) {
 	  conn->telnet->decompress(conn, mbuffer, bts);
 	  ok = 1;

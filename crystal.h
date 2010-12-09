@@ -45,33 +45,38 @@ class InAddrList;
 class hlist;
 
 class conn_t : public commandeditor_t {
-public:
+ private:
   //! the amount we have scrolled to in the buffer
   int hardscroll;
 
+ public:
   //! are we in never echo mode (default: no)
   bool never_echo;
 
   //! are we in kludge lp prompts mode (default: yes)
   bool lp_prompts;
 
+ public:
   //! are we quitting?
   bool quit;
 
+ private:
   InAddrList *addrs;
   int addr_i;
 
+ public:
   std::string host;
   int port;
   bool ssl;
 
   grid_t *grid;
-  grid_t *slave;
 
+ private:
+  grid_t *slave;
+ public:
   grid_t *cur_grid;
 
   telnet_state *telnet;
-
   FILE *logfile;
 
   std::string mud_cset;
@@ -104,6 +109,7 @@ public:
 
   void display_buffer();
 
+  bool disconnected(int bts, int pend);
   void connected();
   bool try_addr(const char *host, int port, bool ssl);
 
