@@ -383,16 +383,6 @@ void conn_t::display_buffer() {
   fflush(stdout);
 }
 
-void wtstring(grid_t *grid, const my_wstring &str) {  
-  int len = str.length();
-  int i = 0;
-  while (len) {
-    grid->wterminal(str[i]);
-    len--;
-    i++;
-  }
-}
-
 void conn_t::dotoggleslave() {
   if (slave) {
     slave->visible = !slave->visible;
@@ -462,9 +452,9 @@ void conn_t::doenter()
 
     commandmode = 0;
 
-    info(conn->grid, _("crystal> "));
-    info(conn->grid, s);
-    info(conn->grid, "\n");
+    conn->grid->info(_("crystal> "));
+    conn->grid->info(s);
+    conn->grid->info("\n");
 
     docommand(conn, s);
 
@@ -694,7 +684,7 @@ void conn_t::addbinding(const wchar_t* key, const char* cmd)
   keybinding_method_t handler = binding.command();
 
   if (!handler) {
-    infof(grid, _("/// missing handler for %ls (%s)\n"), key, cmd);
+    grid->infof(_("/// missing handler for %ls (%s)\n"), key, cmd);
   } else {
     keys[key] = handler;
     keystr[key] = cmd;
@@ -706,7 +696,7 @@ void conn_t::initbindings()
   for (size_t i=0;initkeys[i].s;i++) {
     keybinding_method_t handler = initkeys[i].command();
     if (!handler) {
-      infof(grid, _("/// missing handler for %ls (%s)\n"), initkeys[i].s, initkeys[i].cmdname);
+      grid->infof(_("/// missing handler for %ls (%s)\n"), initkeys[i].s, initkeys[i].cmdname);
     } else {
       keys[initkeys[i].s] = handler;
       keystr[initkeys[i].s] = initkeys[i].cmdname;
@@ -726,7 +716,7 @@ void conn_t::dispatch_key(const my_wstring &s)
     if (handler)
       (this->*handler)();
     else
-      infof(grid, _("/// missing handler for %ls\n"), s.c_str());
+      grid->infof(_("/// missing handler for %ls\n"), s.c_str());
     return;
   }
 
@@ -740,7 +730,7 @@ void conn_t::dispatch_key(const my_wstring &s)
 void cmd_bind(conn_t *conn, const cmd_args &arg)
 {
   if (arg.size() != 1 && arg.size() != 3) {
-    infof(conn->grid, _("/// set [option value]\n"));
+    conn->grid->infof(_("/// set [option value]\n"));
     return;
   }
 
@@ -755,7 +745,7 @@ void cmd_bind(conn_t *conn, const cmd_args &arg)
     for (std::map<my_wstring, std::string>::const_iterator it = keystr.begin();
 	 it != keystr.end();
 	 it++) {
-      infof(conn->grid, "%*ls %s\n", wid, it->first.c_str(), it->second.c_str());
+      conn->grid->infof("%*ls %s\n", wid, it->first.c_str(), it->second.c_str());
     }
   } else {
     std::string cmd;
@@ -776,11 +766,11 @@ void conn_t::connected()
 {
   conn_t* conn = this;
   
-  infof(conn->grid, _("/// connected\n"));
+  conn->grid->infof(_("/// connected\n"));
   
   static int a = 0;
   if (!a) {
-    infof(conn->grid, _("/// escape character is '%s'\n"), "^]");
+    conn->grid->infof(_("/// escape character is '%s'\n"), "^]");
     a = 1;
   }  
 
@@ -809,14 +799,14 @@ bool conn_t::try_addr(const char *host, int port, bool ssl)
 
   int e = errno;
   if (stat < 0) {
-    infof(conn->grid, _("/// unable to connect : %s.\n"), strerror(e));
+    conn->grid->infof(_("/// unable to connect : %s.\n"), strerror(e));
     delete s2;
 
     conn->addr_i++;
     return try_addr(host, port, ssl);
   }
 
-  infof(conn->grid, _("/// connecting to %s:%i\n"), addr->tostring().c_str(), port);
+  conn->grid->infof(_("/// connecting to %s:%i\n"), addr->tostring().c_str(), port);
   
   if (s2->getpend()==0)
     connected();
@@ -838,7 +828,7 @@ void conn_t::connect(const char *host, int port, bool ssl)
   if (grid->col) 
     grid->newline();
 
-  infof(grid, _("/// resolving %s\n"), host, port);
+  grid->infof(_("/// resolving %s\n"), host, port);
   display_buffer();
 
   if (addrs)
@@ -846,7 +836,7 @@ void conn_t::connect(const char *host, int port, bool ssl)
 
   addrs = InAddr::resolv(host);
   if (!addrs) {
-    infof(grid, _("/// unknown host.\n"));
+    grid->infof(_("/// unknown host.\n"));
     return;
   }
   addr_i = 0;
@@ -859,16 +849,16 @@ void conn_t::connect(const char *host, int port, bool ssl)
 bool conn_t::file_log(const char *filename)
 {
   if (logfile) {
-    info(grid, _("/// closing old logfile.\n"));
+    grid->info(_("/// closing old logfile.\n"));
     fclose(logfile);
     logfile = NULL;
   }
   logfile = fopen(filename, "a");
   if (!logfile) {
-    infof(grid, _("/// couldn't open '%s' for appending.\n"), filename);
+    grid->infof(_("/// couldn't open '%s' for appending.\n"), filename);
     return false;
   } else {
-    infof(grid, _("/// logging to end of '%s'.\n"), filename);
+    grid->infof(_("/// logging to end of '%s'.\n"), filename);
     return true;
   }
 }
@@ -957,7 +947,7 @@ void main_loop(conn_t *conn)
 	  }
 	  if (bts==-1) {
 	    int e = errno;
-	    infof(conn->grid, _("/// connection closed : %s.\n"), strerror(e));
+	    conn->grid->infof(_("/// connection closed : %s.\n"), strerror(e));
 	    if (pend && (conn->addr_i < conn->addrs->size())) {
 	      conn->addr_i++;
 	      if (conn->try_addr(conn->host.c_str(), conn->port, conn->ssl)) {
@@ -969,7 +959,7 @@ void main_loop(conn_t *conn)
 	    }
 
 	  } else {
-	    info(conn->grid, _("/// connection closed by foreign host.\n"));
+	    conn->grid->info(_("/// connection closed by foreign host.\n"));
 	  }
 	  conn->display_buffer();
 	  fflush(stdout);

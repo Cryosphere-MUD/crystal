@@ -78,7 +78,7 @@ namespace scripting {
   {
     if (lua_pcall(L, args, rets, 0) != 0) {
       std::string s = lua_tostring(L, -1);
-      infof(ergrid, "lua error: %s\n", s.c_str());
+      ergrid->infof("lua error: %s\n", s.c_str());
       badlua = 1;
     }
   }
@@ -227,7 +227,7 @@ static int lua_info(lua_State *L) {
     set_lua_error(L, "Wanted std::string for tomud.");
   }
   if (ergrid) {
-    infof(ergrid, "/// %s", lua_tostring(L, 1));
+    ergrid->infof("/// %s", lua_tostring(L, 1));
   }
   return 0;
 }
@@ -370,7 +370,7 @@ static int lua_get_port(lua_State *L)
 static int luaerror(lua_State *L)
 {
   badlua = 1;
-  infof(ergrid, "/// lua error: %s\n", lua_tostring(L,1));
+  ergrid->infof("/// lua error: %s\n", lua_tostring(L,1));
   return 0;
 }
 

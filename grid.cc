@@ -151,19 +151,13 @@ void grid_t::wterminal(wchar_t ch) {
     case ESC:
       mode = ESC;
       par = -1;
-      {
-      std::list<int> q;
-      pars = q;
-      }
+      pars.clear();
       return;
 
     case CSI:
       mode = CSI;
       par = -1;
-      {
-      std::list<int> q;
-      pars = q;
-      }
+      pars.clear();
       return;
 
     default:
@@ -185,8 +179,6 @@ void grid_t::wterminal(wchar_t ch) {
       cell_t a = cell_t(ch, inten, forecol, backcol, scs, ul, it, fr, os, inv);
       place(&a);
       
-      //      grid_changed = 1;
-      //      buffer_changed = 1;
       changed = 1;
     }
     return;
@@ -478,14 +470,14 @@ void grid_t::wterminal(wchar_t ch) {
 
       mode = 0;
       par = -1;
-      std::list<int> q; pars = q;
+      pars.clear();
       return;
     }
 
     if (ch >=0x30 && ch <= 0x7e) {
       mode = 0;
       par = -1;
-      std::list<int> q; pars = q;
+      pars.clear();
     }
 
     return;
@@ -494,25 +486,16 @@ void grid_t::wterminal(wchar_t ch) {
 
 int info_to_stderr = 1;
 
-void infof(grid_t *g, const char *fmt, ...) {
+void grid_t::infof(const char *fmt, ...) {
   char buf[10000];
   va_list ap;
   va_start(ap, fmt);
   vsprintf(buf, fmt, ap);
   va_end(ap);
-  info(g, buf);
+  info(buf);
 }
 
-void infof(grid_t *g, FILE *f, const char *fmt, ...) {
-  char buf[10000];
-  va_list ap;
-  va_start(ap, fmt);
-  vsprintf(buf, fmt, ap);
-  va_end(ap);
-  info(g, buf);
-}
-
-void infoc(grid_t *grid, wchar_t w) {
+void grid_t::infoc(wchar_t w) {
   if (info_to_stderr) {
     fprintf(stderr, "%lc", w);
   }
@@ -524,68 +507,68 @@ void infoc(grid_t *grid, wchar_t w) {
   if (w=='\n') {
     cellstring q;
     int c = -1;
-    int p = grid->lastprompt;
-    grid->lastprompt = 0;
-    if (grid->col) {
-      for (int i=0;i<grid->get_len(grid->row);i++) {
-	q += grid->get(grid->row, i);
+    int p = lastprompt;
+    lastprompt = 0;
+    if (col) {
+      for (int i=0;i<get_len(row);i++) {
+	q += get(row, i);
       }
-      c = grid->col;
-      grid->col = 0;
-      grid->eraseline(0);
+      c = col;
+      col = 0;
+      eraseline(0);
     }
     for (size_t i=0;i<isf.length();i++) {
       cell_t c = cell_t(isf[i]);
-      grid->place(&c);
+      place(&c);
     }
     
     if (c != -1) {
       for (int i=0;i<q.length();i++)
-	grid->place(&q[i]);
-      c = grid->col;
+	place(&q[i]);
+      c = col;
     }
-    grid->lastprompt = p;
-    grid->changed = 1;
+    lastprompt = p;
+    changed = 1;
     isf = L"";
     return;
   }
 }
 
-void info(grid_t *grid, const char *str) {  
+void grid_t::info(const char *str) {  
   int max = strlen(str);
   while (1) {
     wchar_t c;
     int s=mbtowc(&c, str, max);
     if (s<=0)
       return;
-    infoc(grid, c);
+    infoc(c);
     str += s;
     max -= s;
   }
   
 }
 
-void info(grid_t *grid, const wchar_t *w)
+void grid_t::info(const wchar_t *w)
 {
   while (*w) {
-    infoc(grid, *w);
+    infoc(*w);
     w++;
   }
 }
 
-void info(grid_t *grid, const my_wstring &str) {  
+void grid_t::info(const my_wstring &str) {  
   for (size_t i=0;i<str.length();i++) {
-    infoc(grid, str[i]);
+    infoc(str[i]);
   }
 }
 
 bool grid_t::file_dump(const char * file) {
   FILE *dumpfile = fopen(file,"a");
   if(NULL==dumpfile){
-    infof(this, _("/// couldn't open '%s' to dump to\n"), file);
+    infof(_("/// couldn't open '%s' to dump to\n"), file);
     return 0;
   }
-  infof(this, _("/// dumping scroll history to '%s'\n"), file);
+  infof(_("/// dumping scroll history to '%s'\n"), file);
   
   time_t cur_time = time(NULL);
   std::string ctime_str = ctime(&cur_time);

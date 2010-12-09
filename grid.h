@@ -45,10 +45,16 @@ struct ansi_context
 {
   // the escape mode
   int mode;
+
+  // parameters so far
   std::list<int> pars;
+
+  // current paremeter
   int par;
+
   Intensity inten;
-  int forecol, backcol, scs, ul, it, fr, inv, os, hidden, lastcr;
+  int forecol, backcol;
+  bool scs, ul, it, fr, inv, os, hidden;
   std::string title;
   int defbc, deffc;
 
@@ -66,7 +72,6 @@ struct ansi_context
     inv = 0;
     os = 0;
     hidden = 0;
-    lastcr = 0;
     title = "";
   }
 };
@@ -201,9 +206,23 @@ public:
   void place(const cell_t *ri);
 
   void wterminal(wchar_t ch);
+
   void show_batch(const cellstring &batch);
 
   bool file_dump(const char * file);
+
+  // the info functions place characters directly on the grid ignoring the
+  // current ANSI formatting.  These should be used to insert client-originated
+  // messages into the stream.
+  void info(const char *);
+  void info(const wchar_t *);
+  void info(const my_wstring &);
+
+  void infof(const char *fmt, ...) /* __attribute__ (( format (printf, 2, 3) )) */;
+
+ private:
+  void infoc(wchar_t w);
+
 };
 
 inline void have_prompt(grid_t *grid) {
@@ -217,11 +236,5 @@ inline void have_prompt(grid_t *grid) {
 }
 
 extern int info_to_stderr;
-
-void info(grid_t *g, const char *);
-void info(grid_t *g, const wchar_t *);
-void info(grid_t *g, const my_wstring &);
-
-void infof(grid_t *g, const char *fmt, ...) /* __attribute__ (( format (printf, 2, 3) )) */;
 
 #endif
