@@ -71,9 +71,7 @@ class conn_t : public commandeditor_t {
 
   grid_t *grid;
 
- private:
   grid_t *slave;
- public:
   grid_t *cur_grid;
 
   telnet_state *telnet;
