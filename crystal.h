@@ -33,6 +33,8 @@
 #ifndef CRYSTAL_H
 #define CRYSTAL_H
 
+#include <set>
+
 struct telnet_state;
 class grid_t;
 class InAddrList;
@@ -118,6 +120,11 @@ public:
   void initbindings();
   void dispatch_key(const my_wstring &s);
   void addbinding(const wchar_t* key, const char* bind);
+
+  void connect(const char *host, int port, bool ssl);
+  bool file_log(const char *filename);
+
+  std::set<my_wstring> hl_matches;
 };
 
 #endif

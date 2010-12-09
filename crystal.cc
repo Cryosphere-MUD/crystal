@@ -89,6 +89,7 @@
 #undef grid
 
 #include "Socket.h"
+#include "url.h"
 
 #include "config.h"
 
@@ -99,28 +100,12 @@
 class conn_t;
 class grid_t;
 
-void connect(conn_t *, const char *host, int port, bool ssl);
-bool file_dump(grid_t *, const char * file);
-bool file_log(conn_t *conn, const char *filename);
-
-bool valid_protocol(const std::string &s)
-{
-  if (s == "telnet")
-    return 1;
-
-#ifdef HAVE_SSL
-  if (s == "telnets")
-    return 1;
-#endif
-  
-  return 0;
-}
-
 #include "io.h"
 #include "grid.h"
 #include "telnet.h"
 #include "crystal.h"
 #include "scripting.h"
+#include "commands.h"
 
 mterm tty;
 
@@ -261,8 +246,6 @@ void show_want() {
   } 
   bad_have = 0;
 }
-
-std::set<my_wstring> hl_matches;
 
 void conn_t::show_lines_at(int from, int to, int num)
 {
@@ -555,21 +538,6 @@ hlist *chist() {
   return &hist;
 }
 
-std::string mks(const my_wstring &w) {
-  std::string s;
-  for (size_t i=0;i<w.length();i++) {
-    wchar_t c = w[i];
-    if (c < 0x80)
-      s += c;
-    else {
-      char t[100];
-      sprintf(t, "%lc", c);
-      s += t;
-    }
-  }
-  return s;
-}
-
 void conn_t::dokillword() {
   int orig=cursor;
   if (cursor) {
@@ -728,12 +696,6 @@ void conn_t::doinsertchar(wchar_t ch)
   cursor++;
 }
 
-typedef std::vector<my_wstring> cmd_args;
-
-void cmd_quit(conn_t *conn, const cmd_args &arg) {
-  conn->quit = 1;
-}
-
 void conn_t::dosuspend() {
   kill(0, SIGTSTP);
 
@@ -750,276 +712,6 @@ void conn_t::dosuspend() {
     tty.titleset = 0;
     tty.title("%s", tty.curtitle.c_str());
   }
-}
-
-void cmd_z(conn_t *conn, const cmd_args &arg)
-{
-  conn->dosuspend();
-}
-
-void cmd_close(conn_t *conn, const cmd_args &arg)
-{
-  if (!conn->telnet) {
-    info(conn->grid, _("/// you aren't connected.\n"));
-    return;
-  }
-
-  delete conn->telnet;
-  conn->telnet = 0;
-  info(conn->grid, _("/// connection closed.\n"));
-}
-
-void cmd_reload(conn_t *conn, const cmd_args &arg)
-{
-  scripting::start();
-  info(conn->grid, _("/// scripting restarted.\n"));
-}
-
-void cmd_help(conn_t *conn, const cmd_args &arg);
-
-#ifdef MCCP
-void cmd_compress(conn_t *conn, const cmd_args &arg) {
-  if (conn->telnet &&
-      conn->telnet->mc && 
-      mudcompress_compressing(conn->telnet->mc)) {
-    unsigned long compread, uncompread;
-    mudcompress_stats(conn->telnet->mc, &compread, &uncompread);
-    infof(conn->grid, _("/// wire:%lc bytes data:%lli bytes.\n"), compread, uncompread);
-  } else {
-    info(conn->grid, _("/// no compression\n"));
-  }
-}
-#endif
-
-void cmd_connect(conn_t *conn, const cmd_args &arg)
-{
-  if (arg.size()!= 2 && arg.size()!=3) {
-    infof(conn->grid, _("/// connect <host> [port]\n"));
-    return;
-  }
-
-  my_wstring host = arg[1];
-  my_wstring port = arg.size()==3 ? arg[2] : L"";
-
-  std::string cport = mks(port);
-  std::string chost = mks(host);
-
-  url u = url(chost.c_str());
-  if (cport.length()!=0) {
-    u.service = cport;
-  }
-  
-  if (!valid_protocol(u.protocol)) {
-    infof(conn->grid, _("/// bad protocol : '%s'.\n"), cport.c_str());
-    return;
-  }
-
-  int p = lookup_service(u.service);
-  if (p == -1) {
-    infof(conn->grid, _("/// bad port : '%s'.\n"), cport.c_str());
-    return;
-  }
-
-  connect(conn, u.hostname.c_str(), p, u.protocol=="telnets");
-}
-
-void cmd_match(conn_t *conn, const cmd_args &arg) {
-  if (arg.size() != 2 && arg.size() != 1) {
-    infof(conn->grid, _("/// match [pattern]\n"));    
-    return;
-  }
-
-  if (arg.size()==1) {
-    hl_matches = std::set<my_wstring>();
-  } else {
-    hl_matches.insert(arg[1]);
-  }
-
-  conn->grid->changed = 1;
-}
-
-void cmd_charset(conn_t *conn, const cmd_args &arg) 
-{
-  if (arg.size() != 2) {
-    infof(conn->grid, _("/// charset <charset>\n"));
-    return;
-  }
-
-  conn->mud_cset = mks(arg[1]);
-  infof(conn->grid, _("/// charset '%s' selected\n"), conn->mud_cset.c_str());
-}  
-
-void cmd_dump(conn_t *conn, const cmd_args &arg)
-{
-  if (arg.size() != 2) {
-    infof(conn->grid, _("/// dump <filename>\n"));
-    return;
-  }
-
-  std::string cfilename = mks(arg[1]);
-  file_dump(conn->grid, cfilename.c_str());
-}
-
-void cmd_log(conn_t *conn, const cmd_args &arg)
-{
-  if (arg.size() != 2) {
-    infof(conn->grid, _("/// log <filename>\n"));
-    return;
-  }
-
-  std::string cfilename = mks(arg[1]);
-  file_log(conn, cfilename.c_str());
-}
-
-void cmd_dumplog(conn_t *conn, const cmd_args &arg)
-{
-  if (arg.size() != 2) {
-    infof(conn->grid, _("/// dumplog <filename>\n"));
-    return;
-  }
-
-  std::string cfilename = mks(arg[1]);
-  if (file_dump(conn->grid, cfilename.c_str()))
-    file_log(conn, cfilename.c_str());
-}
-
-struct option_t {
-  const char *name;
-  bool (conn_t::*option);
-} options[] = {
-  {"neverecho", &conn_t::never_echo },
-  {"lpprompts", &conn_t::lp_prompts },
-  { NULL, }
-};
-
-void cmd_bind(conn_t *conn, const cmd_args &arg);
-
-void cmd_set(conn_t *conn, const cmd_args &arg)
-{
-  if (arg.size() != 1 && arg.size() != 3) {
-    infof(conn->grid, _("/// set [option value]\n"));
-    return;
-  }
-
-  bool to = false;
-
-  if (arg.size()==1)
-    infof(conn->grid, _("/// current options are\n"));
-  else {
-    if (arg[2]==L"on" || arg[2]==L"yes" || arg[2]==L"true" || arg[2]==L"1")
-      to = true;
-    else if (arg[2]==L"off" || arg[2]==L"no" || arg[2]==L"false" || arg[2]==L"0")
-      to = false;
-    else {
-      infof(conn->grid, _("/// valid values are 'on' or 'off'\n"));
-      return;
-    }
-  }
-
-  std::string s = arg.size()==3?mks(arg[1]):"";
-
-  for (int i=0;options[i].name;i++) {
-    if (arg.size()==1)
-      infof(conn->grid, "///  %s - %s\n", options[i].name, conn->*options[i].option?"on":"off");
-    else
-      if (s==options[i].name) {
-	conn->*options[i].option = to;
-	infof(conn->grid, "/// done\n");
-	return;
-      }
-  }
-
-  if (arg.size()==3)
-    infof(conn->grid, "/// no option of %ls\n", s.c_str());
-}
-
-struct cmd_t {
-  const wchar_t *commandname;
-  void (*function)(conn_t *conn, const std::vector<my_wstring> &);
-  const char *args;
-  const char *help;
-} cmd_table[] =
-{
-  { L"connect" , cmd_connect, "<host> [port]", "connects to given host" },
-  { L"open",     cmd_connect },
-  { L"close",    cmd_close, NULL, "cuts connection" },
-
-  { L"quit",     cmd_quit, NULL, "quits crystal" },
-  { L"exit",     cmd_quit, NULL, NULL },
-
-#ifdef MCCP
-  { L"compress", cmd_compress, NULL, "show compression stats" },
-#endif
-
-  { L"dump",     cmd_dump, "<filename>", "dump scrollback to file" },
-  { L"log", 	 cmd_log,  "<filename>", "log to file" },
-  { L"dumplog",  cmd_dumplog, "<filename>", "dump scrollback to file and start logging to it" },
-
-  { L"match", 	 cmd_match, "[pattern]", "highlight text matching pattern" },
-  { L"charset",  cmd_charset, "<charset>", "talk to mud with given charset" },
-#ifdef HAVE_LUA
-  { L"reload",   cmd_reload, NULL, "reload config file" },
-#endif
-  { L"help",     cmd_help, NULL, "brief summary of commands" },
-
-  { L"set",      cmd_set, "[option value]", "shows current options or sets one" },
-  { L"bind",     cmd_bind, "[key value]", "shows or sets current keyboard bindings" },
-
-  { L"z",        cmd_z, NULL, "suspend" },
-  { NULL, }
-};
-
-void cmd_help(conn_t *conn, const cmd_args &arg) 
-{
-  int i = 0;
-  while (cmd_table[i].commandname) {
-    if (!i || cmd_table[i].function != cmd_table[i-1].function) {
-      if (cmd_table[i].args)
-	if (cmd_table[i].help)
-	  infof(conn->grid, "// %ls %s - %s\n", cmd_table[i].commandname, cmd_table[i].args, cmd_table[i].help);
-	else
-	  infof(conn->grid, "// %ls %s\n", cmd_table[i].commandname, cmd_table[i].args);
-      else
-	if (cmd_table[i].help)
-	  infof(conn->grid, "// %ls - %s\n", cmd_table[i].commandname, cmd_table[i].help);
-	else
-	  infof(conn->grid, "// %ls\n", cmd_table[i].commandname);
-    }
-    i++;
-  }
-}
-
-std::vector<my_wstring> tokenize(my_wstring s) {
-  std::vector<my_wstring> v;
-  while (1) {
-    my_wstring::size_type n = s.find(L' ');
-    if (n == my_wstring::npos)
-      break;
-    v.push_back(s.substr(0, n));
-    s = s.substr(n+1);
-  }
-
-  if (s.length()) {
-    v.push_back(s);
-  }
-  
-  return v;
-}
-
-void docommand(conn_t *conn, my_wstring s)
-{
-  std::vector<my_wstring> args = tokenize(s);
-  
-  int i = 0;
-  while (const wchar_t *cm=cmd_table[i].commandname) {
-    if (cm == args[0]) {
-      cmd_table[i].function(conn, args);
-      return;
-    }
-    i++;
-  }
-  
-  info(conn->grid, _("/// don't understand that\n"));
 }
 
 void conn_t::doenter()
@@ -1416,73 +1108,47 @@ bool try_addr(conn_t *conn, const char *host, int port, bool ssl) {
   return true;
 }
 
-void connect(conn_t *conn, const char *host, int port, bool ssl)
+void conn_t::connect(const char *host, int port, bool ssl)
 {
   /* nuke old stuff */
-  delete conn->telnet;
-  conn->telnet = 0;
+  delete telnet;
+  telnet = 0;
 
-  if (conn->slave) conn->slave->visible = 0;
-  if (conn->grid->col) 
-    conn->grid->newline();
+  if (slave) slave->visible = 0;
+  if (grid->col) 
+    grid->newline();
 
-  infof(conn->grid, _("/// resolving %s\n"), host, port);
-  display_buffer(conn);
+  infof(grid, _("/// resolving %s\n"), host, port);
+  display_buffer(this);
 
-  if (conn->addrs)
-    delete conn->addrs;
+  if (addrs)
+    delete addrs;
 
-  conn->addrs = InAddr::resolv(host);
-  if (!conn->addrs) {
-    infof(conn->grid, _("/// unknown host.\n"));
+  addrs = InAddr::resolv(host);
+  if (!addrs) {
+    infof(grid, _("/// unknown host.\n"));
     return;
   }
-  conn->addr_i = 0;
-  conn->host = host;
-  conn->port = port;
-  conn->ssl = ssl;
-  try_addr(conn, host, port, ssl);
+  addr_i = 0;
+  host = host;
+  port = port;
+  ssl = ssl;
+  try_addr(this, host, port, ssl);
 }
 
-bool file_dump(grid_t *grid, const char * file){
-  FILE *dumpfile; 
-  
-  dumpfile = fopen(file,"a");
-  if(NULL==dumpfile){
-    infof(grid, _("/// couldn't open '%s' to dump to\n"), file);
-    return 0;
-  }
-  infof(grid, _("/// dumping scroll history to '%s'\n"), file);
-  
-  time_t cur_time = time(NULL);
-  std::string ctime_str = ctime(&cur_time);
-  ctime_str = ctime_str.substr(0,ctime_str.length()-1);
-    
-  fprintf(dumpfile,_("---=== Dump generated on %s by crystal ===---\n"),
-	   ctime_str.c_str());
-  for(int i = grid->first;i<grid->row;i++){
-    for(int j=0;j<grid->get_len(i);j++)
-      fprintf(dumpfile,"%lc",grid->get(i,j).ch);
-    fprintf(dumpfile,"\n");
-  }
-  fprintf(dumpfile,_("---=== End of dump ===---\n"));
-  fclose(dumpfile);
-  return true;
-}
-
-bool file_log(conn_t *conn, const char *filename)
+bool conn_t::file_log(const char *filename)
 {
-  if (conn->logfile) {
-    info(conn->grid, _("/// closing old logfile.\n"));
-    fclose(conn->logfile);
-    conn->logfile = NULL;
+  if (logfile) {
+    info(grid, _("/// closing old logfile.\n"));
+    fclose(logfile);
+    logfile = NULL;
   }
-  conn->logfile = fopen(filename, "a");
-  if (!conn->logfile) {
-    infof(conn->grid, _("/// couldn't open '%s' for appending.\n"), filename);
+  logfile = fopen(filename, "a");
+  if (!logfile) {
+    infof(grid, _("/// couldn't open '%s' for appending.\n"), filename);
     return false;
   } else {
-    infof(conn->grid, _("/// logging to end of '%s'.\n"), filename);
+    infof(grid, _("/// logging to end of '%s'.\n"), filename);
     return true;
   }
 }
@@ -1718,7 +1384,7 @@ int main(int argc, char **argv) {
       exit(1);
     }
 
-    connect(&conn, u.hostname.c_str(), port, u.protocol == "telnets");
+    conn.connect(u.hostname.c_str(), port, u.protocol == "telnets");
     if (!conn.telnet)
       exit(1);
 

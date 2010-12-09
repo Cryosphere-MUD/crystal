@@ -201,6 +201,8 @@ public:
 
   void wterminal(wchar_t ch);
   void show_batch(const cellstring &batch);
+
+  bool file_dump(const char * file);
 };
 
 inline void have_prompt(grid_t *grid) {

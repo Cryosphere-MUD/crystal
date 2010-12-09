@@ -64,6 +64,8 @@ inline int MIN(int a, int b) {
 
 typedef std::basic_string<wchar_t> my_wstring;
 
+std::string mks(const my_wstring &w);
+
 #define COL_BLACK   0
 #define COL_RED     1
 #define COL_GREEN   2

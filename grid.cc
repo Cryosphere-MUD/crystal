@@ -578,3 +578,28 @@ void info(grid_t *grid, const my_wstring &str) {
     infoc(grid, str[i]);
   }
 }
+
+bool grid_t::file_dump(const char * file) {
+  FILE *dumpfile = fopen(file,"a");
+  if(NULL==dumpfile){
+    infof(this, _("/// couldn't open '%s' to dump to\n"), file);
+    return 0;
+  }
+  infof(this, _("/// dumping scroll history to '%s'\n"), file);
+  
+  time_t cur_time = time(NULL);
+  std::string ctime_str = ctime(&cur_time);
+  ctime_str = ctime_str.substr(0,ctime_str.length()-1);
+    
+  fprintf(dumpfile,_("---=== Dump generated on %s by crystal ===---\n"),
+	   ctime_str.c_str());
+  for(int i = first;i<row;i++){
+    for(int j=0;j<get_len(i);j++)
+      fprintf(dumpfile,"%lc",get(i,j).ch);
+    fprintf(dumpfile,"\n");
+  }
+  fprintf(dumpfile,_("---=== End of dump ===---\n"));
+  fclose(dumpfile);
+  return true;
+}
+
