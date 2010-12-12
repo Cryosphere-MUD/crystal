@@ -420,6 +420,8 @@ bool conn_t::try_addr(const char *host, int port, bool ssl)
 
   Socket *s2 = new Socket(ssl);
   addr->set_port(port);
+  conn->port = port;
+
   int stat = s2->connect(addr);
 
   int e = errno;
