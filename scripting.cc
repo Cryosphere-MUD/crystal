@@ -392,6 +392,7 @@ void start()
   lua_iolibopen(l);
   lua_strlibopen(l);
   lua_mathlibopen(l);
+  lua_tablibopen(l);
 
   lua_register(l, "_ERRORMESSAGE",luaerror);
   lua_register(l, "register_auto",lua_register_auto);
