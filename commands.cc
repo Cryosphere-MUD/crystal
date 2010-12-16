@@ -223,11 +223,15 @@ void cmd_set(conn_t *conn, const cmd_args &arg)
 }
 
 struct cmd_t {
-  const wchar_t *commandname;
-  void (*function)(conn_t *conn, const std::vector<my_wstring> &);
+  my_wstring commandname;
+  command_handler function;
   const char *args;
   const char *help;
-} cmd_table[] =
+};
+
+std::vector<cmd_t> cmd_table;
+
+cmd_t init_cmds[] =
 {
   { L"connect" , cmd_connect, "<host> [port]", "connects to given host" },
   { L"open",     cmd_connect },
@@ -255,26 +259,24 @@ struct cmd_t {
   { L"bind",     cmd_bind, "[key value]", "shows or sets current keyboard bindings" },
 
   { L"z",        cmd_z, NULL, "suspend" },
-  { NULL, }
+  { L"", }
 };
 
 void cmd_help(conn_t *conn, const cmd_args &arg) 
 {
-  int i = 0;
-  while (cmd_table[i].commandname) {
+  for (int i = 0; i < cmd_table.size(); i++) {
     if (!i || cmd_table[i].function != cmd_table[i-1].function) {
       if (cmd_table[i].args)
 	if (cmd_table[i].help)
-	  conn->grid->infof("// %ls %s - %s\n", cmd_table[i].commandname, cmd_table[i].args, cmd_table[i].help);
+	  conn->grid->infof("// %ls %s - %s\n", cmd_table[i].commandname.c_str(), cmd_table[i].args, cmd_table[i].help);
 	else
-	  conn->grid->infof("// %ls %s\n", cmd_table[i].commandname, cmd_table[i].args);
+	  conn->grid->infof("// %ls %s\n", cmd_table[i].commandname.c_str(), cmd_table[i].args);
       else
 	if (cmd_table[i].help)
-	  conn->grid->infof("// %ls - %s\n", cmd_table[i].commandname, cmd_table[i].help);
+	  conn->grid->infof("// %ls - %s\n", cmd_table[i].commandname.c_str(), cmd_table[i].help);
 	else
-	  conn->grid->infof("// %ls\n", cmd_table[i].commandname);
+	  conn->grid->infof("// %ls\n", cmd_table[i].commandname.c_str());
     }
-    i++;
   }
 }
 
@@ -295,17 +297,38 @@ std::vector<my_wstring> tokenize(my_wstring s) {
   return v;
 }
 
+void init_commands()
+{
+  for (int i = 0; init_cmds[i].commandname.size(); i++) {
+    cmd_table.push_back(init_cmds[i]);
+  }
+}
+
+my_wstring mkws(const char* cmd)
+{
+  my_wstring rval;
+  while (*cmd) {
+    rval += *cmd;
+    cmd++;
+  }
+  return rval;
+}
+
+void register_command(const char* cmd, command_handler function, const char* arg, const char* hlp)
+{
+  cmd_t newCmd = {mkws(cmd), function, arg, hlp };
+  cmd_table.push_back(newCmd);
+}
+
 void docommand(conn_t *conn, my_wstring s)
 {
   std::vector<my_wstring> args = tokenize(s);
   
-  int i = 0;
-  while (const wchar_t *cm=cmd_table[i].commandname) {
-    if (cm == args[0]) {
+  for (int i = 0; i < cmd_table.size(); i++) {
+    if (cmd_table[i].commandname == args[0]) {
       cmd_table[i].function(conn, args);
       return;
     }
-    i++;
   }
   
   conn->grid->info(_("/// don't understand that\n"));

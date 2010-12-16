@@ -41,6 +41,12 @@ typedef std::vector<my_wstring> cmd_args;
 
 class conn_t;
 
+typedef void (*command_handler)(conn_t *conn, const cmd_args &);
+
 void docommand(conn_t *conn, my_wstring s);
+
+void register_command(const char* cmd, command_handler function, const char* arg, const char *hlp);
+
+void init_commands();
 
 #endif

@@ -37,6 +37,7 @@
 #include "Socket.h"
 #include "telnet.h"
 #include "config.h"
+#include "commands.h"
 
 #ifndef HAVE_LUA
 
@@ -334,12 +335,45 @@ static int lua_bind_key(lua_State *L)
 static int lua_register_host(lua_State *L)
 {
   if (lua_gettop(L)!=1) {
-    set_lua_error(L, "Bad number of args to register_auto");
+    set_lua_error(L, "Bad number of args to register_host");
   }
   if (!lua_isstring(L, 1)) {
-    set_lua_error(L, "Bad arg 1 to register_auto");
+    set_lua_error(L, "Bad arg 1 to register_host");
   }
   host = lua_tostring(L, 1);
+  return 0;
+}
+
+static std::map<std::wstring, std::string> lua_command_functions;
+
+static void lua_command_handler(conn_t *conn, const cmd_args &args)
+{
+  lua_getglobal(l, lua_command_functions[args[0]].c_str());
+  lua_newtable(l);
+
+  for (int i = 0; i < args.size(); i++) {
+    lua_pushnumber(l, i + 1);
+    lua_pushstring(l, mks(args[i]).c_str());
+    lua_settable(l, -3);
+  }
+  
+  do_lua_call(l, 1, 0);
+}
+
+static int lua_register_command(lua_State *L)
+{
+  if (lua_gettop(L)!=4) {
+    set_lua_error(L, "Bad number of args to register_command");
+  }
+  if (!lua_isstring(L, 1)) {
+    set_lua_error(L, "Bad arg 1 to register_command");
+  }
+  const char* cmd = lua_tostring(L, 1);
+  const char* lua = lua_tostring(L, 2);
+  const char* arg = lua_tostring(L, 3);
+  const char* hlp = lua_tostring(L, 4);
+  lua_command_functions[mkws(cmd)] = lua;
+  register_command(cmd, lua_command_handler, arg, hlp);
   return 0;
 }
 
@@ -399,6 +433,7 @@ void start()
   lua_register(l, "register_trig",lua_register_trig);
   lua_register(l, "register_prompt",lua_register_prompt);
   lua_register(l, "register_host",lua_register_host);
+  lua_register(l, "register_command",lua_register_command);
   lua_register(l, "bind_key",lua_bind_key);
 
   lua_register(l, "get_host",lua_get_host);
