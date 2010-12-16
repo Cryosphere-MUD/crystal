@@ -348,6 +348,10 @@ static std::map<std::wstring, std::string> lua_command_functions;
 
 static void lua_command_handler(conn_t *conn, const cmd_args &args)
 {
+  if (!l) {
+    return;
+  }
+
   lua_getglobal(l, lua_command_functions[args[0]].c_str());
   lua_newtable(l);
 
