@@ -381,6 +381,21 @@ static int lua_register_command(lua_State *L)
   return 0;
 }
 
+static int lua_quit(lua_State *L)
+{
+  if (lua_gettop(L)!=1) {
+    set_lua_error(L, "Bad number of args to quit");
+  }
+  if (!lua_isnumber(L, 1)) {
+    set_lua_error(L, "Bad arg 1 to register_command");
+  }
+  long num = lua_tonumber(L, 1);
+  exitValue = num;
+  conn_t *conn = ergrid->conn;
+  conn->quit = true;
+  return 0;
+}
+
 static int lua_register_prompt(lua_State *L)
 {
   if (lua_gettop(L)!=1) {
@@ -446,6 +461,8 @@ void start()
   lua_register(l, "tomud",lua_tomud);
   lua_register(l, "tomud_echo",lua_tomud_echo);
   lua_register(l, "info",lua_info);
+
+  lua_register(l, "quit", lua_quit);
 
   std::string f = getenv("HOME");
   f += "/.crystal.lua";

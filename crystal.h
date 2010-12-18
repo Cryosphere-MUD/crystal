@@ -116,4 +116,6 @@ class conn_t : public commandeditor_t {
   std::set<my_wstring> hl_matches;
 };
 
+extern int exitValue;
+
 #endif

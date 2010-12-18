@@ -130,6 +130,8 @@ void cleanup()
 
 bool had_winch = 0;
 
+int exitValue = 0;
+
 void winch(int) {
   tty.grabwinsize();
   had_winch = 1;
@@ -232,5 +234,5 @@ int main(int argc, char **argv) {
   cleanup();
   printf("\n");
 
-  return 0;
+  return exitValue;
 }
