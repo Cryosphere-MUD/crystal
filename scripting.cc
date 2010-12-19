@@ -427,6 +427,17 @@ static int luaerror(lua_State *L)
   return 0;
 }
 
+std::string getRcFile() {
+  if (const char* cry = getenv("CRYSTAL_LUA"))
+    return cry;
+
+  if (const char* home = getenv("HOME")) {
+    return home + std::string("/.crystal.lua");
+  }
+
+  return "";
+}
+
 void start()
 {
   if (l) {
@@ -464,9 +475,13 @@ void start()
 
   lua_register(l, "quit", lua_quit);
 
-  std::string f = getenv("HOME");
-  f += "/.crystal.lua";
-  lua_dofile(l, f.c_str());
+  //  get_rcfile();
+
+  std::string f = getRcFile();
+  if (f.length()) {
+    lua_dofile(l, f.c_str());
+  }
+
   if (badlua) {
     lua_close(l);
     l = 0;
