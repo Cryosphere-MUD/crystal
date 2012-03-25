@@ -456,7 +456,9 @@ void start()
   lua_iolibopen(l);
   lua_strlibopen(l);
   lua_mathlibopen(l);
+#ifdef HAVE_LUA50  
   lua_tablibopen(l);
+#endif
 
   lua_register(l, "_ERRORMESSAGE",luaerror);
   lua_register(l, "register_auto",lua_register_auto);
