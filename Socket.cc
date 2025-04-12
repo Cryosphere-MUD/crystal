@@ -150,14 +150,23 @@ InAddrList *InAddr::resolv(const char *name)
   InAddrList *list = new InAddrList;
 #ifdef AF_INET6
   if (he4 && he4->h_addrtype == AF_INET) {
-    list->add(new InAddr4((struct in_addr*)he4->h_addr_list[0]));
+    auto addr = (struct in_addr*)he4->h_addr_list[0];
+    if (addr != nullptr) {
+      list->add(new InAddr4(addr));
+    }
   }
   if (he6 && he6->h_addrtype == AF_INET6) {
-    list->add(new InAddr6((struct in6_addr*)he6->h_addr_list[0]));
+    auto addr = (struct in6_addr*)he6->h_addr_list[0];
+    if (addr != nullptr) {
+      list->add(new InAddr6(addr));
+    }
   }
 #endif
   if (he && he->h_addrtype == AF_INET) {
-    list->add(new InAddr4((struct in_addr*)he->h_addr_list[0]));
+    auto addr = (struct in_addr*)he->h_addr_list[0];
+    if (addr != nullptr) {
+      list->add(new InAddr4(addr));
+    }
   }
 
   return list;
