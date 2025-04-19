@@ -229,7 +229,15 @@ void telnet_state::tstack(conn_t *conn, int ch) {
       if (subneg_type == TELOPT_TTYPE) {
 	std::string str;
 	str += (char)TELQUAL_IS;
-	str += (conn->mud_cset == "UTF-8"?"ucryotel":"cryotel");
+        if (ttype_count == 0)
+        {
+        	str += (conn->mud_cset == "UTF-8"?"ucryotel":"cryotel");
+        }
+        else
+        {
+                str += "crystal:000_002_005";
+        }
+        ttype_count++;
 	subneg_send(TELOPT_TTYPE, str);
       }
       if (subneg_type == TELOPT_MPLEX) {

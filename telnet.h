@@ -52,34 +52,23 @@
 struct telnet_state {
   Socket *s;
 
-  int will_eor;
-  int allstars;
-  int will_echo;
-  int charmode;
-  int rcvd_iac;
-  int mode;
-  int subneg_type;
-  int will_ttype;
+  int will_eor = 0;
+  int allstars = 0;
+  int will_echo = 0;
+  int charmode = 0;
+  int rcvd_iac = 0;
+  int mode = 0;
+  int subneg_type = 0;
+  int will_ttype = 0;
+  int ttype_count = 0;
   std::string subneg_data;
-  int do_naws;
+  int do_naws = 0;
 #ifdef MCCP
-  mc_state *mc;
+  mc_state *mc = nullptr;
 #endif
   telnet_state(Socket *sock) : 
     s(sock),
-    will_eor(0),
-    allstars(0),
-    will_echo(0),
-    charmode(0),
-    rcvd_iac(0),
-    mode(0),
-    subneg_type(0),
-    will_ttype(0),
-    subneg_data(""),
-    do_naws(0)
-#ifdef MCCP
-    , mc(0)
-#endif
+    subneg_data("")
 {
 #ifdef MCCP
     mc = mudcompress_new();
