@@ -124,6 +124,7 @@ void grid_t::osc_end()
        std::string new_title = osc_string.substr(2);
        tty.title(_("%s - Crystal"), new_title.c_str());
    }
+   osc_string = "";
 }
 
 void grid_t::wterminal(wchar_t ch) {
