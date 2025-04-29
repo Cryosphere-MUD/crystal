@@ -87,6 +87,8 @@ my_wstring mkws(const char* cmd);
 #define CR  '\r'
 #define BS  '\b'
 
+#define OSC ']'
+
 #define ESC L'\033'
 #define CSI L'\233'
 

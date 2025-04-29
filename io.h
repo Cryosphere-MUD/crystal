@@ -98,7 +98,7 @@ struct mterm {
       va_start(a, fmt);
       vsprintf(buf, fmt, a);
       if (!titleset || curtitle != buf) {
-	printf("\033]0;%s\a", buf);
+	printf("\033]2;%s\a", buf);
 	curtitle = buf;
 	titleset = 1;
       }

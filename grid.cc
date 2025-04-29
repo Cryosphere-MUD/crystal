@@ -44,8 +44,7 @@
 extern mterm tty;
 
 enum {
-  TITLEBAR = 256,
-  TITLEBAR2 
+  OSC_ESCAPE = 256,
 };
 
 void grid_t::show_batch(const cellstring &batch) {
@@ -115,6 +114,16 @@ std::string q(int ch) {
   if (ch==0) return "NUL";
   char a[2] = { ch, 0 };
   return a;
+}
+
+void grid_t::osc_end()
+{
+   if (osc_string.substr(0, 2) == "0;" || 
+       osc_string.substr(0, 2) == "2;")
+   {
+       std::string new_title = osc_string.substr(2);
+       tty.title(_("%s - Crystal"), new_title.c_str());
+   }
 }
 
 void grid_t::wterminal(wchar_t ch) {
@@ -244,32 +253,28 @@ void grid_t::wterminal(wchar_t ch) {
     return;
   }
 
-  if (mode == ']') {
-    if (ch != '0')
-      mode = 0;
-    else
-      mode = TITLEBAR;
-    return;
+  if (mode == OSC) {
+        if (ch == '\a' || ch == ST) {
+                mode = 0;
+                osc_end();
+                return;
+        }
+        if (ch == '\e') {
+                mode = OSC_ESCAPE;
+                return;
+        }
+        osc_string += ch;
+        return;
   }
 
-  if (mode == TITLEBAR) {
-    if (ch != ';')
-      mode = 0;
-    else {
-      mode = TITLEBAR2;
-      title = "";
-    }
-    return;
-  }
-
-  if (mode == TITLEBAR2) {
-    if (ch != '\a' && ch != ST) {
-      title += ch;
-    } else {
-      tty.title(_("%s - Crystal"), title.c_str());
-      mode = 0;
-    }
-    return;
+  if (mode == OSC_ESCAPE) 
+  {
+        if (ch == '\\')
+        {
+                mode = 0;
+                osc_end();
+        }
+        return;
   }
 
   if (mode == CSI) {

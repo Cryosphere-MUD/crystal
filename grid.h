@@ -52,10 +52,11 @@ struct ansi_context
   // current paremeter
   int par;
 
+  std::string osc_string;
+
   Intensity inten;
   int forecol, backcol;
   bool scs, ul, it, fr, inv, os, hidden;
-  std::string title;
   int defbc, deffc;
 
   void init() {
@@ -72,7 +73,6 @@ struct ansi_context
     inv = 0;
     os = 0;
     hidden = 0;
-    title = "";
   }
 };
 
@@ -204,6 +204,8 @@ public:
   }
 
   void place(const cell_t *ri);
+
+  void osc_end();
 
   void wterminal(wchar_t ch);
 
