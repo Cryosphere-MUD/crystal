@@ -391,7 +391,7 @@ void conn_t::connected()
 {
   conn_t* conn = this;
   
-  conn->grid->infof(_("/// connected\n"));
+  conn->grid->infof(_("/// connected with %s\n"), conn->ssl ? "TLS" : "telnet");
   
   static int a = 0;
   if (!a) {

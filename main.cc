@@ -166,17 +166,30 @@ int main(int argc, char **argv) {
   }
 
   if (argv[1] && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))) {
-    printf("Usage: crystal [-n] <hostname> <port>\n");
+    printf("Usage: crystal [-n] [-s] <hostname> <port>\n");
     printf("       crystal [-n] telnets://hostname:port/\n");
     printf("Options:\n");
     printf("       -n never echo locally.\n");
+    printf("       -s use TLS.\n");
     return 0;
   }
 
-  if (argv[1] && strcmp(argv[1], "-n")==0) {
-    conn.never_echo = 1;
-    argv++;
-    argc--;
+  bool force_tls = false;
+
+  while (argv[1]) {
+    if (strcmp(argv[1], "-n")==0) {
+      conn.never_echo = 1;
+      argv++;
+      argc--;
+      continue;
+    }
+    if (strcmp(argv[1], "-s")==0) {
+      force_tls = true;
+      argv++;
+      argc--;
+      continue;
+    }    
+    break;
   }
 
 #ifdef I18N
@@ -188,6 +201,8 @@ int main(int argc, char **argv) {
     if (argc>2) {
       u.service = argv[2];
     }
+    if (force_tls)
+        u.protocol = "telnets";
 
     if (!valid_protocol(u.protocol)) {
       fprintf(stderr, _("%s: Bad protocol - '%s'.\n"), pname, u.protocol.c_str());

@@ -3,7 +3,7 @@
 crystal -\ mud client
 .SH SYNPOSIS
 .B crystal
-[-n] host [port]
+[-n] [-s] host [port]
 .PP
 .B crystal
 [-n] telnet://host[:port]/
@@ -15,7 +15,7 @@ crystal -\ mud client
 is a fuss-free mud client with an interface similar to telnet.  It should
 support all muds.  It has support for many ANSI codes, prompt grabbing,
 window size negotiation, terminal type identification, the MCCP (mud compression) 
-protocol, and openssl.
+protocol, and TLS encryption (activated by 'telnets' in the URL or the -s option).
 .PP
 It has full line editing, similar to that available in bash/readline.
 You can use page-up and page-down to scroll back and forward within the buffer
@@ -27,4 +27,4 @@ can be configured at runtime with the 'set' command.
 Within crystal, use control-] to get to the command-mode, and then 'help'
 for a list of commands.
 .SH AUTHORS
-Written by Abi Brady <morwen@evilmagic.org>. Copyright (c) 2002-2003.
+Written by Abi Brady <morwen@evilmagic.org>. Copyright (c) 2002-2025.
