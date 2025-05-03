@@ -467,9 +467,9 @@ void conn_t::connect(const char *host, int port, bool ssl)
     return;
   }
   addr_i = 0;
-  host = host;
-  port = port;
-  ssl = ssl;
+  this->host = host;
+  this->port = port;
+  this->ssl = ssl;
   try_addr(host, port, ssl);
 }
 
