@@ -82,7 +82,7 @@ DECLARE_COMMAND(scrollstart)
 DECLARE_COMMAND(scrollend)
 DECLARE_COMMAND(scrollup)
 DECLARE_COMMAND(scrolldown)
-DECLARE_COMMAND(toggleslave)
+DECLARE_COMMAND(toggleoverlay)
 DECLARE_COMMAND(clearline)
 DECLARE_COMMAND(enter)
 
@@ -133,7 +133,7 @@ struct keybinding_t initkeys[34] = {
   keybinding_t( L"delete",    "delete" ),
   keybinding_t( L"pagedown",  "scrolldown" ),
   keybinding_t( L"pageup",    "scrollup" ),
-  keybinding_t( L"fn.12",     "toggleslave" ),
+  keybinding_t( L"fn.12",     "toggleoverlay" ),
   keybinding_t( NULL, NULL ),
 };
 

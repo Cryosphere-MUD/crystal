@@ -86,7 +86,7 @@ void conn_t::display_buffer() {
 
   grid_t &grid = *conn->grid;
 
-  if (!grid.changed && !conn->slave->changed)
+  if (!grid.changed && !conn->overlay->changed)
     return;
 
   const wchar_t *a = conn->buffer.data();
@@ -131,11 +131,11 @@ void conn_t::display_buffer() {
     grid.changed = 0;
   }
 
-  if (conn->slave && conn->slave->visible) {
-    for (int i=0;i<conn->slave->height;i++) {
-      for (int j=0;j<conn->slave->width;j++) {
-	if (tty.WIDTH-conn->slave->width+j>=0)
-	  tty.wantbuffer[i][tty.WIDTH-conn->slave->width+j] = conn->slave->get(i, j);
+  if (conn->overlay && conn->overlay->visible) {
+    for (int i=0;i<conn->overlay->height;i++) {
+      for (int j=0;j<conn->overlay->width;j++) {
+	if (tty.WIDTH-conn->overlay->width+j>=0)
+	  tty.wantbuffer[i][tty.WIDTH-conn->overlay->width+j] = conn->overlay->get(i, j);
       }
     }
   }

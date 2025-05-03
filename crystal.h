@@ -71,7 +71,7 @@ class conn_t : public commandeditor_t {
 
   grid_t *grid;
 
-  grid_t *slave;
+  grid_t *overlay;
   grid_t *cur_grid;
 
   telnet_state *telnet;
@@ -90,7 +90,7 @@ class conn_t : public commandeditor_t {
 
   void doenter();
   void dosuspend();
-  void dotoggleslave();
+  void dotoggleoverlay();
   void docommandmode();
 
   void show_lines_at(int from, int to, int num);

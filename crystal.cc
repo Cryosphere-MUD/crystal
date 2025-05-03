@@ -138,11 +138,11 @@ conn_t::conn_t(grid_t *gr) {
   addr_i = 0;
 
   cur_grid = grid = gr;
-  slave = new grid_t(NULL);
+  overlay = new grid_t(NULL);
   
-  slave->defbc = 0;
-  slave->backcol = 0;
-  slave->visible = 0;
+  overlay->defbc = 0;
+  overlay->backcol = 0;
+  overlay->visible = 0;
   
   telnet = 0;
 
@@ -159,13 +159,13 @@ conn_t::conn_t(grid_t *gr) {
   hardscroll = 0;
 
   gr->set_conn(this);
-  if (slave)
-    slave->set_conn(this);
+  if (overlay)
+    overlay->set_conn(this);
 }
 
 conn_t::~conn_t() {
-  if (slave)
-    delete slave;
+  if (overlay)
+    delete overlay;
 }
 
 void conn_t::dofindnext()
@@ -195,10 +195,10 @@ void conn_t::dofindnext()
   grid->changed = 1;
 }
 
-void conn_t::dotoggleslave() {
-  if (slave) {
-    slave->visible = !slave->visible;
-    slave->changed = 1;
+void conn_t::dotoggleoverlay() {
+  if (overlay) {
+    overlay->visible = !overlay->visible;
+    overlay->changed = 1;
   }
 }
 
@@ -451,7 +451,7 @@ void conn_t::connect(const char *host, int port, bool ssl)
   delete telnet;
   telnet = 0;
 
-  if (slave) slave->visible = 0;
+  if (overlay) overlay->visible = 0;
   if (grid->col) 
     grid->newline();
 

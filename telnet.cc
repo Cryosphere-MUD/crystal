@@ -243,28 +243,28 @@ void telnet_state::tstack(conn_t *conn, int ch) {
       if (subneg_type == TELOPT_MPLEX) {
 	if (subneg_data.length()==2) {
 	  if (subneg_data[0]==MPLEX_SELECT) {
-	    conn->cur_grid = subneg_data[1] ? conn->slave : conn->grid;
+	    conn->cur_grid = subneg_data[1] ? conn->overlay : conn->grid;
 	  }
 	  if (subneg_data[0]==MPLEX_HIDE) {
-	    if (subneg_data[1]==1 && conn->slave) {
-	      conn->slave->visible = 0;
-	      conn->slave->changed = 1;
+	    if (subneg_data[1]==1 && conn->overlay) {
+	      conn->overlay->visible = 0;
+	      conn->overlay->changed = 1;
 	      conn->grid->changed = 1;
 	    }
 	  }
 	  if (subneg_data[0]==MPLEX_SHOW) {
-	    if (subneg_data[1]==1 && conn->slave) {
-	      conn->slave->visible = 1;
-	      conn->slave->changed = 1;
+	    if (subneg_data[1]==1 && conn->overlay) {
+	      conn->overlay->visible = 1;
+	      conn->overlay->changed = 1;
 	      conn->grid->changed = 1;
 	    }
 	  }
 	}
 	if (subneg_data.length()==6 && subneg_data[0]==MPLEX_SETSIZE) {
-	  if (subneg_data[1]==1 && conn->slave) {
-	    conn->slave->width  = (subneg_data[2] << 8) | (subneg_data[3]);
-	    conn->slave->height = (subneg_data[4] << 8) | (subneg_data[5]);
-	    conn->slave->changed = 1;
+	  if (subneg_data[1]==1 && conn->overlay) {
+	    conn->overlay->width  = (subneg_data[2] << 8) | (subneg_data[3]);
+	    conn->overlay->height = (subneg_data[4] << 8) | (subneg_data[5]);
+	    conn->overlay->changed = 1;
 	  }
 	}
       }
