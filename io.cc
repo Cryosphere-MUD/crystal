@@ -1,6 +1,6 @@
 /*
  * Crystal Mud Client
- * Copyright (C) 2002-2003 Abigail Brady
+ * Copyright (C) 2002-2025 Abigail Brady
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -150,7 +150,9 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
   }
 
   if (g.ul != cul) {
-    if (g.ul)
+    if (g.ul == 2)
+      whats += "22;";
+    else if (g.ul)
       whats += "4;";
     else
       whats += "24;";

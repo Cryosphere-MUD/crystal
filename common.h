@@ -109,7 +109,7 @@ struct cell_t {
   int fc;
   int bc;
   bool scs:1;
-  bool ul:1;
+  int ul:2;
   bool it:1;
   bool fr:1;
   bool os:1;

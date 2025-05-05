@@ -1,6 +1,6 @@
 /*
  * Crystal Mud Client
- * Copyright (C) 2002-2010 Abigail Brady
+ * Copyright (C) 2002-2025 Abigail Brady
  * Copyright (C) 2002 Owen Cliffe
  * Copyright (C) 2004 Stuart Brady
  * Copyright (C) 2004 Paul Lettington
@@ -403,6 +403,9 @@ void grid_t::wterminal(wchar_t ch) {
 	  fr = 1;
 	  it = 0;
 	  break;
+        case 21:
+          ul = 2;
+          break;
 	case 22:
 	  inten = I_NORM;
 	  break;
