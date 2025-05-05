@@ -42,6 +42,7 @@
 
 #include <iconv.h>
 #include <errno.h>
+#include <sstream>
 
 #define TELOPT_MXP 0x5b
 #define TELOPT_MPLEX  0x70
@@ -233,9 +234,26 @@ void telnet_state::tstack(conn_t *conn, int ch) {
         {
         	str += (conn->mud_cset == "UTF-8"?"ucryotel":"cryotel");
         }
-        else
-        {
+        else if (ttype_count == 1) {
                 str += "crystal:000_002_005";
+        }
+        else if (ttype_count == 2 || ttype_count == 3)
+        {
+                int mtts_bitmask  = 0;
+                mtts_bitmask     |= 1; // ANSI
+                if (conn->mud_cset == "UTF-8")
+                        mtts_bitmask     |= 4; // UTF-8
+
+                if (tty.col256)
+                        mtts_bitmask     |= 8; // 256 colors
+
+                mtts_bitmask     |= 2048; // SSL
+
+                std::stringstream ss;
+                ss << "MTTS ";
+                ss << mtts_bitmask;
+
+                str += ss.str();
         }
         ttype_count++;
 	subneg_send(TELOPT_TTYPE, str);
