@@ -432,14 +432,7 @@ void grid_t::wterminal(wchar_t ch) {
 	    if (*parit == 5) {
 	      parit++;
 	      if (parit != pars.end()) {
-		int c = *parit;
-		if (c >= 0 && c <= 7)
-		  forecol = c;
-		else if (c >= 8 && c <= 15)
-		  forecol = c&7;
-		else {
-		  forecol = c;
-		}
+		forecol = *parit;
 		parit++;
 		continue;
 	      }
@@ -457,14 +450,7 @@ void grid_t::wterminal(wchar_t ch) {
 	    if (*parit == 5) {
 	      parit++;
 	      if (parit != pars.end()) {
-		int c = *parit;
-		if (c >= 0 && c <= 7)
-		  backcol = c;
-		else if (c >= 8 && c <= 15)
-		  backcol = c&7;
-		else {
-		  backcol = c;
-		}
+		backcol = *parit;
 		parit++;
 		continue;
 	      }

@@ -117,7 +117,9 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
 
   if (g.fc != cfg) {
     static char blah[100];
-    if (g.fc>7) {
+    if (g.fc == COL_DEFAULT) {
+        sprintf(blah, ";39");
+    } else if (g.fc>7) {
       if (col256)
 	sprintf(blah, "38;5;%i;", g.fc);
       else
@@ -132,7 +134,9 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
 
   if (g.bc != cbg) {
     static char blah[100];
-    if (g.bc>7) {
+    if (g.bc == COL_DEFAULT) {
+        sprintf(blah, "49;");
+    } else if (g.bc>7) {
       if (col256)
 	sprintf(blah, "48;5;%i;", g.bc);
       else

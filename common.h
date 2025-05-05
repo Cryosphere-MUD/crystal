@@ -75,7 +75,7 @@ my_wstring mkws(const char* cmd);
 #define COL_MAGENTA 5
 #define COL_CYAN    6
 #define COL_WHITE   7
-#define COL_DEFAULT 9
+#define COL_DEFAULT -1
 
 #define BEL '\a'
 #define SI  0x0e
@@ -106,8 +106,8 @@ enum Intensity {
 struct cell_t { 
   wchar_t ch;
   Intensity inten;
-  unsigned char fc;
-  unsigned char bc;
+  int fc;
+  int bc;
   bool scs:1;
   bool ul:1;
   bool it:1;
