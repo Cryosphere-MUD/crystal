@@ -201,8 +201,12 @@ int main(int argc, char **argv) {
     if (argc>2) {
       u.service = argv[2];
     }
+    const char *tlsopt = "";
     if (force_tls)
+    {
         u.protocol = "telnets";
+        tlsopt = "-s ";
+    }
 
     if (!valid_protocol(u.protocol)) {
       fprintf(stderr, _("%s: Bad protocol - '%s'.\n"), pname, u.protocol.c_str());
@@ -221,9 +225,9 @@ int main(int argc, char **argv) {
 
     wchar_t blah[1000];
     if (argc>2)
-      swprintf(blah, 1000, L"connect %s %s", argv[1], argv[2]);
+      swprintf(blah, 1000, L"connect %s%s %s", tlsopt, argv[1], argv[2]);
     else
-      swprintf(blah, 1000, L"connect %s", argv[1]);
+      swprintf(blah, 1000, L"connect %s%s", tlsopt, argv[1]);
     cmdhist.insert(blah);
   }
 

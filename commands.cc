@@ -82,13 +82,21 @@ void cmd_compress(conn_t *conn, const cmd_args &arg) {
 
 void cmd_connect(conn_t *conn, const cmd_args &arg)
 {
-  if (arg.size()!= 2 && arg.size()!=3) {
-    conn->grid->infof(_("/// connect <host> [port]\n"));
+  if (arg.size()!= 2 && arg.size()!=3 && arg.size()!=4) {
+    conn->grid->infof(_("/// connect [-s] <host> [port]\n"));
     return;
   }
+  
+  bool force_tls = false;
+  int cmd_root = 1;
 
-  my_wstring host = arg[1];
-  my_wstring port = arg.size()==3 ? arg[2] : L"";
+  if (arg[cmd_root] == L"-s") {
+        force_tls = true;
+        cmd_root = 2;
+  }
+
+  my_wstring host = arg[cmd_root];
+  my_wstring port = arg.size()==cmd_root+2 ? arg[cmd_root+1] : L"";
 
   std::string cport = mks(port);
   std::string chost = mks(host);
@@ -109,7 +117,7 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
     return;
   }
 
-  conn->connect(u.hostname.c_str(), p, u.protocol=="telnets");
+  conn->connect(u.hostname.c_str(), p, u.protocol=="telnets" || force_tls);
 }
 
 void cmd_match(conn_t *conn, const cmd_args &arg) {
