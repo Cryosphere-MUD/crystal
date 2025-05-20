@@ -40,6 +40,7 @@
 
 #include <wchar.h>
 #include <ctype.h>
+#include <time.h>
 
 extern mterm tty;
 
@@ -112,7 +113,7 @@ std::string q(int ch) {
   if (ch==LF) return "LF";
   if (ch==BEL) return "BEL";
   if (ch==0) return "NUL";
-  char a[2] = { ch, 0 };
+  char a[2] = { char(ch), 0 };
   return a;
 }
 

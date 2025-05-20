@@ -11,7 +11,7 @@ It's as close to telnet as possible except -
   * you can cursor up and down for a history.
   * there are a bunch of other commands
 
-We aim to eventually have perfect ansi and telnet handling, but right now it's
+We aim to eventually have perfect ANSI and telnet handling, but right now it's
 just Good Enough.
 
 We implement from telnet everything that's mandatory, and also
@@ -19,7 +19,7 @@ We implement from telnet everything that's mandatory, and also
   EOR/GA - lp prompt grabbing
   NAWS - window size
   TTYPE - terminal type identification
-  MCCP - mud compression
+  MCCP2 - mud compression
 
 It links against openssl if available, and will then be able to connect to
 telnets muds too.
