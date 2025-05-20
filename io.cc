@@ -102,6 +102,7 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
     cfr = 0;
     cinv = 0;
     cos = 0;
+    col = 0;
   }
 
   if (g.inten != cint) {
@@ -150,8 +151,8 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
   }
 
   if (g.ul != cul) {
-    if (g.ul == 2)
-      whats += "22;";
+    if (g.ul)
+      whats += "21;";
     else if (g.ul)
       whats += "4;";
     else
@@ -190,6 +191,14 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
     else
       whats += "23;";
     cfr = g.fr;
+  }
+
+  if (g.ol != col) {
+    if (g.ol)
+      whats += "53;";
+    else
+      whats += "55;";
+    cos = g.ol;
   }
 
   if (whats.length()) {

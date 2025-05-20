@@ -56,7 +56,8 @@ struct ansi_context
 
   Intensity inten;
   int forecol, backcol;
-  bool scs, ul, it, fr, inv, os, hidden;
+  bool scs, it, fr, inv, os, hidden, ol;
+  int ul:2;
   int defbc, deffc;
 
   void init() {
@@ -72,6 +73,7 @@ struct ansi_context
     fr = 0;
     inv = 0;
     os = 0;
+    ol = 0;
     hidden = 0;
   }
 };

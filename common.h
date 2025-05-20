@@ -114,6 +114,7 @@ struct cell_t {
   bool fr:1;
   bool os:1;
   bool inv:1;
+  bool ol:1;
   void operator= (const cell_t &o) {
     ch = o.ch;
     inten = o.inten;
@@ -125,6 +126,7 @@ struct cell_t {
     fr = o.fr;
     os = o.os;
     inv = o.inv;
+    ol = o.ol;
   }
   bool operator==(const cell_t &o) const {
     if (ch != o.ch) return false;
@@ -136,12 +138,13 @@ struct cell_t {
     if (it != o.it) return false;
     if (fr != o.fr) return false;
     if (inv != o.inv) return false;
+    if (ol != o.ol) return false;
     return true;
   }
   bool operator != (const cell_t &o) const {
     return !operator==(o);
   }
-  cell_t(wchar_t ch = '\0', Intensity inten = I_NORM, int fc = COL_DEFAULT, int bc = COL_DEFAULT, int scs = 0, int ul = 0, int it = 0, int fr = 0, int os = 0, int inv = 0)
+  cell_t(wchar_t ch = '\0', Intensity inten = I_NORM, int fc = COL_DEFAULT, int bc = COL_DEFAULT, int scs = 0, int ul = 0, int it = 0, int fr = 0, int os = 0, int inv = 0, int ol = 0)
   : ch(ch),
     inten(inten),
     fc(fc),
@@ -151,7 +154,8 @@ struct cell_t {
     it(it),
     fr(fr),
     os(os),
-    inv(inv)
+    inv(inv),
+    ol(ol)
   {
   }
 };

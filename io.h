@@ -54,6 +54,7 @@ struct mterm {
   int cinv;
   int cos;
   int cul;
+  int col;
   bool died;
 
   void initcol()
@@ -62,6 +63,7 @@ struct mterm {
     cbg = -1;
     cint = I_UNK;
     cul = -1;
+    col = -1;
     cit = -1;
     cfr = -1;
     cinv = -1;

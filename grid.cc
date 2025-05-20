@@ -187,7 +187,7 @@ void grid_t::wterminal(wchar_t ch) {
 	scs = 0;
       }
 	
-      cell_t a = cell_t(ch, inten, forecol, backcol, scs, ul, it, fr, os, inv);
+      cell_t a = cell_t(ch, inten, forecol, backcol, scs, ul, it, fr, os, inv, ol);
       place(&a);
       
       changed = 1;
@@ -377,6 +377,7 @@ void grid_t::wterminal(wchar_t ch) {
 	  inv = 0;
 	  hidden = 0;
 	  os = 0;
+	  ol = 0;
 	  break;
 	case 1:
 	  inten = I_BOLD;
@@ -461,7 +462,13 @@ void grid_t::wterminal(wchar_t ch) {
 	    }
 	  }
 	  break;
-	}
+        case 53:
+          ol = 1;
+          break;
+        case 55:
+          ol = 0;
+          break;
+        }
       }
 
       mode = 0;
