@@ -1,3 +1,9 @@
+0.3
+  TrueColor support. See https://github.com/termstandard/colors. We pass
+  these through directly from the MUD without trying a fallback.
+
+  Add support for the MTTS standard for client capabilities.
+
 0.2.4
   Links against Lua 5 if available.  Note that it prefers Lua 5 over Lua 4, 
   and this may break your .crystal.lua since various system functions have
@@ -39,7 +45,7 @@
 
   Support for a made-up telnet MULTIPLEX option, used by the Cryosphere for
   making subwindows to hold the current state of board games.   See 
-  <http://cryosphere.net/~rwb197/telnet-mplex.txt> for the documentation.
+  <https://musicmud.org/crystal/telopt-mplex.txt> for the documentation.
 
   Slightly better terminal emulation - still nowhere near self-hosting,
   but getting there.

@@ -50,7 +50,6 @@
 #endif
 
 #include <term.h>
-#include <curses.h>
 
 #include <locale.h>
 #include <wchar.h>

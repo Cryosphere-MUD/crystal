@@ -35,7 +35,6 @@
 
 #include <string>
 #include <stdio.h>
-#include <curses.h>
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <stdlib.h>

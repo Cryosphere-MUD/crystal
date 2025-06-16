@@ -34,6 +34,7 @@
 #define IO_H
 
 #include <string.h>
+#include <curses.h>
 
 #include "common.h"
 
@@ -100,7 +101,7 @@ struct mterm {
       va_start(a, fmt);
       vsprintf(buf, fmt, a);
       if (!titleset || curtitle != buf) {
-	printf("\033]2;%s\a", buf);
+	printf("\033]2;%s\033\\", buf);
 	curtitle = buf;
 	titleset = 1;
       }
@@ -170,6 +171,11 @@ struct mterm {
       knowscroll = 0;
       if (strstr(t, "256") || getenv("TERM256"))
 	col256 = 1;
+    }
+
+    t = getenv("COLORTERM");
+    if (t && (strstr(t, "true") || strstr(t, "24"))) {
+        col256 = 1;
     }
   }
 

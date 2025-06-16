@@ -235,7 +235,7 @@ void telnet_state::tstack(conn_t *conn, int ch) {
         	str += (conn->mud_cset == "UTF-8"?"ucryotel":"cryotel");
         }
         else if (ttype_count == 1) {
-                str += "crystal:000_002_005";
+                str += "crystal:000_003_001";
         }
         else if (ttype_count == 2 || ttype_count == 3)
         {
@@ -244,10 +244,14 @@ void telnet_state::tstack(conn_t *conn, int ch) {
                 if (conn->mud_cset == "UTF-8")
                         mtts_bitmask     |= 4; // UTF-8
 
-                if (tty.col256)
-                        mtts_bitmask     |= 8; // 256 colors
+                if (tty.col256) {
+                        mtts_bitmask     |= 8;   // 256 colors
+                        mtts_bitmask     |= 256; // TrueColor
+                }
 
-                mtts_bitmask     |= 2048; // SSL
+#ifdef HAVE_SSL
+		mtts_bitmask     |= 2048; // SSL
+#endif
 
                 std::stringstream ss;
                 ss << "MTTS ";
