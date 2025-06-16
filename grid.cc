@@ -128,6 +128,17 @@ void grid_t::osc_end()
    osc_string = "";
 }
 
+static int parse_truecol(std::list<int>::iterator &parit, const std::list<int>::iterator end, int def)
+{
+        int comps[3];
+        for (int i = 0 ; i < 3 ; i++) {
+                if (parit == end) return def;
+                comps[i] = *parit;
+                parit++;
+        }
+        return make_truecol(comps[0], comps[1], comps[2]);
+}
+
 void grid_t::wterminal(wchar_t ch) {
   //  fprintf(stderr, "mode: %3s, got:%3s.\n", q(mode).c_str(), q(ch).c_str());
 
@@ -442,6 +453,11 @@ void grid_t::wterminal(wchar_t ch) {
 		continue;
 	      }
 	    }
+	    if (*parit == 2) {
+   	        parit++;
+                forecol = parse_truecol(parit, pars.end(), 7);
+                continue;
+	    }
 	  }
 	  break;
 	case 40 ... 47:
@@ -460,6 +476,11 @@ void grid_t::wterminal(wchar_t ch) {
 		continue;
 	      }
 	    }
+	    if (*parit == 2) {
+   	        parit++;
+                backcol = parse_truecol(parit, pars.end(), 0);
+                continue;
+            }
 	  }
 	  break;
         case 53:

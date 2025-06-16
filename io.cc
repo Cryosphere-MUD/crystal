@@ -41,6 +41,15 @@
 #include <string.h>
 #include <unistd.h>
 
+void truecol_to_str(char* buf, int value)
+{
+        int red = ((value >> 16) & 0xff);
+        int green = ((value >> 8) & 0xff);
+        int blue = value & 0xff;
+
+        sprintf(buf, "2;%i;%i;%i;", red, green, blue);
+}
+
 int mterm::getinput() {
   unsigned char buf[10];
   if (read(0, buf, 1)==1) {
@@ -122,7 +131,12 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
         sprintf(blah, ";39");
     } else if (g.fc>7) {
       if (col256)
-	sprintf(blah, "38;5;%i;", g.fc);
+        if (is_truecol(g.fc)) {
+          strcpy(blah, "38;");
+          truecol_to_str(blah + 3, g.fc);
+        }
+        else
+	  sprintf(blah, "38;5;%i;", g.fc);
       else
 	sprintf(blah, "31;");
     } else {
@@ -139,7 +153,12 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
         sprintf(blah, "49;");
     } else if (g.bc>7) {
       if (col256)
-	sprintf(blah, "48;5;%i;", g.bc);
+        if (is_truecol(g.bc)) {
+          strcpy(blah, "48;");
+          truecol_to_str(blah+3, g.bc);
+        }
+        else
+  	  sprintf(blah, "48;5;%i;", g.bc);
       else
 	sprintf(blah, "41;");
     } else {

@@ -77,6 +77,16 @@ my_wstring mkws(const char* cmd);
 #define COL_WHITE   7
 #define COL_DEFAULT -1
 
+#define TRUE_MARKER (1 << 25)
+
+constexpr int make_truecol(unsigned char r, unsigned char g, unsigned char b) {
+        return ((r&0xff) << 16 | (g & 0xff) << 8 | (b & 0xff)) | TRUE_MARKER;
+}
+
+constexpr bool is_truecol(unsigned int value) {
+        return (value & TRUE_MARKER) == TRUE_MARKER;
+}
+
 #define BEL '\a'
 #define SI  0x0e
 #define SO  0x0f
