@@ -246,10 +246,8 @@ void mterm::plonk(const cell_t &g, bool allow_dead) {
     case 0:
       break;
     case 1:
-      printf("-");
       break;
     case 2:
-      printf("--");
       break;
     }
   }

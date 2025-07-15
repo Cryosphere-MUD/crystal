@@ -4,6 +4,8 @@
 
   Add support for the MTTS standard for client capabilities.
 
+  Autotools make setup has been remaked with CMake.
+
 0.2.4
   Links against Lua 5 if available.  Note that it prefers Lua 5 over Lua 4, 
   and this may break your .crystal.lua since various system functions have

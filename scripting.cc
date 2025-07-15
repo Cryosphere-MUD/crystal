@@ -36,7 +36,6 @@
 #include "scripting.h"
 #include "Socket.h"
 #include "telnet.h"
-#include "config.h"
 #include "commands.h"
 
 #ifndef HAVE_LUA

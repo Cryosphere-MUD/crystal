@@ -91,7 +91,6 @@
 #include "Socket.h"
 #include "url.h"
 
-#include "config.h"
 
 #undef SCROLL
 

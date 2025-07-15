@@ -42,7 +42,6 @@
 #include <netdb.h>
 #include <resolv.h>
 
-#include "config.h"
 
 #include "Socket.h"
 #include "io.h"

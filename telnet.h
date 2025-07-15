@@ -38,7 +38,6 @@
 #include "common.h"
 #include "crystal.h"
 #include "grid.h"
-#include "config.h"
 #include "Socket.h"
 
 #ifdef HAVE_ZLIB
