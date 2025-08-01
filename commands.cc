@@ -182,10 +182,11 @@ void cmd_dumplog(conn_t *conn, const cmd_args &arg)
 struct option_t {
   const char *name;
   bool (conn_t::*option);
-} options[] = {
-  {"neverecho", &conn_t::never_echo },
-  {"lpprompts", &conn_t::lp_prompts },
-  { NULL, }
+};
+
+auto options = {
+  option_t{"neverecho", &conn_t::never_echo },
+  option_t{"lpprompts", &conn_t::lp_prompts },
 };
 
 void cmd_bind(conn_t *conn, const cmd_args &arg);
@@ -214,12 +215,12 @@ void cmd_set(conn_t *conn, const cmd_args &arg)
 
   std::string s = arg.size()==3?mks(arg[1]):"";
 
-  for (int i=0;options[i].name;i++) {
+  for (const auto &opt : options) {
     if (arg.size()==1)
-      conn->grid->infof("///  %s - %s\n", options[i].name, conn->*options[i].option?"on":"off");
+      conn->grid->infof("///  %s - %s\n", opt.name, conn->*opt.option?"on":"off");
     else
-      if (s==options[i].name) {
-	conn->*options[i].option = to;
+      if (s==opt.name) {
+	conn->*opt.option = to;
 	conn->grid->infof("/// done\n");
 	return;
       }
@@ -236,11 +237,9 @@ struct cmd_t {
   const char *help;
 };
 
-std::vector<cmd_t> cmd_table;
-
-cmd_t init_cmds[] =
+std::vector<cmd_t> cmd_table =
 {
-  { L"connect" , cmd_connect, "<host> [port]", "connects to given host" },
+  cmd_t{ L"connect" , cmd_connect, "<host> [port]", "connects to given host" },
   { L"open",     cmd_connect },
   { L"close",    cmd_close, NULL, "cuts connection" },
 
@@ -266,23 +265,24 @@ cmd_t init_cmds[] =
   { L"bind",     cmd_bind, "[key value]", "shows or sets current keyboard bindings" },
 
   { L"z",        cmd_z, NULL, "suspend" },
-  { L"", }
 };
 
 void cmd_help(conn_t *conn, const cmd_args &arg) 
 {
-  for (int i = 0; i < cmd_table.size(); i++) {
-    if (!i || cmd_table[i].function != cmd_table[i-1].function) {
-      if (cmd_table[i].args)
-	if (cmd_table[i].help)
-	  conn->grid->infof("// %ls %s - %s\n", cmd_table[i].commandname.c_str(), cmd_table[i].args, cmd_table[i].help);
+  command_handler prev_func = nullptr;
+  for (const auto& cmd: cmd_table) {
+    if (cmd.function != prev_func) {
+      if (cmd.args)
+	if (cmd.help)
+	  conn->grid->infof("// %ls %s - %s\n", cmd.commandname.c_str(), cmd.args, cmd.help);
 	else
-	  conn->grid->infof("// %ls %s\n", cmd_table[i].commandname.c_str(), cmd_table[i].args);
+	  conn->grid->infof("// %ls %s\n", cmd.commandname.c_str(), cmd.args);
       else
-	if (cmd_table[i].help)
-	  conn->grid->infof("// %ls - %s\n", cmd_table[i].commandname.c_str(), cmd_table[i].help);
+	if (cmd.help)
+	  conn->grid->infof("// %ls - %s\n", cmd.commandname.c_str(), cmd.help);
 	else
-	  conn->grid->infof("// %ls\n", cmd_table[i].commandname.c_str());
+	  conn->grid->infof("// %ls\n", cmd.commandname.c_str());
+      prev_func = cmd.function;
     }
   }
 }
@@ -302,13 +302,6 @@ std::vector<my_wstring> tokenize(my_wstring s) {
   }
   
   return v;
-}
-
-void init_commands()
-{
-  for (int i = 0; init_cmds[i].commandname.size(); i++) {
-    cmd_table.push_back(init_cmds[i]);
-  }
 }
 
 my_wstring mkws(const char* cmd)
@@ -331,9 +324,9 @@ void docommand(conn_t *conn, my_wstring s)
 {
   std::vector<my_wstring> args = tokenize(s);
   
-  for (int i = 0; i < cmd_table.size(); i++) {
-    if (cmd_table[i].commandname == args[0]) {
-      cmd_table[i].function(conn, args);
+  for (const auto& cmd: cmd_table) {
+    if (cmd.commandname == args[0]) {
+      cmd.function(conn, args);
       return;
     }
   }

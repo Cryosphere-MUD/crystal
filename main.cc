@@ -148,8 +148,7 @@ int main(int argc, char **argv) {
   grid.set_conn(&conn);
   
   conn.initbindings();
-  init_commands();
-  
+
   scripting::set_grid(&grid);
   scripting::start();
 

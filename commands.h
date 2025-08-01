@@ -47,6 +47,4 @@ void docommand(conn_t *conn, my_wstring s);
 
 void register_command(const char* cmd, command_handler function, const char* arg, const char *hlp);
 
-void init_commands();
-
 #endif
