@@ -53,8 +53,7 @@ void cmd_close(conn_t *conn, const cmd_args &arg)
     return;
   }
 
-  delete conn->telnet;
-  conn->telnet = 0;
+  conn->telnet.reset();
   conn->grid->info(_("/// connection closed.\n"));
 }
 

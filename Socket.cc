@@ -50,20 +50,6 @@
 #include "crystal.h"
 #include "scripting.h"
 
-InAddrList::InAddrList()
-{
-}
-
-void InAddrList::add(InAddr *a)
-{
-  addrs.push_back(a);
-}
-
-InAddrList::~InAddrList() {
-  for (size_t i=0;i<addrs.size();i++)
-    delete addrs[i];
-}
-
 class InAddr4 : public InAddr {
   struct sockaddr_in s;
 public:
@@ -118,20 +104,20 @@ public:
 };
 #endif
 
-InAddr *InAddr::create(const struct sockaddr *addr)
+InAddrPtr InAddr::create(const struct sockaddr *addr)
 {
   if (addr->sa_family == AF_INET) {
-    return new InAddr4((const struct sockaddr_in *)addr);
+    return std::make_shared<InAddr4>((const struct sockaddr_in *)addr);
   }
 #ifdef AF_INET6
   if (addr->sa_family == AF_INET6) {
-    return new InAddr6((const struct sockaddr_in6 *)addr);
+    return std::make_shared<InAddr6>((const struct sockaddr_in6 *)addr);
   }
 #endif
-  return NULL;
+  return nullptr;
 }
 
-InAddrList *InAddr::resolv(const char *name) 
+InAddrListPtr InAddr::resolv(const char *name) 
 {
 #ifdef AF_INET6
   struct hostent *he4 = gethostbyname2(name, AF_INET);
@@ -144,27 +130,27 @@ InAddrList *InAddr::resolv(const char *name)
  && !he6
 #endif
 )
-    return NULL;
+    return nullptr;
 
-  InAddrList *list = new InAddrList;
+  auto list = std::make_shared<InAddrList>();
 #ifdef AF_INET6
   if (he4 && he4->h_addrtype == AF_INET) {
     auto addr = (struct in_addr*)he4->h_addr_list[0];
     if (addr != nullptr) {
-      list->add(new InAddr4(addr));
+      list->add(std::make_shared<InAddr4>(addr));
     }
   }
   if (he6 && he6->h_addrtype == AF_INET6) {
     auto addr = (struct in6_addr*)he6->h_addr_list[0];
     if (addr != nullptr) {
-      list->add(new InAddr6(addr));
+      list->add(std::make_shared<InAddr6>(addr));
     }
   }
 #endif
   if (he && he->h_addrtype == AF_INET) {
     auto addr = (struct in_addr*)he->h_addr_list[0];
     if (addr != nullptr) {
-      list->add(new InAddr4(addr));
+      list->add(std::make_shared<InAddr4>(addr));
     }
   }
 
@@ -204,7 +190,7 @@ void Socket::connected() {
 #endif
 }
 
-int Socket::connect(InAddr *addr) {
+int Socket::connect(InAddrPtr addr) {
   fd = socket(addr->af(), SOCK_STREAM, 0);
   if (fd == -1)
     return -1;

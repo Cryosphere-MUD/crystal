@@ -415,9 +415,9 @@ bool conn_t::try_addr(const char *host, int port, bool ssl)
     return false;
   }
 
-  InAddr *addr = conn->addrs->get(conn->addr_i);
+  auto addr = conn->addrs->get(conn->addr_i);
 
-  Socket *s2 = new Socket(ssl);
+  auto s2 = std::make_shared<Socket>(ssl);
   addr->set_port(port);
   conn->port = port;
 
@@ -426,8 +426,7 @@ bool conn_t::try_addr(const char *host, int port, bool ssl)
   int e = errno;
   if (stat < 0) {
     conn->grid->infof(_("/// unable to connect : %s.\n"), strerror(e));
-    delete s2;
-
+    s2.reset();
     conn->addr_i++;
     return try_addr(host, port, ssl);
   }
@@ -437,9 +436,7 @@ bool conn_t::try_addr(const char *host, int port, bool ssl)
   if (s2->getpend()==0)
     connected();
   
-  if (conn->telnet)
-    delete conn->telnet;
-  conn->telnet = new telnet_state(s2);
+  conn->telnet = std::make_shared<telnet_state>(s2);
   conn->grid->cstoredprompt.erase();
   return true;
 }
@@ -447,8 +444,7 @@ bool conn_t::try_addr(const char *host, int port, bool ssl)
 void conn_t::connect(const char *host, int port, bool ssl)
 {
   /* nuke old stuff */
-  delete telnet;
-  telnet = 0;
+  telnet.reset();
 
   if (overlay) overlay->visible = 0;
   if (grid->col) 
@@ -456,9 +452,6 @@ void conn_t::connect(const char *host, int port, bool ssl)
 
   grid->infof(_("/// resolving %s\n"), host, port);
   display_buffer();
-
-  if (addrs)
-    delete addrs;
 
   addrs = InAddr::resolv(host);
   if (!addrs) {
@@ -514,8 +507,7 @@ bool conn_t::disconnected(int bts, int pend)
   }
   conn->display_buffer();
   fflush(stdout);
-  delete conn->telnet;
-  conn->telnet = 0;
+  conn->telnet.reset();
   conn->commandmode = 1;
   conn->grid->changed = 1;
   return false;

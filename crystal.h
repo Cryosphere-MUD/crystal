@@ -33,6 +33,7 @@
 #ifndef CRYSTAL_H
 #define CRYSTAL_H
 
+#include <memory>
 #include <set>
 #include <string>
 
@@ -42,6 +43,8 @@
 struct telnet_state;
 class grid_t;
 class InAddrList;
+typedef std::shared_ptr<InAddrList> InAddrListPtr;
+
 class hlist;
 
 class conn_t : public commandeditor_t {
@@ -61,7 +64,7 @@ class conn_t : public commandeditor_t {
   bool quit;
 
  private:
-  InAddrList *addrs;
+  InAddrListPtr addrs;
   int addr_i;
 
  public:
@@ -74,7 +77,7 @@ class conn_t : public commandeditor_t {
   grid_t *overlay;
   grid_t *cur_grid;
 
-  telnet_state *telnet;
+  std::shared_ptr<telnet_state> telnet;
   FILE *logfile;
 
   std::string mud_cset;

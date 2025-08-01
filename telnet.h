@@ -49,7 +49,7 @@
 #endif
 
 struct telnet_state {
-  Socket *s;
+  std::shared_ptr<Socket> s;
 
   int will_eor = 0;
   int allstars = 0;
@@ -65,7 +65,7 @@ struct telnet_state {
 #ifdef MCCP
   mc_state *mc = nullptr;
 #endif
-  telnet_state(Socket *sock) : 
+  telnet_state(std::shared_ptr<Socket> sock) : 
     s(sock),
     subneg_data("")
 {
@@ -81,10 +81,6 @@ struct telnet_state {
       mc = 0;
     }
 #endif
-    if (s) {
-      delete s;
-      s = 0;
-    }
   }
 
   void tstack(conn_t *conn, int ch);

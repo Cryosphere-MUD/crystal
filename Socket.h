@@ -33,7 +33,7 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
-
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -48,20 +48,28 @@ int lookup_service(const std::string &name);
 
 class InAddr;
 
+typedef std::shared_ptr<InAddr> InAddrPtr;
+
 class InAddrList {
-  std::vector<InAddr*> addrs;
+  std::vector<InAddrPtr> addrs;
  public:
-  InAddrList();
-  void add(InAddr *);
-  InAddr *get(int i) { return addrs[i]; }
+  InAddrList() { }
+  void add(InAddrPtr addr)
+  {
+        addrs.push_back(addr);
+  }
+
+  InAddrPtr get(int i) { return addrs[i]; }
   int size() { return addrs.size(); }
-  ~InAddrList();
+  ~InAddrList() { }
 };
+
+typedef std::shared_ptr<InAddrList> InAddrListPtr;
 
 class InAddr {
 public:
-  static InAddrList *resolv(const char *name);
-  static InAddr *create(const struct sockaddr *addr);
+  static InAddrListPtr resolv(const char *name);
+  static InAddrPtr create(const struct sockaddr *addr);
 
   virtual ~InAddr() { };
 
@@ -90,7 +98,7 @@ class Socket {
   bool getdead() { return dead; }
   bool getpend() { return pending; }
   Socket(bool ssl);
-  int connect(InAddr *where);
+  int connect(InAddrPtr where);
   int read(char *, int);
   int write(const char *, int);
   void close();
