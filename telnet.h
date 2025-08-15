@@ -44,6 +44,9 @@
 #define MCCP
 #endif
 
+#undef MCCP
+// MCCP disabled due to bugs in library
+
 #ifdef MCCP
 #include "mccpDecompress.h"
 #endif
