@@ -379,7 +379,7 @@ void grid_t::wterminal(wchar_t ch)
 			return;
 		}
 
-		if (ch == 'D')
+		if (ch == 'C')
 		{ /* CUR - cursor right */
 			if (pars.begin() != pars.end())
 				col += *pars.begin();
