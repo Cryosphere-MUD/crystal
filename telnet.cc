@@ -184,14 +184,10 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 	for (int i = 0; i < len; i++)
 	{
 		if (compression_mode == TELOPT_COMPRESS4)
-		{
 			mccp4_state.input_buffer += bytes[i];
-		}
 
 		if (compression_mode == TELOPT_COMPRESS2)
-		{
 			zlib_state.input_buffer += bytes[i];
-		}
 
 		if (!compression_mode)
 			conn->telnet->tstack(conn, bytes[i]);
@@ -200,7 +196,7 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 	if (compression_mode == TELOPT_COMPRESS4)
 	{
 		std::string &input_buffer = mccp4_state.input_buffer;
-		ZSTD_inBuffer_s inbuffer = { input_buffer.data(), input_buffer.size(), 0 };
+		ZSTD_inBuffer_s inbuffer = {input_buffer.data(), input_buffer.size(), 0};
 
 		std::vector<unsigned char> outdata(ZSTD_DStreamOutSize());
 
@@ -208,9 +204,10 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 
 		int rval;
 
-		do {
-			 
-			outbuffer = { outdata.data(), outdata.size(), 0 };
+		do
+		{
+
+			outbuffer = {outdata.data(), outdata.size(), 0};
 
 			rval = ZSTD_decompressStream(mccp4_state.stream, &outbuffer, &inbuffer);
 
@@ -218,7 +215,7 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 			{
 				conn->grid->info("/// Compression error!\n");
 				ZSTD_freeDStream(mccp4_state.stream);
-                                mccp4_state.stream = nullptr;
+				mccp4_state.stream = nullptr;
 				compression_mode = 0;
 				return;
 			}
@@ -226,16 +223,16 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 			input_buffer = input_buffer.substr(inbuffer.pos);
 			for (int idx = 0; idx < outbuffer.pos; idx++)
 				conn->telnet->tstack(conn, outdata[idx]);
-
-		} while (outbuffer.pos == outbuffer.size);
+		}
+		while (outbuffer.pos == outbuffer.size);
 
 		if (rval == 0)
 		{
 			compression_mode = 0;
-                        std::string remainder = input_buffer;
-			handle_read(conn, (unsigned char*)remainder.data(), remainder.size());
-                        ZSTD_freeDStream(mccp4_state.stream);
-                        mccp4_state.stream = nullptr;
+			std::string remainder = input_buffer;
+			handle_read(conn, (unsigned char *)remainder.data(), remainder.size());
+			ZSTD_freeDStream(mccp4_state.stream);
+			mccp4_state.stream = nullptr;
 		}
 	}
 
@@ -243,13 +240,13 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 	{
 		std::string &input_buffer = zlib_state.input_buffer;
 		z_stream &stream = zlib_state.stream;
-		
+
 		int status = 0;
 		size_t obtained = 0;
 
 		do
 		{
-			stream.next_in = (Bytef*)input_buffer.data();
+			stream.next_in = (Bytef *)input_buffer.data();
 			stream.avail_in = input_buffer.size();
 
 			std::vector<Bytef> outdata(16384);
@@ -262,7 +259,7 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 
 			obtained = stream.next_out - first_out;
 
-			input_buffer = std::string((const char*)stream.next_in, stream.avail_in);
+			input_buffer = std::string((const char *)stream.next_in, stream.avail_in);
 			while (first_out < stream.next_out)
 			{
 				conn->telnet->tstack(conn, *first_out);
@@ -274,8 +271,8 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 				compression_mode = 0;
 				handle_read(conn, stream.next_in, stream.avail_in);
 			}
-
-		} while (status == Z_OK && obtained);
+		}
+		while (status == Z_OK && obtained);
 	}
 }
 
@@ -295,7 +292,7 @@ void telnet_state::handle_compress4(conn_t *conn)
 			compression_mode = TELOPT_COMPRESS4;
 			if (mccp4_state.stream)
 				ZSTD_freeDStream(mccp4_state.stream);
-                        mccp4_state.input_buffer = "";
+			mccp4_state.input_buffer = "";
 			mccp4_state.stream = ZSTD_createDStream();
 			ZSTD_initDStream(mccp4_state.stream);
 		}
@@ -416,21 +413,13 @@ void telnet_state::tstack(conn_t *conn, int ch)
 		if (ch == SE)
 		{
 			if (subneg_type == TELOPT_TTYPE)
-			{
 				handle_ttype(conn);
-			}
 			if (subneg_type == TELOPT_MPLEX)
-			{
 				handle_mplex(conn);
-			}
 			if (subneg_type == TELOPT_COMPRESS2)
-			{
 				handle_compress2(conn);
-			}
 			if (subneg_type == TELOPT_COMPRESS4)
-			{
 				handle_compress4(conn);
-			}
 			subneg_type = 0;
 			mode = 0;
 			debug_fprintf((stderr, "\n"));
