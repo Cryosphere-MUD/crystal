@@ -55,6 +55,7 @@
 
 #define TELOPT_GMCP 201
 
+#define TELOPT_COMPRESS2 86
 #define TELOPT_COMPRESS4 88
 #define MCCP4_ACCEPT_ENCODING 1
 #define MCCP4_BEGIN_ENCODING 2
@@ -184,6 +185,11 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 			mccp4_state.input_buffer += bytes[i];
 		}
 
+		if (compression_mode == TELOPT_COMPRESS2)
+		{
+			zlib_state.input_buffer += bytes[i];
+		}
+
 		if (!compression_mode)
 			conn->telnet->tstack(conn, bytes[i]);
 	}
@@ -225,6 +231,52 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 			handle_read(conn, (unsigned char*)inbuffer.src + inbuffer.pos, inbuffer.size - inbuffer.pos);
 		}
 	}
+
+	if (compression_mode == TELOPT_COMPRESS2)
+	{
+		std::string &input_buffer = zlib_state.input_buffer;
+		z_stream &stream = zlib_state.stream;
+		
+		int status = 0;
+		size_t obtained = 0;
+
+		do
+		{
+			stream.next_in = (Bytef*)input_buffer.data();
+			stream.avail_in = input_buffer.size();
+
+			std::vector<Bytef> outdata(16384);
+
+			auto first_out = outdata.data();
+			stream.next_out = outdata.data();
+			stream.avail_out = outdata.size();
+
+			int status = inflate(&stream, Z_PARTIAL_FLUSH);
+
+			obtained = stream.next_out - first_out;
+
+			input_buffer = std::string((const char*)stream.next_in, stream.avail_in);
+			while (first_out < stream.next_out)
+			{
+				conn->telnet->tstack(conn, *first_out);
+				first_out++;
+			}
+
+			if (status == Z_STREAM_END)
+			{
+				compression_mode = 0;
+				handle_read(conn, stream.next_in, stream.avail_in);
+			}
+
+		} while (status == Z_OK && obtained);
+	}
+}
+
+void telnet_state::handle_compress2(conn_t *conn)
+{
+	compression_mode = TELOPT_COMPRESS2;
+	zlib_state = {};
+	conn->grid->infof("[inflate_init %i]\n", inflateInit(&zlib_state.stream));
 }
 
 void telnet_state::handle_compress4(conn_t *conn)
@@ -355,7 +407,6 @@ void telnet_state::tstack(conn_t *conn, int ch)
 		}
 		if (ch == SE)
 		{
-			conn->grid->infof("subtype %i", subneg_type);
 			if (subneg_type == TELOPT_TTYPE)
 			{
 				handle_ttype(conn);
@@ -363,6 +414,10 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			if (subneg_type == TELOPT_MPLEX)
 			{
 				handle_mplex(conn);
+			}
+			if (subneg_type == TELOPT_COMPRESS2)
+			{
+				handle_compress2(conn);
 			}
 			if (subneg_type == TELOPT_COMPRESS4)
 			{
@@ -436,6 +491,13 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			encodings.push_back(MCCP4_ACCEPT_ENCODING);
 			encodings += "zstd";
 			subneg_send(TELOPT_COMPRESS4, encodings);
+			mode = 0;
+			return;
+		}
+
+		if (ch == TELOPT_COMPRESS2)
+		{
+			reply(IAC, DO, TELOPT_COMPRESS2);
 			mode = 0;
 			return;
 		}

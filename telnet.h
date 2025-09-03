@@ -40,6 +40,8 @@
 #include "crystal.h"
 #include "grid.h"
 
+#include <zlib.h>
+
 #ifdef HAVE_ZLIB
 #define MCCP
 #endif
@@ -57,6 +59,12 @@ struct MCCP4State
 {
 	std::string input_buffer;
 	ZSTD_DStream *stream = nullptr;
+};
+
+struct ZLibState
+{
+	std::string input_buffer;
+	z_stream_s stream;
 };
 
 struct telnet_state
@@ -78,6 +86,7 @@ struct telnet_state
 
 	int compression_mode = 0;
 
+	ZLibState zlib_state;
 	MCCP4State mccp4_state;
 
 #ifdef MCCP
@@ -106,6 +115,8 @@ struct telnet_state
 	void handle_ttype(conn_t *conn);
 
 	void handle_mplex(conn_t *conn);
+
+	void handle_compress2(conn_t *conn);
 
 	void handle_compress4(conn_t *conn);
 
