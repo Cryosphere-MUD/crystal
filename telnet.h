@@ -89,7 +89,12 @@ struct telnet_state
 	}
 
 	void tstack(conn_t *conn, int ch);
-	void decompress(conn_t *, unsigned char *, size_t);
+
+	void handle_ttype(conn_t *conn);
+
+	void handle_mplex(conn_t *conn);
+
+	void handle_read(conn_t *, unsigned char *, size_t);
 
 	void send(const std::string &s);
 

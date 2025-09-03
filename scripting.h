@@ -33,6 +33,8 @@
 #ifndef SCRIPTING_H
 #define SCRIPTING_H
 
+#include "common.h"
+
 class grid_t;
 
 namespace scripting {

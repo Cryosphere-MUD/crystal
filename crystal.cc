@@ -640,7 +640,7 @@ void conn_t::main_loop()
 				}
 				else if (bts != -1)
 				{
-					conn->telnet->decompress(conn, mbuffer, bts);
+					conn->telnet->handle_read(conn, mbuffer, bts);
 					ok = 1;
 				}
 			}
