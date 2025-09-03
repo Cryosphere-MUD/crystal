@@ -33,167 +33,169 @@
 #ifndef IO_H
 #define IO_H
 
-#include <string.h>
 #include <curses.h>
+#include <string.h>
 
 #include "common.h"
 
-struct mterm {
-  bool utf8;
-  bool xterm_title;
-  bool col256;
-  bool knowscroll;
-  std::string curtitle;
-  bool titleset;
+struct mterm
+{
+	bool utf8;
+	bool xterm_title;
+	bool col256;
+	bool knowscroll;
+	std::string curtitle;
+	bool titleset;
 
-  int ccs;
-  int cfg;
-  int cbg;
-  Intensity cint;
-  int cit;
-  int cfr;
-  int cinv;
-  int cos;
-  int cul;
-  int col;
-  bool died;
+	int ccs;
+	int cfg;
+	int cbg;
+	Intensity cint;
+	int cit;
+	int cfr;
+	int cinv;
+	int cos;
+	int cul;
+	int col;
+	bool died;
 
-  void initcol()
-  {
-    cfg = -1;
-    cbg = -1;
-    cint = I_UNK;
-    cul = -1;
-    col = -1;
-    cit = -1;
-    cfr = -1;
-    cinv = -1;
-    cos = -1;
-    died = false;
-  }
+	void initcol()
+	{
+		cfg = -1;
+		cbg = -1;
+		cint = I_UNK;
+		cul = -1;
+		col = -1;
+		cit = -1;
+		cfr = -1;
+		cinv = -1;
+		cos = -1;
+		died = false;
+	}
 
-  mterm() 
-  : utf8(false)
-  , xterm_title(false)
-  , col256(false)
-  , knowscroll(false)
-  , curtitle("")
-  , titleset(false)
-  , acsc("")
-  , acsc_set(0)
-  , bad_have(true)
-  {
-    HEIGHT = 24;
-    WIDTH = 80;
-    initcol();
-    memset(evillines, 0, sizeof(evillines));
-  }
+	mterm()
+	    : utf8(false), xterm_title(false), col256(false), knowscroll(false), curtitle(""), titleset(false), acsc(""), acsc_set(0),
+	      bad_have(true)
+	{
+		HEIGHT = 24;
+		WIDTH = 80;
+		initcol();
+		memset(evillines, 0, sizeof(evillines));
+	}
 
-  void beep() {
-    printf("\a");
-    fflush(stdout);
-  }
+	void beep()
+	{
+		printf("\a");
+		fflush(stdout);
+	}
 
-  void title(const char *fmt, ...) {
-    if (xterm_title) {
-      char buf[1000];
-      va_list a;
-      va_start(a, fmt);
-      vsprintf(buf, fmt, a);
-      if (!titleset || curtitle != buf) {
-	printf("\033]2;%s\033\\", buf);
-	curtitle = buf;
-	titleset = 1;
-      }
-      va_end(a);
-    }
-  }
-  
-  std::string getinfo(const char *name, const char *def=0) {
-    const char *i = tigetstr((char*)name);
-    if (i && strstr(i, "$<")) {
-      std::string q = i;
-      q = q.substr(0, strstr(i, "$<")-i);
-      return q;
-    }
-    if (i) 
-      return i;
-    return def;
-  }
+	void title(const char *fmt, ...)
+	{
+		if (xterm_title)
+		{
+			char buf[1000];
+			va_list a;
+			va_start(a, fmt);
+			vsprintf(buf, fmt, a);
+			if (!titleset || curtitle != buf)
+			{
+				printf("\033]2;%s\033\\", buf);
+				curtitle = buf;
+				titleset = 1;
+			}
+			va_end(a);
+		}
+	}
 
-  std::string acsc;
-  int acsc_set;
+	std::string getinfo(const char *name, const char *def = 0)
+	{
+		const char *i = tigetstr((char *)name);
+		if (i && strstr(i, "$<"))
+		{
+			std::string q = i;
+			q = q.substr(0, strstr(i, "$<") - i);
+			return q;
+		}
+		if (i)
+			return i;
+		return def;
+	}
 
-  void outvtchar(unsigned char w) {
-    if (!acsc_set) {
-      acsc = getinfo("acsc", "");
-      acsc_set = 1;
-    }
-    const char *s = acsc.c_str();
-    while (*s) {
-      if (*s==w) {
-	printf("%c", s[1]);
-	return;
-      }
-      s += 2;
-    }
+	std::string acsc;
+	int acsc_set;
 
-    const char *def = "+#????\\+?#+++++~--_++++++<>*!Lo";
-    if (w >= '`' && w <= 0x7e) {
-      printf("%c", def[w-'`']);
-      return;
-    }
+	void outvtchar(unsigned char w)
+	{
+		if (!acsc_set)
+		{
+			acsc = getinfo("acsc", "");
+			acsc_set = 1;
+		}
+		const char *s = acsc.c_str();
+		while (*s)
+		{
+			if (*s == w)
+			{
+				printf("%c", s[1]);
+				return;
+			}
+			s += 2;
+		}
 
-    printf("%c", '?');
-  }
+		const char *def = "+#????\\+?#+++++~--_++++++<>*!Lo";
+		if (w >= '`' && w <= 0x7e)
+		{
+			printf("%c", def[w - '`']);
+			return;
+		}
 
-  int HEIGHT;
-  int WIDTH;
+		printf("%c", '?');
+	}
 
-  void grabwinsize() {
-    struct winsize wws;
-    const struct winsize *ws = &wws;
-    ioctl(0, TIOCGWINSZ, ws);
-    if (ws->ws_row) 
-      HEIGHT = MIN(ws->ws_row,     MAXHEIGHT)-1;
-    if (ws->ws_col) 
-      WIDTH = MIN(ws->ws_col, MAXWIDTH);    
-  }
+	int HEIGHT;
+	int WIDTH;
 
-  void getterm() {
-    const char *t=getenv("TERM");
-    if (t && (strcmp(t, "xterm")==0||
-	      strcmp(t, "rxvt")==0||
-	      strcmp(t, "xterm-color")==0||
-	      strcmp(t, "screen")==0)||
-	strncmp(t, "xterm-", 5)==0) {
-      xterm_title = 1;
-      knowscroll = 0;
-      if (strstr(t, "256") || getenv("TERM256"))
-	col256 = 1;
-    }
+	void grabwinsize()
+	{
+		struct winsize wws;
+		const struct winsize *ws = &wws;
+		ioctl(0, TIOCGWINSZ, ws);
+		if (ws->ws_row)
+			HEIGHT = MIN(ws->ws_row, MAXHEIGHT) - 1;
+		if (ws->ws_col)
+			WIDTH = MIN(ws->ws_col, MAXWIDTH);
+	}
 
-    t = getenv("COLORTERM");
-    if (t && (strstr(t, "true") || strstr(t, "24"))) {
-        col256 = 1;
-    }
-  }
+	void getterm()
+	{
+		const char *t = getenv("TERM");
+		if (t && (strcmp(t, "xterm") == 0 || strcmp(t, "rxvt") == 0 || strcmp(t, "xterm-color") == 0 || strcmp(t, "screen") == 0) ||
+		    strncmp(t, "xterm-", 5) == 0)
+		{
+			xterm_title = 1;
+			knowscroll = 0;
+			if (strstr(t, "256") || getenv("TERM256"))
+				col256 = 1;
+		}
 
-  void plonk(const cell_t &g, bool allow_dead);
+		t = getenv("COLORTERM");
+		if (t && (strstr(t, "true") || strstr(t, "24")))
+			col256 = 1;
+	}
 
-  cell_t wantbuffer[MAXHEIGHT][MAXWIDTH];
-  bool bad_have;
-  int evillines[MAXHEIGHT];
+	void plonk(const cell_t &g, bool allow_dead);
 
-  void show_want();
+	cell_t wantbuffer[MAXHEIGHT][MAXWIDTH];
+	bool bad_have;
+	int evillines[MAXHEIGHT];
 
-  my_wstring convert_input(int i);
-  int getinput();
+	void show_want();
 
-private:
-  cell_t havebuffer[MAXHEIGHT][MAXWIDTH];
+	my_wstring convert_input(int i);
+	int getinput();
 
-
+      private:
+	cell_t havebuffer[MAXHEIGHT][MAXWIDTH];
 };
 
 #endif

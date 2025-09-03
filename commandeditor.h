@@ -33,91 +33,96 @@
 #ifndef COMMANDEDITOR_H
 #define COMMANDEDITOR_H
 
-#include <map>
 #include "common.h"
+#include <map>
 
-struct hlist {
-  std::map<int, my_wstring> hist;
-  int idx;
-  int max;
-  hlist() : idx(0), max(0) {
-  }
+struct hlist
+{
+	std::map<int, my_wstring> hist;
+	int idx;
+	int max;
+	hlist() : idx(0), max(0) {}
 
-  void insert(const my_wstring &blah) {
-    hist[max] = blah;
-    max++;
-    idx = max;
-  }
+	void insert(const my_wstring &blah)
+	{
+		hist[max] = blah;
+		max++;
+		idx = max;
+	}
 
-  bool back() {
-    idx--;
-    if (idx < 0) {
-      idx = 0;
-      return 0;
-    }
-    return 1;
-  }
+	bool back()
+	{
+		idx--;
+		if (idx < 0)
+		{
+			idx = 0;
+			return 0;
+		}
+		return 1;
+	}
 
-  bool next() {
-    idx++;
-    if (idx >= max) {
-      idx = max;
-      return  0;
-    }
-    return 1;
-  }
+	bool next()
+	{
+		idx++;
+		if (idx >= max)
+		{
+			idx = max;
+			return 0;
+		}
+		return 1;
+	}
 
-  const my_wstring &get() {
-    static const my_wstring blah = L"";
-    if (idx >= max || idx < 0) 
-      return blah;
-    return hist[idx];
-  }
+	const my_wstring &get()
+	{
+		static const my_wstring blah = L"";
+		if (idx >= max || idx < 0)
+			return blah;
+		return hist[idx];
+	}
 };
 
 extern hlist cmdhist;
 
-class commandeditor_t {
- public:
-  //! are we in command mode (true) or mud mode (false)
-  bool commandmode;
-  
-  my_wstring buffer;
-  size_t cursor;
+class commandeditor_t
+{
+      public:
+	//! are we in command mode (true) or mud mode (false)
+	bool commandmode;
 
-  my_wstring future;
-  bool nofuture;
+	my_wstring buffer;
+	size_t cursor;
 
-  my_wstring cutbuffer;
+	my_wstring future;
+	bool nofuture;
 
-  hlist *chist();
+	my_wstring cutbuffer;
 
-  void doprevhistory();
-  void donexthistory();
+	hlist *chist();
 
-  void dokillword();
-  void dodelete();
+	void doprevhistory();
+	void donexthistory();
 
-  void docutfromhere();
-  void docuttohere();
-  void dopaste();
+	void dokillword();
+	void dodelete();
 
-  void dolastchar();
-  void donextchar();
-  void doprevchar();
-  void dofirstchar();
+	void docutfromhere();
+	void docuttohere();
+	void dopaste();
 
-  void doprevword();
-  void donextword();
+	void dolastchar();
+	void donextchar();
+	void doprevchar();
+	void dofirstchar();
 
-  void dotranspose();
+	void doprevword();
+	void donextword();
 
-  void doclearline();
-  void doinsertchar(wchar_t);
-  
-  void dobackspace();
+	void dotranspose();
 
-  
+	void doclearline();
+	void doinsertchar(wchar_t);
+
+	void dobackspace();
 };
 
 #endif

@@ -84,64 +84,65 @@
 #define MUDCOMPRESS_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-    /*  Opaque handle for a decompressor. Details defined in Compress.c - you
+	/*  Opaque handle for a decompressor. Details defined in Compress.c - you
      *  should never need to see them externally.
      */
-    struct mc_state_s;
-    typedef struct mc_state_s mc_state;
+	struct mc_state_s;
+	typedef struct mc_state_s mc_state;
 
-    /*  Create a new decompressor. Return a handle to it.
+	/*  Create a new decompressor. Return a handle to it.
      */
-    mc_state *mudcompress_new(void);
+	mc_state *mudcompress_new(void);
 
-    /*  Deallocate a decompressor and associated data. 'state' is invalid
+	/*  Deallocate a decompressor and associated data. 'state' is invalid
      *  afterthis call.
      */
-    void mudcompress_delete(mc_state *state);
+	void mudcompress_delete(mc_state *state);
 
-    /*  Perform decompression and negotiation on some received data.
+	/*  Perform decompression and negotiation on some received data.
      *  'data' is a pointer to the received data, 'len' is its length.
      */
-    void mudcompress_receive(mc_state *state, const char *data, unsigned len);
+	void mudcompress_receive(mc_state *state, const char *data, unsigned len);
 
-    /*  Return the number of pending decompressed bytes that can currently
+	/*  Return the number of pending decompressed bytes that can currently
      *  be read by mudcompress_get
      */
-    int mudcompress_pending(mc_state *state);
+	int mudcompress_pending(mc_state *state);
 
-    /*  Return true (non-0) if this decompressor encountered a fatal error.
+	/*  Return true (non-0) if this decompressor encountered a fatal error.
      */
-    int mudcompress_error(mc_state *state);
+	int mudcompress_error(mc_state *state);
 
-    /*  Read decompressed data from the decompressor into 'buf', up to a
+	/*  Read decompressed data from the decompressor into 'buf', up to a
      *  maximum of 'size' bytes. Returns the number of bytes actually copied.
      */
-    int mudcompress_get(mc_state *state, char *buf, int size);
+	int mudcompress_get(mc_state *state, char *buf, int size);
 
-    /*  Set *comp to the number of compressed bytes read, and *uncomp to the
+	/*  Set *comp to the number of compressed bytes read, and *uncomp to the
      *  number of bytes they expanded to, for this decompressor.
      */
-    void mudcompress_stats(mc_state *state, unsigned long *comp, unsigned long *uncomp);
+	void mudcompress_stats(mc_state *state, unsigned long *comp, unsigned long *uncomp);
 
-    /*  Check for a negotiation response. If this returns NULL, no output is
+	/*  Check for a negotiation response. If this returns NULL, no output is
      *  needed. If it returns non-NULL, it points to a NUL-terminated string
      *  that should be sent to the mud server. Calling this function clears
      *  the pending string (so be sure to save the result).
      */
-    const char *mudcompress_response(mc_state *state);
+	const char *mudcompress_response(mc_state *state);
 
-    /*  Return true (non-0) if this decompressor has successfully negotiated
+	/*  Return true (non-0) if this decompressor has successfully negotiated
      *  compression and is currently performing decompression.
      */
-    int mudcompress_compressing(mc_state *state);
+	int mudcompress_compressing(mc_state *state);
 
-    /*  Returns the numeric version of the protocol in use (0=none, 1=old
+	/*  Returns the numeric version of the protocol in use (0=none, 1=old
      *  original protocol, 2 is current)
      */
-    int mudcompress_version(mc_state *state);
+	int mudcompress_version(mc_state *state);
 
 #ifdef __cplusplus
 }

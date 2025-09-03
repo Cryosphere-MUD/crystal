@@ -34,209 +34,211 @@
 #define GRID_H
 
 #include "common.h"
-#include "io.h"
 #include "crystal.h"
+#include "io.h"
 #include "scripting.h"
 
 #include <list>
 #include <vector>
 
-struct ansi_context 
+struct ansi_context
 {
-  // the escape mode
-  int mode;
+	// the escape mode
+	int mode;
 
-  // parameters so far
-  std::list<int> pars;
+	// parameters so far
+	std::list<int> pars;
 
-  // current paremeter
-  int par;
+	// current paremeter
+	int par;
 
-  std::string osc_string;
+	std::string osc_string;
 
-  Intensity inten;
-  int forecol, backcol;
-  bool scs, it, fr, inv, os, hidden, ol;
-  int ul:2;
-  int defbc, deffc;
+	Intensity inten;
+	int forecol, backcol;
+	bool scs, it, fr, inv, os, hidden, ol;
+	int ul : 2;
+	int defbc, deffc;
 
-  void init() {
-    mode = 0;
-    pars = std::list<int>();
-    par = 0;
-    inten = I_NORM;
-    deffc = forecol = COL_DEFAULT;
-    defbc = backcol = COL_DEFAULT;
-    scs = 0;
-    ul = 0;
-    it = 0;
-    fr = 0;
-    inv = 0;
-    os = 0;
-    ol = 0;
-    hidden = 0;
-  }
+	void init()
+	{
+		mode = 0;
+		pars = std::list<int>();
+		par = 0;
+		inten = I_NORM;
+		deffc = forecol = COL_DEFAULT;
+		defbc = backcol = COL_DEFAULT;
+		scs = 0;
+		ul = 0;
+		it = 0;
+		fr = 0;
+		inv = 0;
+		os = 0;
+		ol = 0;
+		hidden = 0;
+	}
 };
 
-struct line_t {
-  cell_t i[MAXWIDTH];
-  int len;
+struct line_t
+{
+	cell_t i[MAXWIDTH];
+	int len;
 };
 
 #define GRIDHEIGHT 10000
 
-class grid_t : public ansi_context {
-public:
-  conn_t *conn;
+class grid_t : public ansi_context
+{
+      public:
+	conn_t *conn;
 
-  std::vector<line_t> lines;
-  int first;
-  int n;
-  int lcount;
+	std::vector<line_t> lines;
+	int first;
+	int n;
+	int lcount;
 
-  int row;
-  int col;
+	int row;
+	int col;
 
-  int lastprompt;
+	int lastprompt;
 
-  int height;
-  int width;
+	int height;
+	int width;
 
-  int visible;
+	int visible;
 
-  int changed;
+	int changed;
 
-  cellstring cstoredprompt;  
-  
-  void set_conn(conn_t *c) {
-    conn = c;
-  }
+	cellstring cstoredprompt;
 
-  grid_t(conn_t *c) {
-    conn = 0;
-    first = 0;
-    n = 0;
-    lcount = GRIDHEIGHT;
-    lines.reserve( lcount );
-    lastprompt = 0;
-    nlw = 0;
-    row = 0;
-    col = 0;
-    visible = 1;
-    changed = 0;
+	void set_conn(conn_t *c) { conn = c; }
 
-    height = 0;
-    width = 0;
+	grid_t(conn_t *c)
+	{
+		conn = 0;
+		first = 0;
+		n = 0;
+		lcount = GRIDHEIGHT;
+		lines.reserve(lcount);
+		lastprompt = 0;
+		nlw = 0;
+		row = 0;
+		col = 0;
+		visible = 1;
+		changed = 0;
 
-    init();
-  }
+		height = 0;
+		width = 0;
 
-  cell_t myblank() {
-    cell_t b = blank;
-    b.fc = deffc;
-    b.bc = defbc;
-    return b;
-  }
+		init();
+	}
 
-  cell_t get(int r, int c) {
-    if (r < first)
-      return myblank();
-    if (r > (first + n))
-      return myblank();
+	cell_t myblank()
+	{
+		cell_t b = blank;
+		b.fc = deffc;
+		b.bc = defbc;
+		return b;
+	}
 
-    if (c > lines[r % lcount].len)
-      return myblank();
+	cell_t get(int r, int c)
+	{
+		if (r < first)
+			return myblank();
+		if (r > (first + n))
+			return myblank();
 
-    return lines[r % lcount].i[c];
-  }
+		if (c > lines[r % lcount].len)
+			return myblank();
 
-  void newline() {
-    my_wstring s;
-    for (int i=0;i<get_len(row);i++) {
-      s += get(row, i).ch;
-    }
+		return lines[r % lcount].i[c];
+	}
 
-    if (conn->logfile) {
-      for (int i=0;i<get_len(row);i++) {
-	fprintf(conn->logfile, "%lc", get(row,i).ch);
-      }
-      fprintf(conn->logfile, "\n");
-      fflush(conn->logfile);
-    }
+	void newline()
+	{
+		my_wstring s;
+		for (int i = 0; i < get_len(row); i++)
+			s += get(row, i).ch;
 
-    row++;
-    col = 0;
-    n++;
-    for (int i=0;i<MAXWIDTH;i++) {
-      lines [ row % lcount ].i[i] = myblank();
-    }
-    if (n > lcount) {
-      first++;
-      n--;
-    }
-    scripting::dotrigger(s);
-  }
+		if (conn->logfile)
+		{
+			for (int i = 0; i < get_len(row); i++)
+				fprintf(conn->logfile, "%lc", get(row, i).ch);
+			fprintf(conn->logfile, "\n");
+			fflush(conn->logfile);
+		}
 
-  void eraseline(int from) 
-  {
-    for (int i=from;i<MAXWIDTH;i++) {
-      lines [ row % lcount ].i[i] = blank;
-    }
-  }
+		row++;
+		col = 0;
+		n++;
+		for (int i = 0; i < MAXWIDTH; i++)
+			lines[row % lcount].i[i] = myblank();
+		if (n > lcount)
+		{
+			first++;
+			n--;
+		}
+		scripting::dotrigger(s);
+	}
 
-  int get_len(int r) {
-    if (r < first)
-      return 0;
-    if (r > (first + n))
-      return 0;
+	void eraseline(int from)
+	{
+		for (int i = from; i < MAXWIDTH; i++)
+			lines[row % lcount].i[i] = blank;
+	}
 
-    return lines[r % lcount].len;
-  }
+	int get_len(int r)
+	{
+		if (r < first)
+			return 0;
+		if (r > (first + n))
+			return 0;
 
-  void set(int r, int c, cell_t ch) {
-    if (lines [ r % lcount].len <= c) 
-      lines[r % lcount].len = c+1;
-    lines[r % lcount].i[c] = ch;
-  }
+		return lines[r % lcount].len;
+	}
 
-  int nlw;
+	void set(int r, int c, cell_t ch)
+	{
+		if (lines[r % lcount].len <= c)
+			lines[r % lcount].len = c + 1;
+		lines[r % lcount].i[c] = ch;
+	}
 
-  void wantnewline() {
-    nlw++;
-  }
+	int nlw;
 
-  void place(const cell_t *ri);
+	void wantnewline() { nlw++; }
 
-  void osc_end();
+	void place(const cell_t *ri);
 
-  void wterminal(wchar_t ch);
+	void osc_end();
 
-  void show_batch(const cellstring &batch);
+	void wterminal(wchar_t ch);
 
-  bool file_dump(const char * file);
+	void show_batch(const cellstring &batch);
 
-  // the info functions place characters directly on the grid ignoring the
-  // current ANSI formatting.  These should be used to insert client-originated
-  // messages into the stream.
-  void info(const char *);
-  void info(const wchar_t *);
-  void info(const my_wstring &);
+	bool file_dump(const char *file);
 
-  void infof(const char *fmt, ...) /* __attribute__ (( format (printf, 2, 3) )) */;
+	// the info functions place characters directly on the grid ignoring the
+	// current ANSI formatting.  These should be used to insert client-originated
+	// messages into the stream.
+	void info(const char *);
+	void info(const wchar_t *);
+	void info(const my_wstring &);
 
- private:
-  void infoc(wchar_t w);
+	void infof(const char *fmt, ...) /* __attribute__ (( format (printf, 2, 3) )) */;
 
+      private:
+	void infoc(wchar_t w);
 };
 
-inline void have_prompt(grid_t *grid) {
-  grid->lastprompt = 1;
+inline void have_prompt(grid_t *grid)
+{
+	grid->lastprompt = 1;
 
-  my_wstring s;
-  for (int i=0;i<grid->get_len(grid->row);i++) {
-    s += grid->get(grid->row, i).ch;
-  }
-  scripting::doprompt(s);
+	my_wstring s;
+	for (int i = 0; i < grid->get_len(grid->row); i++)
+		s += grid->get(grid->row, i).ch;
+	scripting::doprompt(s);
 }
 
 extern int info_to_stderr;

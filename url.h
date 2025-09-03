@@ -37,15 +37,15 @@
 
 inline bool valid_protocol(const std::string &s)
 {
-  if (s == "telnet")
-    return 1;
+	if (s == "telnet")
+		return 1;
 
 #ifdef HAVE_SSL
-  if (s == "telnets")
-    return 1;
+	if (s == "telnets")
+		return 1;
 #endif
-  
-  return 0;
+
+	return 0;
 }
 
 #endif
