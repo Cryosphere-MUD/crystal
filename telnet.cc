@@ -57,7 +57,7 @@
 
 #define TELOPT_COMPRESS4 88
 #define MCCP4_ACCEPT_ENCODING 1
-#define MCCP4_BEGIN_ENCODING 1
+#define MCCP4_BEGIN_ENCODING 2
 
 #undef NEGOTIATE_MXP
 
@@ -229,11 +229,21 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 
 void telnet_state::handle_compress4(conn_t *conn)
 {
-	compression_mode = TELOPT_COMPRESS4;
-	if (mccp4_state.stream)
-		ZSTD_freeDStream(mccp4_state.stream);
-	mccp4_state.stream = ZSTD_createDStream();
-	ZSTD_initDStream(mccp4_state.stream);
+	if (subneg_data[0] == MCCP4_BEGIN_ENCODING)
+	{
+		if (subneg_data.substr(1) == "zstd")
+		{
+			compression_mode = TELOPT_COMPRESS4;
+			if (mccp4_state.stream)
+				ZSTD_freeDStream(mccp4_state.stream);
+			mccp4_state.stream = ZSTD_createDStream();
+			ZSTD_initDStream(mccp4_state.stream);
+		}
+		else
+		{
+			conn->grid->info("unknown compression method\n");
+		}
+	}
 }
 
 void telnet_state::handle_ttype(conn_t *conn)
