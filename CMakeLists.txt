@@ -53,6 +53,8 @@ else()
   message(WARNING "zlib not found - MCCP support will not be built")
 endif()
 
+target_link_libraries(crystal PRIVATE -lzstd)
+
 find_library(ICONV_LIB iconv)
 if(ICONV_LIB)
   target_link_libraries(crystal PRIVATE ${ICONV_LIB})

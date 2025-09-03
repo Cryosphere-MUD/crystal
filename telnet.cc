@@ -55,6 +55,10 @@
 
 #define TELOPT_GMCP 201
 
+#define TELOPT_COMPRESS4 88
+#define MCCP4_ACCEPT_ENCODING 1
+#define MCCP4_BEGIN_ENCODING 1
+
 #undef NEGOTIATE_MXP
 
 extern mterm tty;
@@ -174,7 +178,62 @@ void decode(conn_t *conn, grid_t *grid, int ch)
 void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 {
 	for (int i = 0; i < len; i++)
-		conn->telnet->tstack(conn, bytes[i]);
+	{
+		if (compression_mode == TELOPT_COMPRESS4)
+		{
+			mccp4_state.input_buffer += bytes[i];
+		}
+
+		if (!compression_mode)
+			conn->telnet->tstack(conn, bytes[i]);
+	}
+
+	if (compression_mode == TELOPT_COMPRESS4)
+	{
+		std::string &input_buffer = mccp4_state.input_buffer;
+		ZSTD_inBuffer_s inbuffer = { input_buffer.data(), input_buffer.size(), 0 };
+
+		std::vector<char> outdata(ZSTD_DStreamOutSize());
+
+		ZSTD_outBuffer_s outbuffer;
+
+		int rval;
+
+		do {
+			 
+			outbuffer = { outdata.data(), outdata.size(), 0 };
+
+			rval = ZSTD_decompressStream(mccp4_state.stream, &outbuffer, &inbuffer);
+
+			if (ZSTD_isError(rval))
+			{
+				conn->grid->info("/// Compression error!");
+				ZSTD_freeDStream(mccp4_state.stream);
+				compression_mode = 0;
+				return;
+			}
+
+			input_buffer = input_buffer.substr(inbuffer.pos);
+			for (int idx = 0; idx < outbuffer.pos; idx++)
+				conn->telnet->tstack(conn, outdata[idx]);
+
+		} while (outbuffer.pos == outbuffer.size);
+
+		if (rval == 0)
+		{
+			compression_mode = 0;
+			handle_read(conn, (unsigned char*)inbuffer.src + inbuffer.pos, inbuffer.size - inbuffer.pos);
+		}
+	}
+}
+
+void telnet_state::handle_compress4(conn_t *conn)
+{
+	compression_mode = TELOPT_COMPRESS4;
+	if (mccp4_state.stream)
+		ZSTD_freeDStream(mccp4_state.stream);
+	mccp4_state.stream = ZSTD_createDStream();
+	ZSTD_initDStream(mccp4_state.stream);
 }
 
 void telnet_state::handle_ttype(conn_t *conn)
@@ -254,7 +313,6 @@ void telnet_state::handle_mplex(conn_t *conn)
 
 void telnet_state::tstack(conn_t *conn, int ch)
 {
-
 	if (mode == IAC)
 	{
 		debug_fprintf((stderr, "%s ", nam(ch).c_str()));
@@ -280,33 +338,14 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			debug_fprintf((stderr, "\n"));
 			return;
 		}
-		if (ch == WILL)
+		if (ch == WILL || ch == WONT || ch == DO || ch == DONT || ch == SB)
 		{
-			mode = WILL;
-			return;
-		}
-		if (ch == WONT)
-		{
-			mode = WONT;
-			return;
-		}
-		if (ch == DO)
-		{
-			mode = DO;
-			return;
-		}
-		if (ch == DONT)
-		{
-			mode = DONT;
-			return;
-		}
-		if (ch == SB)
-		{
-			mode = SB;
+			mode = ch;
 			return;
 		}
 		if (ch == SE)
 		{
+			conn->grid->infof("subtype %i", subneg_type);
 			if (subneg_type == TELOPT_TTYPE)
 			{
 				handle_ttype(conn);
@@ -314,6 +353,10 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			if (subneg_type == TELOPT_MPLEX)
 			{
 				handle_mplex(conn);
+			}
+			if (subneg_type == TELOPT_COMPRESS4)
+			{
+				handle_compress4(conn);
 			}
 			subneg_type = 0;
 			mode = 0;
@@ -375,6 +418,17 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			reply(IAC, WILL, TELOPT_LINEMODE);
 #endif
 		rcvd_iac = 1;
+
+		if (ch == TELOPT_COMPRESS4)
+		{
+			reply(IAC, DO, TELOPT_COMPRESS4);
+			std::string encodings;
+			encodings.push_back(MCCP4_ACCEPT_ENCODING);
+			encodings += "zstd";
+			subneg_send(TELOPT_COMPRESS4, encodings);
+			mode = 0;
+			return;
+		}
 
 		if (ch == TELOPT_EOR)
 		{

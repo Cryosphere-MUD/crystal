@@ -13,8 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
+      with:
+        submodules: 'recursive'
     - name: cmake
       run: cmake -S . -B build/
     - name: make
