@@ -171,23 +171,85 @@ void decode(conn_t *conn, grid_t *grid, int ch)
 	return;
 }
 
-void telnet_state::decompress(conn_t *conn, unsigned char *bytes, size_t len)
+void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 {
-#ifdef MCCP
-	mudcompress_receive(mc, (const char *)bytes, len);
-	while (mudcompress_pending(mc))
-	{
-		char buf[2048];
-		int got = mudcompress_get(mc, buf, 2048);
-		for (int i = 0; i < got; i++)
-			conn->telnet->tstack(conn, (unsigned char)buf[i]);
-	}
-	if (const char *st = mudcompress_response(mc))
-		s->write(st, strlen(st));
-#else
 	for (int i = 0; i < len; i++)
 		conn->telnet->tstack(conn, bytes[i]);
+}
+
+void telnet_state::handle_ttype(conn_t *conn)
+{
+	std::string str;
+	str += (char)TELQUAL_IS;
+	if (ttype_count == 0)
+	{
+		str += (conn->mud_cset == "UTF-8" ? "ucryotel" : "cryotel");
+	}
+	else if (ttype_count == 1)
+	{
+		str += "crystal:000_003_001";
+	}
+	else if (ttype_count == 2 || ttype_count == 3)
+	{
+		int mtts_bitmask = 0;
+		mtts_bitmask |= 1; // ANSI
+		if (conn->mud_cset == "UTF-8")
+			mtts_bitmask |= 4; // UTF-8
+
+		if (tty.col256)
+		{
+			mtts_bitmask |= 8;   // 256 colors
+			mtts_bitmask |= 256; // TrueColor
+		}
+
+#ifdef HAVE_SSL
+		mtts_bitmask |= 2048; // SSL
 #endif
+
+		std::stringstream ss;
+		ss << "MTTS ";
+		ss << mtts_bitmask;
+
+		str += ss.str();
+	}
+	ttype_count++;
+	subneg_send(TELOPT_TTYPE, str);
+}
+
+void telnet_state::handle_mplex(conn_t *conn)
+{
+	if (subneg_data.length() == 2)
+	{
+		if (subneg_data[0] == MPLEX_SELECT)
+			conn->cur_grid = subneg_data[1] ? conn->overlay : conn->grid;
+		if (subneg_data[0] == MPLEX_HIDE)
+		{
+			if (subneg_data[1] == 1 && conn->overlay)
+			{
+				conn->overlay->visible = 0;
+				conn->overlay->changed = 1;
+				conn->grid->changed = 1;
+			}
+		}
+		if (subneg_data[0] == MPLEX_SHOW)
+		{
+			if (subneg_data[1] == 1 && conn->overlay)
+			{
+				conn->overlay->visible = 1;
+				conn->overlay->changed = 1;
+				conn->grid->changed = 1;
+			}
+		}
+	}
+	if (subneg_data.length() == 6 && subneg_data[0] == MPLEX_SETSIZE)
+	{
+		if (subneg_data[1] == 1 && conn->overlay)
+		{
+			conn->overlay->width = (subneg_data[2] << 8) | (subneg_data[3]);
+			conn->overlay->height = (subneg_data[4] << 8) | (subneg_data[5]);
+			conn->overlay->changed = 1;
+		}
+	}
 }
 
 void telnet_state::tstack(conn_t *conn, int ch)
@@ -247,76 +309,11 @@ void telnet_state::tstack(conn_t *conn, int ch)
 		{
 			if (subneg_type == TELOPT_TTYPE)
 			{
-				std::string str;
-				str += (char)TELQUAL_IS;
-				if (ttype_count == 0)
-				{
-					str += (conn->mud_cset == "UTF-8" ? "ucryotel" : "cryotel");
-				}
-				else if (ttype_count == 1)
-				{
-					str += "crystal:000_003_001";
-				}
-				else if (ttype_count == 2 || ttype_count == 3)
-				{
-					int mtts_bitmask = 0;
-					mtts_bitmask |= 1; // ANSI
-					if (conn->mud_cset == "UTF-8")
-						mtts_bitmask |= 4; // UTF-8
-
-					if (tty.col256)
-					{
-						mtts_bitmask |= 8;   // 256 colors
-						mtts_bitmask |= 256; // TrueColor
-					}
-
-#ifdef HAVE_SSL
-					mtts_bitmask |= 2048; // SSL
-#endif
-
-					std::stringstream ss;
-					ss << "MTTS ";
-					ss << mtts_bitmask;
-
-					str += ss.str();
-				}
-				ttype_count++;
-				subneg_send(TELOPT_TTYPE, str);
+				handle_ttype(conn);
 			}
 			if (subneg_type == TELOPT_MPLEX)
 			{
-				if (subneg_data.length() == 2)
-				{
-					if (subneg_data[0] == MPLEX_SELECT)
-						conn->cur_grid = subneg_data[1] ? conn->overlay : conn->grid;
-					if (subneg_data[0] == MPLEX_HIDE)
-					{
-						if (subneg_data[1] == 1 && conn->overlay)
-						{
-							conn->overlay->visible = 0;
-							conn->overlay->changed = 1;
-							conn->grid->changed = 1;
-						}
-					}
-					if (subneg_data[0] == MPLEX_SHOW)
-					{
-						if (subneg_data[1] == 1 && conn->overlay)
-						{
-							conn->overlay->visible = 1;
-							conn->overlay->changed = 1;
-							conn->grid->changed = 1;
-						}
-					}
-				}
-				if (subneg_data.length() == 6 && subneg_data[0] == MPLEX_SETSIZE)
-				{
-					if (subneg_data[1] == 1 && conn->overlay)
-					{
-						conn->overlay->width = (subneg_data[2] << 8) | (subneg_data[3]);
-						conn->overlay->height = (subneg_data[4] << 8) | (subneg_data[5]);
-						conn->overlay->changed = 1;
-					}
-				}
+				handle_mplex(conn);
 			}
 			subneg_type = 0;
 			mode = 0;
