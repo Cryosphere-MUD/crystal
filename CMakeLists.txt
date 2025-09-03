@@ -12,13 +12,13 @@ option(ENABLE_SCRIPTING "Enable Lua scripting support" ON)
 
 # Define executable sources
 set(SOURCES
-  crystal.cc Socket.cc mccpDecompress.c io.cc grid.cc telnet.cc wcwidth.c
+  crystal.cc Socket.cc io.cc grid.cc telnet.cc wcwidth.c
   scripting.cc commands.cc common.cc commandeditor.cc keybindings.cc display.cc main.cc
 )
 
 # Define headers for IDEs
 set(HEADERS
-  Socket.h mccpDecompress.h common.h crystal.h grid.h io.h telnet.h
+  Socket.h common.h crystal.h grid.h io.h telnet.h
   scripting.h commands.h commandeditor.h url.h
 )
 
