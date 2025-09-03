@@ -36,6 +36,8 @@
 #undef TELCMDS
 #undef TELOPTS
 
+#include <nlohmann/json.hpp>
+
 #include "Socket.h"
 #include "telnet.h"
 #include "io.h"
@@ -50,6 +52,8 @@
 #define MPLEX_HIDE    0x72
 #define MPLEX_SHOW    0x73
 #define MPLEX_SETSIZE 0x74
+
+#define TELOPT_GMCP 201
 
 #undef NEGOTIATE_MXP
 
@@ -324,6 +328,18 @@ void telnet_state::tstack(conn_t *conn, int ch) {
       will_echo = 1;
       mode = 0;
       reply(IAC, DO, TELOPT_ECHO);
+      debug_fprintf((stderr, "\n"));
+      return;
+    }
+
+    if (ch == TELOPT_GMCP) {
+      gmcp = true;
+      mode = 0;
+      reply(IAC, DO, TELOPT_GMCP);
+      nlohmann::json hello;
+      hello["Client"] = "Crystal";
+      hello["Version"] = VERSION;
+      subneg_send(TELOPT_GMCP, hello.dump());
       debug_fprintf((stderr, "\n"));
       return;
     }

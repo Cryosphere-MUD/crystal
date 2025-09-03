@@ -54,17 +54,18 @@
 struct telnet_state {
   std::shared_ptr<Socket> s;
 
-  int will_eor = 0;
-  int allstars = 0;
-  int will_echo = 0;
-  int charmode = 0;
-  int rcvd_iac = 0;
+  bool gmcp = false;
+  bool will_eor = false;
+  bool allstars = false;
+  bool will_echo = false;
+  bool charmode = false;
+  bool rcvd_iac = false;
   int mode = 0;
   int subneg_type = 0;
   int will_ttype = 0;
   int ttype_count = 0;
   std::string subneg_data;
-  int do_naws = 0;
+  bool do_naws = false;
 #ifdef MCCP
   mc_state *mc = nullptr;
 #endif
