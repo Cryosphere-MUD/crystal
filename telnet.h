@@ -115,6 +115,8 @@ struct telnet_state
 
 	void handle_read(conn_t *, unsigned char *, size_t);
 
+	void handle_gmcp(conn_t *, const std::string &gmcp_data);
+
 	void send(const std::string &s);
 
 	void reply(int a, int b, int c);
