@@ -51,6 +51,14 @@
 #include "mccpDecompress.h"
 #endif
 
+#include <zstd.h>
+
+struct MCCP4State
+{
+	std::string input_buffer;
+	ZSTD_DStream *stream = nullptr;
+};
+
 struct telnet_state
 {
 	std::shared_ptr<Socket> s;
@@ -67,6 +75,11 @@ struct telnet_state
 	int ttype_count = 0;
 	std::string subneg_data;
 	bool do_naws = false;
+
+	int compression_mode = 0;
+
+	MCCP4State mccp4_state;
+
 #ifdef MCCP
 	mc_state *mc = nullptr;
 #endif
@@ -93,6 +106,8 @@ struct telnet_state
 	void handle_ttype(conn_t *conn);
 
 	void handle_mplex(conn_t *conn);
+
+	void handle_compress4(conn_t *conn);
 
 	void handle_read(conn_t *, unsigned char *, size_t);
 
