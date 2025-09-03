@@ -216,8 +216,9 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 
 			if (ZSTD_isError(rval))
 			{
-				conn->grid->info("/// Compression error!");
+				conn->grid->info("/// Compression error!\n");
 				ZSTD_freeDStream(mccp4_state.stream);
+                                mccp4_state.stream = nullptr;
 				compression_mode = 0;
 				return;
 			}
@@ -231,7 +232,10 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 		if (rval == 0)
 		{
 			compression_mode = 0;
-			handle_read(conn, (unsigned char*)inbuffer.src + inbuffer.pos, inbuffer.size - inbuffer.pos);
+                        std::string remainder = input_buffer;
+			handle_read(conn, (unsigned char*)remainder.data(), remainder.size());
+                        ZSTD_freeDStream(mccp4_state.stream);
+                        mccp4_state.stream = nullptr;
 		}
 	}
 
@@ -291,6 +295,7 @@ void telnet_state::handle_compress4(conn_t *conn)
 			compression_mode = TELOPT_COMPRESS4;
 			if (mccp4_state.stream)
 				ZSTD_freeDStream(mccp4_state.stream);
+                        mccp4_state.input_buffer = "";
 			mccp4_state.stream = ZSTD_createDStream();
 			ZSTD_initDStream(mccp4_state.stream);
 		}
