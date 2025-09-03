@@ -35,10 +35,10 @@
 
 #include <arpa/telnet.h>
 
+#include "Socket.h"
 #include "common.h"
 #include "crystal.h"
 #include "grid.h"
-#include "Socket.h"
 
 #ifdef HAVE_ZLIB
 #define MCCP
@@ -51,50 +51,51 @@
 #include "mccpDecompress.h"
 #endif
 
-struct telnet_state {
-  std::shared_ptr<Socket> s;
-
-  bool gmcp = false;
-  bool will_eor = false;
-  bool allstars = false;
-  bool will_echo = false;
-  bool charmode = false;
-  bool rcvd_iac = false;
-  int mode = 0;
-  int subneg_type = 0;
-  int will_ttype = 0;
-  int ttype_count = 0;
-  std::string subneg_data;
-  bool do_naws = false;
-#ifdef MCCP
-  mc_state *mc = nullptr;
-#endif
-  telnet_state(std::shared_ptr<Socket> sock) : 
-    s(sock),
-    subneg_data("")
+struct telnet_state
 {
+	std::shared_ptr<Socket> s;
+
+	bool gmcp = false;
+	bool will_eor = false;
+	bool allstars = false;
+	bool will_echo = false;
+	bool charmode = false;
+	bool rcvd_iac = false;
+	int mode = 0;
+	int subneg_type = 0;
+	int will_ttype = 0;
+	int ttype_count = 0;
+	std::string subneg_data;
+	bool do_naws = false;
 #ifdef MCCP
-    mc = mudcompress_new();
+	mc_state *mc = nullptr;
 #endif
-  }
-  
-  ~telnet_state() {
+	telnet_state(std::shared_ptr<Socket> sock) : s(sock), subneg_data("")
+	{
 #ifdef MCCP
-    if (mc) {
-      mudcompress_delete(mc);
-      mc = 0;
-    }
+		mc = mudcompress_new();
 #endif
-  }
+	}
 
-  void tstack(conn_t *conn, int ch);
-  void decompress(conn_t *, unsigned char *, size_t);
+	~telnet_state()
+	{
+#ifdef MCCP
+		if (mc)
+		{
+			mudcompress_delete(mc);
+			mc = 0;
+		}
+#endif
+	}
 
-  void send(const std::string &s);
+	void tstack(conn_t *conn, int ch);
+	void decompress(conn_t *, unsigned char *, size_t);
 
-  void reply(int a, int b, int c);
+	void send(const std::string &s);
 
-  void subneg_send(int neg, const std::string &data);
+	void reply(int a, int b, int c);
+
+	void subneg_send(int neg, const std::string &data);
 };
 
 void sendwinsize(conn_t *);

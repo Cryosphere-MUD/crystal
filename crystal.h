@@ -37,8 +37,8 @@
 #include <set>
 #include <string>
 
-#include "common.h"
 #include "commandeditor.h"
+#include "common.h"
 
 struct telnet_state;
 class grid_t;
@@ -47,76 +47,77 @@ typedef std::shared_ptr<InAddrList> InAddrListPtr;
 
 class hlist;
 
-class conn_t : public commandeditor_t {
- private:
-  //! the amount we have scrolled to in the buffer
-  int hardscroll;
+class conn_t : public commandeditor_t
+{
+      private:
+	//! the amount we have scrolled to in the buffer
+	int hardscroll;
 
- public:
-  //! are we in never echo mode (default: no)
-  bool never_echo;
+      public:
+	//! are we in never echo mode (default: no)
+	bool never_echo;
 
-  //! are we in kludge lp prompts mode (default: yes)
-  bool lp_prompts;
+	//! are we in kludge lp prompts mode (default: yes)
+	bool lp_prompts;
 
- public:
-  //! are we quitting?
-  bool quit;
+      public:
+	//! are we quitting?
+	bool quit;
 
- private:
-  InAddrListPtr addrs;
-  int addr_i;
+      private:
+	InAddrListPtr addrs;
+	int addr_i;
 
- public:
-  std::string host;
-  int port;
-  bool ssl;
+      public:
+	std::string host;
+	int port;
+	bool ssl;
 
-  grid_t *grid;
+	grid_t *grid;
 
-  grid_t *overlay;
-  grid_t *cur_grid;
+	grid_t *overlay;
+	grid_t *cur_grid;
 
-  std::shared_ptr<telnet_state> telnet;
-  FILE *logfile;
+	std::shared_ptr<telnet_state> telnet;
+	FILE *logfile;
 
-  std::string mud_cset;
+	std::string mud_cset;
 
-  void dorefresh();
+	void dorefresh();
 
-  void doscrollup();
-  void doscrolldown();
-  void doscrollstart();
-  void doscrollend();
-  void triggerfn(const char *which);
-  void dofindnext();
+	void doscrollup();
+	void doscrolldown();
+	void doscrollstart();
+	void doscrollend();
+	void triggerfn(const char *which);
+	void dofindnext();
 
-  void doenter();
-  void dosuspend();
-  void dotoggleoverlay();
-  void docommandmode();
+	void doenter();
+	void dosuspend();
+	void dotoggleoverlay();
+	void docommandmode();
 
-  void show_lines_at(int from, int to, int num);
-  
-  ~conn_t();
-  conn_t(grid_t *);
+	void show_lines_at(int from, int to, int num);
 
-  void initbindings();
-  void dispatch_key(const my_wstring &s);
-  void addbinding(const wchar_t* key, const char* bind);
+	~conn_t();
+	conn_t(grid_t *);
 
-  void connect(const char *host, int port, bool ssl);
-  bool file_log(const char *filename);
+	void initbindings();
+	void dispatch_key(const my_wstring &s);
+	void addbinding(const wchar_t *key, const char *bind);
 
-  void display_buffer();
+	void connect(const char *host, int port, bool ssl);
+	bool file_log(const char *filename);
 
-  bool disconnected(int bts, int pend);
-  void connected();
-  bool try_addr(const char *host, int port, bool ssl);
+	void display_buffer();
 
-  void main_loop();
+	bool disconnected(int bts, int pend);
+	void connected();
+	bool try_addr(const char *host, int port, bool ssl);
 
-  std::set<my_wstring> hl_matches;
+	void main_loop();
+
+	std::set<my_wstring> hl_matches;
 };
 
 extern int exitValue;

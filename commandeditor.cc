@@ -41,179 +41,198 @@
  *   read or sslread -> telnet decoder -> charset filter -> tty handler
  */
 
-#include "crystal.h"
-#include "io.h"
-#include "grid.h"
 #include "commandeditor.h"
+#include "crystal.h"
+#include "grid.h"
+#include "io.h"
 
 #include <map>
 
 hlist cmdhist;
 
-hlist *commandeditor_t::chist() {
-  static hlist hist;
-  
-  if (commandmode)
-    return &cmdhist;
+hlist *commandeditor_t::chist()
+{
+	static hlist hist;
 
-  return &hist;
+	if (commandmode)
+		return &cmdhist;
+
+	return &hist;
 }
 
-void commandeditor_t::dokillword() {
-  int orig=cursor;
-  if (cursor) {
-    while(cursor && isspace(buffer[cursor-1]))
-      cursor--;
-    while(cursor && !isspace(buffer[cursor-1]))
-      cursor--;
+void commandeditor_t::dokillword()
+{
+	int orig = cursor;
+	if (cursor)
+	{
+		while (cursor && isspace(buffer[cursor - 1]))
+			cursor--;
+		while (cursor && !isspace(buffer[cursor - 1]))
+			cursor--;
 
-    my_wstring extra = buffer.substr(orig);
-    buffer = buffer.substr(0, cursor);
-    buffer += extra;
-  }
+		my_wstring extra = buffer.substr(orig);
+		buffer = buffer.substr(0, cursor);
+		buffer += extra;
+	}
 }
 
 extern mterm tty;
 
-void commandeditor_t::dodelete() {
-  if (cursor < buffer.length()) {
-    buffer.erase(cursor, 1);
-  } else {
-    tty.beep();
-  }
+void commandeditor_t::dodelete()
+{
+	if (cursor < buffer.length())
+		buffer.erase(cursor, 1);
+	else
+		tty.beep();
 }
 
 void commandeditor_t::dobackspace()
 {
-  if (cursor) {
-    buffer.erase(cursor-1, 1);
-    cursor--;
-  } else {
-    tty.beep();
-  }
+	if (cursor)
+	{
+		buffer.erase(cursor - 1, 1);
+		cursor--;
+	}
+	else
+	{
+		tty.beep();
+	}
 }
 
-void commandeditor_t::doprevhistory() {
-  if (chist() && chist()->back()) {
-    if (nofuture) {
-      future = buffer;
-      nofuture = false;
-    }
+void commandeditor_t::doprevhistory()
+{
+	if (chist() && chist()->back())
+	{
+		if (nofuture)
+		{
+			future = buffer;
+			nofuture = false;
+		}
 
-    buffer = chist()->get();
-    cursor = buffer.length();
-  }
-  else
-    tty.beep();
+		buffer = chist()->get();
+		cursor = buffer.length();
+	}
+	else
+		tty.beep();
 }
 
 void commandeditor_t::donexthistory()
 {
-  if (chist()) {
-    if (chist()->next()) {
-      buffer = chist()->get();
-    }
-    else {
-      buffer = nofuture ? L"" : future;
-      future = L"";
-      nofuture = true;
-    }
-    cursor = buffer.length();
-  }
-  else
-    tty.beep();
+	if (chist())
+	{
+		if (chist()->next())
+		{
+			buffer = chist()->get();
+		}
+		else
+		{
+			buffer = nofuture ? L"" : future;
+			future = L"";
+			nofuture = true;
+		}
+		cursor = buffer.length();
+	}
+	else
+		tty.beep();
 }
 
 void commandeditor_t::doprevchar()
 {
-  if (cursor)
-    cursor--;
-  else
-    tty.beep();
+	if (cursor)
+		cursor--;
+	else
+		tty.beep();
 }
 
 void commandeditor_t::doprevword()
 {
-  while (cursor && !isalnum(buffer[cursor-1])) {
-    cursor--;
-  }
-  while (cursor && isalnum(buffer[cursor-1])) {
-    cursor--;
-  }
+	while (cursor && !isalnum(buffer[cursor - 1]))
+		cursor--;
+	while (cursor && isalnum(buffer[cursor - 1]))
+		cursor--;
 }
 
 void commandeditor_t::donextword()
 {
-  while (cursor<buffer.length() && !isalnum(buffer[cursor])) {
-    cursor++;
-  }
-  while (cursor<buffer.length() && isalnum(buffer[cursor])) {
-    cursor++;
-  }
+	while (cursor < buffer.length() && !isalnum(buffer[cursor]))
+		cursor++;
+	while (cursor < buffer.length() && isalnum(buffer[cursor]))
+		cursor++;
 }
 
 void commandeditor_t::donextchar()
 {
-  cursor++;
-  if (cursor>buffer.length()) {
-    cursor = buffer.length();
-    tty.beep();
-  }
+	cursor++;
+	if (cursor > buffer.length())
+	{
+		cursor = buffer.length();
+		tty.beep();
+	}
 }
 
-void commandeditor_t::dofirstchar() {
-  cursor = 0;
+void commandeditor_t::dofirstchar()
+{
+	cursor = 0;
 }
 
-void commandeditor_t::doclearline() {
-  buffer = L"";
-  cursor = 0;
+void commandeditor_t::doclearline()
+{
+	buffer = L"";
+	cursor = 0;
 }
 
-void commandeditor_t::dolastchar() {
-  cursor = buffer.length();
+void commandeditor_t::dolastchar()
+{
+	cursor = buffer.length();
 }
 
-void commandeditor_t::dotranspose() {
-  if (cursor>1 && buffer.length()==cursor) {
-    wchar_t tmp = buffer[cursor-1];
-    buffer[cursor-1] = buffer[cursor-2];
-    buffer[cursor-2] = tmp;
-    //    grid->changed = 1;
-  } else if (cursor>0) {
-    wchar_t tmp = buffer[cursor];
-    buffer[cursor] = buffer[cursor-1];
-    buffer[cursor-1] = tmp;
-    cursor++;
-    //    grid->changed = 1;
-  } else {
-    tty.beep();
-  }
+void commandeditor_t::dotranspose()
+{
+	if (cursor > 1 && buffer.length() == cursor)
+	{
+		wchar_t tmp = buffer[cursor - 1];
+		buffer[cursor - 1] = buffer[cursor - 2];
+		buffer[cursor - 2] = tmp;
+		//    grid->changed = 1;
+	}
+	else if (cursor > 0)
+	{
+		wchar_t tmp = buffer[cursor];
+		buffer[cursor] = buffer[cursor - 1];
+		buffer[cursor - 1] = tmp;
+		cursor++;
+		//    grid->changed = 1;
+	}
+	else
+	{
+		tty.beep();
+	}
 }
 
 void commandeditor_t::doinsertchar(wchar_t ch)
 {
-  if (cursor == buffer.length()) {
-    buffer += ch;
-  } else {
-    buffer = buffer.substr(0, cursor) + ch + buffer.substr(cursor);
-  }
-  //  grid->changed = 1;
-  cursor++;
+	if (cursor == buffer.length())
+		buffer += ch;
+	else
+		buffer = buffer.substr(0, cursor) + ch + buffer.substr(cursor);
+	//  grid->changed = 1;
+	cursor++;
 }
 
-void commandeditor_t::docutfromhere() {
-  cutbuffer=buffer.substr(cursor);
-  buffer = buffer.substr(0, cursor);
-}
-
-void commandeditor_t::docuttohere() {
-  cutbuffer = buffer.substr(0, cursor);
-  buffer = buffer.substr(cursor);
-  cursor = 0;
-}
-
-void commandeditor_t::dopaste() 
+void commandeditor_t::docutfromhere()
 {
-  buffer.insert(cursor, cutbuffer);
+	cutbuffer = buffer.substr(cursor);
+	buffer = buffer.substr(0, cursor);
+}
+
+void commandeditor_t::docuttohere()
+{
+	cutbuffer = buffer.substr(0, cursor);
+	buffer = buffer.substr(cursor);
+	cursor = 0;
+}
+
+void commandeditor_t::dopaste()
+{
+	buffer.insert(cursor, cutbuffer);
 }

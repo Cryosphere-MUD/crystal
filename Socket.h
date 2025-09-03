@@ -37,8 +37,8 @@
 #include <string>
 #include <vector>
 
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 #ifdef HAVE_SSL
 #include <openssl/ssl.h>
@@ -50,73 +50,84 @@ class InAddr;
 
 typedef std::shared_ptr<InAddr> InAddrPtr;
 
-class InAddrList {
-  std::vector<InAddrPtr> addrs;
- public:
-  InAddrList() { }
-  void add(InAddrPtr addr)
-  {
-        addrs.push_back(addr);
-  }
+class InAddrList
+{
+	std::vector<InAddrPtr> addrs;
 
-  InAddrPtr get(int i) { return addrs[i]; }
-  int size() { return addrs.size(); }
-  ~InAddrList() { }
+      public:
+	InAddrList() {}
+	void add(InAddrPtr addr) { addrs.push_back(addr); }
+
+	InAddrPtr get(int i) { return addrs[i]; }
+	int size() { return addrs.size(); }
+	~InAddrList() {}
 };
 
 typedef std::shared_ptr<InAddrList> InAddrListPtr;
 
-class InAddr {
-public:
-  static InAddrListPtr resolv(const char *name);
-  static InAddrPtr create(const struct sockaddr *addr);
+class InAddr
+{
+      public:
+	static InAddrListPtr resolv(const char *name);
+	static InAddrPtr create(const struct sockaddr *addr);
 
-  virtual ~InAddr() { };
+	virtual ~InAddr(){};
 
-  virtual void set_port(int port)=0;
-  virtual int get_port()=0;
+	virtual void set_port(int port) = 0;
+	virtual int get_port() = 0;
 
-  virtual std::string tostring() = 0;
-  virtual sockaddr *addr() = 0;
-  virtual socklen_t addr_len() = 0;
-  virtual int af() = 0;
+	virtual std::string tostring() = 0;
+	virtual sockaddr *addr() = 0;
+	virtual socklen_t addr_len() = 0;
+	virtual int af() = 0;
 
-  virtual operator sockaddr* () { return addr(); };
+	virtual operator sockaddr *() { return addr(); };
 };
 
-class Socket {
-  int fd;
-  bool dead;
-  bool pending;
-  std::string pendingoutput;
+class Socket
+{
+	int fd;
+	bool dead;
+	bool pending;
+	std::string pendingoutput;
 #ifdef HAVE_SSL
-  SSL *s;
+	SSL *s;
 #endif
-  void connected();
-  
- public:
-  bool getdead() { return dead; }
-  bool getpend() { return pending; }
-  Socket(bool ssl);
-  int connect(InAddrPtr where);
-  int read(char *, int);
-  int write(const char *, int);
-  void close();
-  virtual ~Socket();
-  int getfd() { return fd; }
+	void connected();
+
+      public:
+	bool getdead()
+	{
+		return dead;
+	}
+	bool getpend()
+	{
+		return pending;
+	}
+	Socket(bool ssl);
+	int connect(InAddrPtr where);
+	int read(char *, int);
+	int write(const char *, int);
+	void close();
+	virtual ~Socket();
+	int getfd()
+	{
+		return fd;
+	}
 };
 
-struct url {
-  std::string protocol;
-  std::string hostname;
-  std::string service;
+struct url
+{
+	std::string protocol;
+	std::string hostname;
+	std::string service;
 
-  std::string username;
-  bool has_username;
-  std::string password;
-  bool has_password;
+	std::string username;
+	bool has_username;
+	std::string password;
+	bool has_password;
 
-  url(const char *);
+	url(const char *);
 };
 
 #endif
