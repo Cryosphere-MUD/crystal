@@ -46,6 +46,9 @@
 #include <iconv.h>
 #include <sstream>
 
+// #undef debug_fprintf
+// #define debug_fprintf(a) fprintf a
+
 #define TELOPT_MXP 0x5b
 #define TELOPT_MPLEX 0x70
 #define MPLEX_SELECT 0x71
@@ -199,7 +202,7 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 		std::string &input_buffer = mccp4_state.input_buffer;
 		ZSTD_inBuffer_s inbuffer = { input_buffer.data(), input_buffer.size(), 0 };
 
-		std::vector<char> outdata(ZSTD_DStreamOutSize());
+		std::vector<unsigned char> outdata(ZSTD_DStreamOutSize());
 
 		ZSTD_outBuffer_s outbuffer;
 
