@@ -53,7 +53,22 @@ else()
   message(WARNING "zlib not found - MCCP support will not be built")
 endif()
 
-target_link_libraries(crystal PRIVATE -lzstd)
+set(Zstd_FOUND FALSE)
+find_path(ZSTD_INCLUDE_DIR zstd.h)
+
+if (ZSTD_INCLUDE_DIR)
+  find_library(ZSTD_LIBRARY zstd)
+  if (ZSTD_LIBRARY)
+    set(Zstd_FOUND TRUE)
+  endif()
+endif()
+
+if(Zstd_FOUND)
+  target_link_libraries(crystal PRIVATE -lzstd)
+  target_compile_definitions(crystal PRIVATE HAVE_ZSTD)
+else()
+  message(WARNING "zstd not found - MCCP4 support will not be built")
+endif()
 
 find_library(ICONV_LIB iconv)
 if(ICONV_LIB)

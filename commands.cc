@@ -67,21 +67,21 @@ void cmd_reload(conn_t *conn, const cmd_args &arg)
 
 void cmd_help(conn_t *conn, const cmd_args &arg);
 
-#ifdef MCCP
 void cmd_compress(conn_t *conn, const cmd_args &arg)
 {
-	if (conn->telnet && conn->telnet->mc && mudcompress_compressing(conn->telnet->mc))
+	if (!conn->telnet)
 	{
-		unsigned long compread, uncompread;
-		mudcompress_stats(conn->telnet->mc, &compread, &uncompread);
-		conn->grid->infof(_("/// wire:%lc bytes data:%lli bytes.\n"), compread, uncompread);
+		conn->grid->info(_("/// you aren't connected.\n"));
+		return;
 	}
-	else
+
+	switch (conn->telnet->compression_mode) 
 	{
-		conn->grid->info(_("/// no compression\n"));
+	case 2: conn->grid->info(_("/// zlib compression active\n")); break;
+	case 4: conn->grid->info(_("/// zstd compression active\n")); break;
+	default: conn->grid->info(_("/// no compression\n")); break;
 	}
 }
-#endif
 
 void cmd_connect(conn_t *conn, const cmd_args &arg)
 {
@@ -263,9 +263,7 @@ std::vector<cmd_t> cmd_table = {
     {L"quit", cmd_quit, NULL, "quits crystal"},
     {L"exit", cmd_quit, NULL, NULL},
 
-#ifdef MCCP
-    {L"compress", cmd_compress, NULL, "show compression stats"},
-#endif
+    {L"compress", cmd_compress, NULL, "show compression status"},
 
     {L"dump", cmd_dump, "<filename>", "dump scrollback to file"},
     {L"log", cmd_log, "<filename>", "log to file"},

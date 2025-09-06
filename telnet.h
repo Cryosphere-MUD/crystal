@@ -40,18 +40,20 @@
 #include "crystal.h"
 #include "grid.h"
 
-#include <zlib.h>
-
 #ifdef HAVE_ZLIB
 #define MCCP
+
+#include <zlib.h>
+
+struct ZLibState
+{
+	std::string input_buffer;
+	z_stream_s stream;
+};
 #endif
 
-#undef MCCP
-// MCCP disabled due to bugs in library
-
-#ifdef MCCP
-#include "mccpDecompress.h"
-#endif
+#ifdef HAVE_ZSTD
+#define MCCP4
 
 #include <zstd.h>
 
@@ -61,11 +63,7 @@ struct MCCP4State
 	ZSTD_DStream *stream = nullptr;
 };
 
-struct ZLibState
-{
-	std::string input_buffer;
-	z_stream_s stream;
-};
+#endif
 
 struct telnet_state
 {
@@ -86,28 +84,19 @@ struct telnet_state
 
 	int compression_mode = 0;
 
-	ZLibState zlib_state;
-	MCCP4State mccp4_state;
-
 #ifdef MCCP
-	mc_state *mc = nullptr;
+	ZLibState zlib_state;
 #endif
+#ifdef MCCP4
+	MCCP4State mccp4_state;
+#endif
+
 	telnet_state(std::shared_ptr<Socket> sock) : s(sock), subneg_data("")
 	{
-#ifdef MCCP
-		mc = mudcompress_new();
-#endif
 	}
 
 	~telnet_state()
 	{
-#ifdef MCCP
-		if (mc)
-		{
-			mudcompress_delete(mc);
-			mc = 0;
-		}
-#endif
 	}
 
 	void tstack(conn_t *conn, int ch);
@@ -116,9 +105,13 @@ struct telnet_state
 
 	void handle_mplex(conn_t *conn);
 
+#ifdef MCCP
 	void handle_compress2(conn_t *conn);
+#endif
 
+#ifdef MCCP4
 	void handle_compress4(conn_t *conn);
+#endif
 
 	void handle_read(conn_t *, unsigned char *, size_t);
 
