@@ -67,7 +67,7 @@ struct MCCP4State
 
 struct telnet_state
 {
-	std::shared_ptr<Socket> s;
+	asio::ip::tcp::socket &s;
 
 	bool gmcp = false;
 	bool will_eor = false;
@@ -91,7 +91,7 @@ struct telnet_state
 	MCCP4State mccp4_state;
 #endif
 
-	telnet_state(std::shared_ptr<Socket> sock) : s(sock), subneg_data("")
+	telnet_state(asio::ip::tcp::socket &sock) : s(sock), subneg_data("")
 	{
 	}
 
