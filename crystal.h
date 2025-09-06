@@ -33,6 +33,8 @@
 #ifndef CRYSTAL_H
 #define CRYSTAL_H
 
+#include <asio.hpp>
+
 #include <memory>
 #include <set>
 #include <string>
@@ -49,6 +51,13 @@ class hlist;
 
 class conn_t : public commandeditor_t
 {
+    	asio::io_context& m_io_context;
+    	asio::ip::tcp::resolver m_resolver;
+    	asio::ip::tcp::socket m_socket;
+	std::array<unsigned char, 2048> m_socket_buffer;
+
+	public:
+
       private:
 	//! the amount we have scrolled to in the buffer
 	int hardscroll;
@@ -100,22 +109,24 @@ class conn_t : public commandeditor_t
 	void show_lines_at(int from, int to, int num);
 
 	~conn_t();
-	conn_t(grid_t *);
+	conn_t(asio::io_context& io_context, grid_t *);
 
 	void initbindings();
 	void dispatch_key(const my_wstring &s);
 	void addbinding(const wchar_t *key, const char *bind);
 
-	void connect(const char *host, int port, bool ssl);
+	void connect(std::string host, int port, bool ssl);
 	bool file_log(const char *filename);
+	void do_read_from_socket();
 
 	void display_buffer();
 
 	bool disconnected(int bts, int pend);
 	void connected();
-	bool try_addr(const char *host, int port, bool ssl);
+	bool try_addr(const asio::ip::tcp::resolver::results_type& endpoints,
+		      std::string host, int port, bool ssl);
 
-	void main_loop();
+	void main_loop(asio::io_context &io_context);
 
 	std::set<my_wstring> hl_matches;
 };

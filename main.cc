@@ -49,6 +49,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <asio.hpp>
 #include <term.h>
 
 #include <langinfo.h>
@@ -145,8 +146,10 @@ int main(int argc, char **argv)
 
 	tty.getterm();
 
+	asio::io_context io_context;
+
 	grid_t grid(NULL);
-	conn_t conn(&grid);
+	conn_t conn(io_context, &grid);
 	grid.set_conn(&conn);
 
 	conn.initbindings();
@@ -255,7 +258,7 @@ int main(int argc, char **argv)
 
 	signal(SIGWINCH, winch);
 
-	conn.main_loop();
+	conn.main_loop(io_context);
 
 	cleanup();
 	printf("\n");

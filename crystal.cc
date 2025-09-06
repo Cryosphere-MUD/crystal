@@ -49,6 +49,10 @@
 #define _GNU_SOURCE
 #endif
 
+#include <asio.hpp>
+
+#include <iostream>
+
 #include <curses.h>
 #include <term.h>
 
@@ -124,7 +128,9 @@ size_t real_wcwidth(wchar_t u)
 const struct cell_t blank(' ');
 const struct cell_t blank2('\0');
 
-conn_t::conn_t(grid_t *gr)
+conn_t::conn_t(asio::io_context& io_context, grid_t *gr) 
+        	: m_io_context(io_context), m_resolver(io_context), m_socket(io_context)
+
 {
 	never_echo = 0;
 	quit = 0;
@@ -145,6 +151,8 @@ conn_t::conn_t(grid_t *gr)
 
 	buffer = L"";
 	cursor = 0;
+
+	ssl = 0;
 
 	cutbuffer = L"";
 	logfile = 0;
@@ -407,6 +415,8 @@ void conn_t::connected()
 {
 	conn_t *conn = this;
 
+	conn->grid->infof(_("/// connected is %p\n"), conn);
+
 	conn->grid->infof(_("/// connected with %s\n"), conn->ssl ? "TLS" : "telnet");
 
 	static int a = 0;
@@ -420,46 +430,55 @@ void conn_t::connected()
 		tty.title(_("telnets://%s:%i - Crystal"), conn->host.c_str(), conn->port);
 	else
 		tty.title(_("telnet://%s:%i - Crystal"), conn->host.c_str(), conn->port);
+
+    	display_buffer();
 }
 
-bool conn_t::try_addr(const char *host, int port, bool ssl)
+void conn_t::do_read_from_socket() {
+    // Ensure the object remains alive for the duration of the async operation
+
+    // Call async_read_some on the socket
+    m_socket.async_read_some(asio::buffer(m_socket_buffer),
+        [this](const asio::error_code& ec, size_t bytes_transferred) {
+            // This lambda is the handler that runs when the read completes
+            if (!ec) {
+                // Read was successful, process the data
+		telnet->handle_read(this, m_socket_buffer.data(), bytes_transferred);
+
+		display_buffer();
+
+                // Start another read operation to continue listening for data
+                this->do_read_from_socket();
+            } else {
+                // An error occurred, handle the connection loss
+                std::cerr << "Socket read error: " << ec.message() << std::endl;
+                // You might want to close the connection here
+                // this->m_socket.close();
+            }
+        });
+}
+
+bool conn_t::try_addr(const asio::ip::tcp::resolver::results_type& endpoints,
+		      std::string host, int port, bool ssl)
 {
-	conn_t *conn = this;
-
-	if (!conn->addrs)
-		return false;
-
-	if (conn->addr_i >= conn->addrs->size())
-		return false;
-
-	auto addr = conn->addrs->get(conn->addr_i);
-
-	auto s2 = std::make_shared<Socket>(ssl);
-	addr->set_port(port);
-	conn->port = port;
-
-	int stat = s2->connect(addr);
-
-	int e = errno;
-	if (stat < 0)
-	{
-		conn->grid->infof(_("/// unable to connect : %s.\n"), strerror(e));
-		s2.reset();
-		conn->addr_i++;
-		return try_addr(host, port, ssl);
-	}
-
-	conn->grid->infof(_("/// connecting to %s:%i\n"), addr->tostring().c_str(), port);
-
-	if (s2->getpend() == 0)
+  	asio::async_connect(m_socket, endpoints,
+        	[this, host, port, ssl](const asio::error_code& ec, 
+                                   const asio::ip::tcp::endpoint& endpoint) {
+            if (!ec) {
+                grid->infof(_("/// connected to %s:%d\n"), host.c_str(), port);
 		connected();
+		do_read_from_socket();
+    		this->telnet = std::make_shared<telnet_state>(m_socket);
+            } else {
+                grid->infof(_("/// connection failed: %s\n"), ec.message().c_str());
+            }
+		this->grid->cstoredprompt.erase();
+        });
 
-	conn->telnet = std::make_shared<telnet_state>(s2);
-	conn->grid->cstoredprompt.erase();
 	return true;
 }
 
-void conn_t::connect(const char *host, int port, bool ssl)
+void conn_t::connect(std::string host, int port, bool ssl)
 {
 	/* nuke old stuff */
 	telnet.reset();
@@ -469,20 +488,21 @@ void conn_t::connect(const char *host, int port, bool ssl)
 	if (grid->col)
 		grid->newline();
 
-	grid->infof(_("/// resolving %s\n"), host, port);
+	grid->infof(_("/// resolving %s\n"), host.c_str());
 	display_buffer();
 
-	addrs = InAddr::resolv(host);
-	if (!addrs)
-	{
-		grid->infof(_("/// unknown host.\n"));
-		return;
-	}
-	addr_i = 0;
-	this->host = host;
-	this->port = port;
-	this->ssl = ssl;
-	try_addr(host, port, ssl);
+    	// Resolve the host asynchronously
+    	m_resolver.async_resolve(host, std::to_string(port),
+        	[this, host, port, ssl](const asio::error_code& ec, 
+                                   asio::ip::tcp::resolver::results_type endpoints) {
+            if (!ec) {
+                // Resolution successful, now try to connect
+                this->try_addr(endpoints, host, port, ssl);
+            } else {
+                grid->infof(_("/// resolve failed: %s\n"), ec.message().c_str());
+            }
+    	    display_buffer();
+        });
 }
 
 bool conn_t::file_log(const char *filename)
@@ -512,6 +532,7 @@ bool conn_t::disconnected(int bts, int pend)
 	tty.title(_("Disconnected - Crystal"));
 	if (conn->grid->col)
 		conn->grid->newline();
+#if 0
 	if (bts == -1)
 	{
 		int e = errno;
@@ -530,8 +551,11 @@ bool conn_t::disconnected(int bts, int pend)
 	}
 	else
 	{
+#endif
 		conn->grid->info(_("/// connection closed by foreign host.\n"));
+#if 0
 	}
+#endif
 	conn->display_buffer();
 	fflush(stdout);
 	conn->telnet.reset();
@@ -540,7 +564,47 @@ bool conn_t::disconnected(int bts, int pend)
 	return false;
 }
 
-void conn_t::main_loop()
+void do_read(conn_t *conn,
+	     asio::posix::stream_descriptor& stream_desc, 
+             std::array<char, 256>& buffer);
+
+void handle_input(conn_t* conn,
+		  const asio::error_code& error, 
+                  size_t bytes_transferred, 
+                  asio::posix::stream_descriptor& stream_desc, 
+                  std::array<char, 256>& buffer) {
+    if (!error) {
+        for (size_t idx = 0; idx < bytes_transferred; idx++) {
+            my_wstring s = tty.convert_input(buffer[idx]);
+            if (s.length()) {
+                conn->dispatch_key(s);
+            }
+		if (!conn->telnet)
+			conn->commandmode = 1;
+		conn->grid->changed = 1;
+        }
+        
+	if (!conn->quit)
+	{
+	        do_read(conn, stream_desc, buffer);
+		conn->display_buffer();
+		fflush(stdout);
+	}
+
+    }
+}
+
+void do_read(conn_t * conn,
+	     asio::posix::stream_descriptor& stream_desc, 
+             std::array<char, 256>& buffer) {
+   stream_desc.async_read_some(asio::buffer(buffer), 
+        [conn, &stream_desc, &buffer](const asio::error_code& error, size_t bytes_transferred) {
+            handle_input(conn, error, bytes_transferred, stream_desc, buffer);
+        });
+}
+
+
+void conn_t::main_loop(asio::io_context &io_context)
 {
 	conn_t *conn = this;
 
@@ -552,6 +616,7 @@ void conn_t::main_loop()
 
 	conn->display_buffer();
 
+#if 0
 	while (!conn->quit)
 	{
 		fd_set r, e, w;
@@ -673,7 +738,7 @@ void conn_t::main_loop()
 
 					if (!conn->telnet)
 						conn->commandmode = 1;
-					conn->grid->changed = 1;
+`					conn->grid->changed = 1;
 				}
 				else
 				{
@@ -688,6 +753,21 @@ void conn_t::main_loop()
 			fflush(stdout);
 		}
 	}
+#endif
+	asio::posix::stream_descriptor stdin_desc(io_context, STDIN_FILENO);
+
+	std::array<char, 256> input_buffer;
+
+	assert(!cursor);
+
+	display_buffer();
+	fflush(stdout);
+
+	do_read(this, stdin_desc, input_buffer);
+
+	io_context.run();
+
+	stdin_desc.release();
 }
 
 struct termios oldti;
