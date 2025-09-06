@@ -1,6 +1,6 @@
 /*
  * Crystal Mud Client
- * Copyright (C) 2002-2005 Abigail Brady
+ * Copyright (C) 2002-2025 Abigail Brady
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -183,16 +183,22 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 {
 	for (int i = 0; i < len; i++)
 	{
+#ifdef MCCP4
 		if (compression_mode == TELOPT_COMPRESS4)
 			mccp4_state.input_buffer += bytes[i];
+#endif
+
+#ifdef MCCP
 
 		if (compression_mode == TELOPT_COMPRESS2)
 			zlib_state.input_buffer += bytes[i];
+#endif
 
 		if (!compression_mode)
 			conn->telnet->tstack(conn, bytes[i]);
 	}
 
+#ifdef MCCP4
 	if (compression_mode == TELOPT_COMPRESS4)
 	{
 		std::string &input_buffer = mccp4_state.input_buffer;
@@ -235,7 +241,9 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 			mccp4_state.stream = nullptr;
 		}
 	}
+#endif
 
+#ifdef MCCP
 	if (compression_mode == TELOPT_COMPRESS2)
 	{
 		std::string &input_buffer = zlib_state.input_buffer;
@@ -274,15 +282,19 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 		}
 		while (status == Z_OK && obtained);
 	}
+#endif
 }
 
+#ifdef MCCP
 void telnet_state::handle_compress2(conn_t *conn)
 {
 	compression_mode = TELOPT_COMPRESS2;
 	zlib_state = {};
-	conn->grid->infof("[inflate_init %i]\n", inflateInit(&zlib_state.stream));
+	inflateInit(&zlib_state.stream);
 }
+#endif
 
+#ifdef MCCP4
 void telnet_state::handle_compress4(conn_t *conn)
 {
 	if (subneg_data[0] == MCCP4_BEGIN_ENCODING)
@@ -302,6 +314,7 @@ void telnet_state::handle_compress4(conn_t *conn)
 		}
 	}
 }
+#endif
 
 void telnet_state::handle_ttype(conn_t *conn)
 {
@@ -416,10 +429,14 @@ void telnet_state::tstack(conn_t *conn, int ch)
 				handle_ttype(conn);
 			if (subneg_type == TELOPT_MPLEX)
 				handle_mplex(conn);
+#ifdef MCCP
 			if (subneg_type == TELOPT_COMPRESS2)
 				handle_compress2(conn);
+#endif
+#ifdef MCCP4
 			if (subneg_type == TELOPT_COMPRESS4)
 				handle_compress4(conn);
+#endif
 			subneg_type = 0;
 			mode = 0;
 			debug_fprintf((stderr, "\n"));
