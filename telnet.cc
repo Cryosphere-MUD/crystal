@@ -395,6 +395,18 @@ void telnet_state::handle_mplex(conn_t *conn)
 	}
 }
 
+struct FileDescriptor
+{
+	int fd;
+	explicit FileDescriptor(int fd) : fd(fd) { }
+	~FileDescriptor()
+	{
+		if (fd != -1)
+			close(fd);
+	}
+	operator int() const { return fd; }
+};
+
 void telnet_state::handle_gmcp(conn_t *conn, const std::string &gmcp_data)
 {
 	auto package_end = gmcp_data.find(' ');
@@ -406,42 +418,46 @@ void telnet_state::handle_gmcp(conn_t *conn, const std::string &gmcp_data)
 
 	if (package == "IRE.Composer.Edit")
 	{
-		conn->grid->infof("gmcp data: %s\n", gmcp_data.c_str());
 		nlohmann::json values;
 
 		try
 		{
 			values = nlohmann::json::parse(payload);
 			char fname[] = "/tmp/crystal-XXXXXX";
-			int fd = mkstemp(fname);
+
+			FileDescriptor fd(mkstemp(fname));
+
 			if (fd == -1)
-				conn->grid->infof("failed to open temp file: %s\n", fname);
-			std::string existing = values["text"];
-			if (write(fd, existing.data(), existing.size()) == existing.size())
 			{
-				const char *editor = getenv("EDITOR");
-				std::string cmdline = editor ? editor : "vi";
-				cmdline += " ";
-				cmdline += fname;
-				system(cmdline.c_str());
-				struct stat statbuf;
-				conn->grid->infof("at %i\n", __LINE__);
-				if (fstat(fd, &statbuf) == 0)
-				{
-					conn->grid->infof("at %i\n", __LINE__);
-					std::string new_text;
-					new_text.resize(statbuf.st_size);
-					lseek(fd, 0, SEEK_SET);
-					ssize_t new_size = read(fd, &new_text[0], new_text.size());
-					conn->grid->infof("new_size %i\n", int(new_size));
-					if (new_size > 0)
-					{
-						conn->grid->infof("at %i\n", __LINE__);
-						nlohmann::json buffer = new_text.substr(0, new_size);
-						subneg_send(TELOPT_GMCP, "IRE.Composer.SetBuffer " + buffer.dump());
-					}
-				}
-				close(fd);
+				conn->grid->infof("failed to open temp file: %s\n", fname);
+				return;
+			}
+
+			std::string existing = values["text"];
+
+			if (write(fd, existing.data(), existing.size()) != existing.size())
+				return;
+
+			const char *editor = getenv("EDITOR");
+
+			std::string cmdline = editor ? editor : "vi";
+			cmdline += " ";
+			cmdline += fname;
+			system(cmdline.c_str());
+			struct stat statbuf;
+
+			if (fstat(fd, &statbuf) != 0)
+				return;
+
+			std::string new_text;
+			new_text.resize(statbuf.st_size);
+
+			lseek(fd, 0, SEEK_SET);
+			ssize_t new_size = read(fd, &new_text[0], new_text.size());
+			if (new_size > 0)
+			{
+				nlohmann::json buffer = new_text.substr(0, new_size);
+				subneg_send(TELOPT_GMCP, "IRE.Composer.SetBuffer " + buffer.dump());
 			}
 		}
 		catch (const nlohmann::json::parse_error &e)
