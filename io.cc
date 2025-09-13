@@ -632,6 +632,7 @@ my_wstring mterm::convert_input(int i)
 			my_wstring s;
 			s += L"m-";
 			s += sofar[1];
+			sofar = L"";
 			return s;
 		}
 
