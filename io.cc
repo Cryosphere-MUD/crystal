@@ -375,198 +375,198 @@ static struct
 	const my_wstring escape_sequence;
 	const my_wstring key_name;
 } keys[] = {{L"\033[A", L"up"},
-		{L"\033[B", L"down"},
-		{L"\033[C", L"right"},
-		{L"\033[D", L"left"},
-		{L"\033[E", L"stay"},
+	    {L"\033[B", L"down"},
+	    {L"\033[C", L"right"},
+	    {L"\033[D", L"left"},
+	    {L"\033[E", L"stay"},
 
-		{L"\033[2A", L"s-up"},
-		{L"\033[2B", L"s-down"},
-		{L"\033[2C", L"s-right"},
-		{L"\033[2D", L"s-left"},
-		{L"\033[2E", L"s-stay"},
+	    {L"\033[2A", L"s-up"},
+	    {L"\033[2B", L"s-down"},
+	    {L"\033[2C", L"s-right"},
+	    {L"\033[2D", L"s-left"},
+	    {L"\033[2E", L"s-stay"},
 
-		{L"\033[3A", L"m-up"},
-		{L"\033[3B", L"m-down"},
-		{L"\033[3C", L"m-right"},
-		{L"\033[3D", L"m-left"},
-		{L"\033[3E", L"m-stay"},
+	    {L"\033[3A", L"m-up"},
+	    {L"\033[3B", L"m-down"},
+	    {L"\033[3C", L"m-right"},
+	    {L"\033[3D", L"m-left"},
+	    {L"\033[3E", L"m-stay"},
 
-		{L"\033[4A", L"m-s-up"},
-		{L"\033[4B", L"m-s-down"},
-		{L"\033[4C", L"m-s-right"},
-		{L"\033[4D", L"m-s-left"},
-		{L"\033[4E", L"m-s-stay"},
+	    {L"\033[4A", L"m-s-up"},
+	    {L"\033[4B", L"m-s-down"},
+	    {L"\033[4C", L"m-s-right"},
+	    {L"\033[4D", L"m-s-left"},
+	    {L"\033[4E", L"m-s-stay"},
 
-		{L"\033[5A", L"c-up"},
-		{L"\033[5B", L"c-down"},
-		{L"\033[5C", L"c-right"},
-		{L"\033[5D", L"c-left"},
-		{L"\033[5E", L"c-stay"},
+	    {L"\033[5A", L"c-up"},
+	    {L"\033[5B", L"c-down"},
+	    {L"\033[5C", L"c-right"},
+	    {L"\033[5D", L"c-left"},
+	    {L"\033[5E", L"c-stay"},
 
-		{L"\033[6A", L"s-c-up"},
-		{L"\033[6B", L"s-c-down"},
-		{L"\033[6C", L"s-c-right"},
-		{L"\033[6D", L"s-c-left"},
-		{L"\033[6E", L"s-c-stay"},
+	    {L"\033[6A", L"s-c-up"},
+	    {L"\033[6B", L"s-c-down"},
+	    {L"\033[6C", L"s-c-right"},
+	    {L"\033[6D", L"s-c-left"},
+	    {L"\033[6E", L"s-c-stay"},
 
-		{L"\033[7A", L"m-c-up"},
-		{L"\033[7B", L"m-c-down"},
-		{L"\033[7C", L"m-c-right"},
-		{L"\033[7D", L"m-c-left"},
-		{L"\033[7E", L"m-c-stay"},
+	    {L"\033[7A", L"m-c-up"},
+	    {L"\033[7B", L"m-c-down"},
+	    {L"\033[7C", L"m-c-right"},
+	    {L"\033[7D", L"m-c-left"},
+	    {L"\033[7E", L"m-c-stay"},
 
-		{L"\033[8A", L"m-s-c-up"},
-		{L"\033[8B", L"m-s-c-down"},
-		{L"\033[8C", L"m-s-c-right"},
-		{L"\033[8D", L"m-s-c-left"},
-		{L"\033[8E", L"m-s-c-stay"},
+	    {L"\033[8A", L"m-s-c-up"},
+	    {L"\033[8B", L"m-s-c-down"},
+	    {L"\033[8C", L"m-s-c-right"},
+	    {L"\033[8D", L"m-s-c-left"},
+	    {L"\033[8E", L"m-s-c-stay"},
 
-		{L"\033[Z", L"s-tab"}, // xterm and freebsd
+	    {L"\033[Z", L"s-tab"}, // xterm and freebsd
 
-		{L"\033[1~", L"home"},
-		{L"\033[2~", L"insert"},
-		{L"\033[3~", L"delete"},
-		{L"\033[4~", L"end"},
-		{L"\033[5~", L"pageup"},
-		{L"\033[6~", L"pagedown"},
+	    {L"\033[1~", L"home"},
+	    {L"\033[2~", L"insert"},
+	    {L"\033[3~", L"delete"},
+	    {L"\033[4~", L"end"},
+	    {L"\033[5~", L"pageup"},
+	    {L"\033[6~", L"pagedown"},
 
-		{L"\033[L", L"insert"},
+	    {L"\033[L", L"insert"},
 
-		{L"\033[H", L"home"},
-		{L"\033[F", L"end"},
+	    {L"\033[H", L"home"},
+	    {L"\033[F", L"end"},
 
-		{L"\033[I", L"pageup"},
-		{L"\033[G", L"pagedown"},
+	    {L"\033[I", L"pageup"},
+	    {L"\033[G", L"pagedown"},
 
-		{L"\033[2;5~", L"c-insert"},
-		{L"\033[5;5~", L"c-pageup"},
-		{L"\033[6;5~", L"c-pagedown"},
+	    {L"\033[2;5~", L"c-insert"},
+	    {L"\033[5;5~", L"c-pageup"},
+	    {L"\033[6;5~", L"c-pagedown"},
 
-		{L"\033[7~", L"home"}, // rxvt
-		{L"\033[8~", L"end"},  // rxvt
+	    {L"\033[7~", L"home"}, // rxvt
+	    {L"\033[8~", L"end"},  // rxvt
 
-		{L"\033[Oa", L"c-up"},    // rxvt
-		{L"\033[Ob", L"c-down"},  // rxvt
-		{L"\033[Oc", L"c-right"}, // rxvt
-		{L"\033[Od", L"c-left"},  // rxvt
+	    {L"\033[Oa", L"c-up"},    // rxvt
+	    {L"\033[Ob", L"c-down"},  // rxvt
+	    {L"\033[Oc", L"c-right"}, // rxvt
+	    {L"\033[Od", L"c-left"},  // rxvt
 
-		/* THIS BLOCK RXVT NUMERIC KEYPAD */
-		{L"\033[Ok", L"+"},	       // rxvt
-		{L"\033[Oj", L"*"},	       // rxvt
-		{L"\033[On", L"delete"},   // rxvt
-		{L"\033[Oo", L"/"},	       // rxvt
-		{L"\033[Om", L"-"},	       // rxvt
-		{L"\033[Op", L"insert"},   // rxvt
-		{L"\033[Oq", L"end"},      // rxvt
-		{L"\033[Or", L"down"},     // rxvt
-		{L"\033[Os", L"pagedown"}, // rxvt
-		{L"\033[Ot", L"left"},     // rxvt
-		{L"\033[Ou", L"stay"},     // rxvt
-		{L"\033[Ov", L"right"},    // rxvt
-		{L"\033[Ow", L"home"},     // rxvt
-		{L"\033[Ox", L"up"},       // rxvt
-		{L"\033[Oy", L"pageup"},   // rxvt
+	    /* THIS BLOCK RXVT NUMERIC KEYPAD */
+	    {L"\033[Ok", L"+"},	       // rxvt
+	    {L"\033[Oj", L"*"},	       // rxvt
+	    {L"\033[On", L"delete"},   // rxvt
+	    {L"\033[Oo", L"/"},	       // rxvt
+	    {L"\033[Om", L"-"},	       // rxvt
+	    {L"\033[Op", L"insert"},   // rxvt
+	    {L"\033[Oq", L"end"},      // rxvt
+	    {L"\033[Or", L"down"},     // rxvt
+	    {L"\033[Os", L"pagedown"}, // rxvt
+	    {L"\033[Ot", L"left"},     // rxvt
+	    {L"\033[Ou", L"stay"},     // rxvt
+	    {L"\033[Ov", L"right"},    // rxvt
+	    {L"\033[Ow", L"home"},     // rxvt
+	    {L"\033[Ox", L"up"},       // rxvt
+	    {L"\033[Oy", L"pageup"},   // rxvt
 
-		{L"\033[OM", L"return"}, // rxvt
-		/* */
+	    {L"\033[OM", L"return"}, // rxvt
+	    /* */
 
-		{L"\033[[A", L"fn.1"}, // linux
-		{L"\033[[B", L"fn.2"}, // linux
-		{L"\033[[C", L"fn.3"}, // linux
-		{L"\033[[D", L"fn.4"}, // linux
-		{L"\033[[E", L"fn.5"}, // linux
-		{L"\033[P", L"pause"}, // linux
+	    {L"\033[[A", L"fn.1"}, // linux
+	    {L"\033[[B", L"fn.2"}, // linux
+	    {L"\033[[C", L"fn.3"}, // linux
+	    {L"\033[[D", L"fn.4"}, // linux
+	    {L"\033[[E", L"fn.5"}, // linux
+	    {L"\033[P", L"pause"}, // linux
 
-		{L"\033[[M", L"fn.1"},	// freebsd
-		{L"\033[[N", L"fn.2"},	// freebsd
-		{L"\033[[O", L"fn.3"},	// freebsd
-		{L"\033[[P", L"fn.4"},	// freebsd
-		{L"\033[[Q", L"fn.5"},	// freebsd
-		{L"\033[[R", L"fn.6"},	// freebsd
-		{L"\033[[S", L"fn.7"},	// freebsd
-		{L"\033[[T", L"fn.8"},	// freebsd
-		{L"\033[[U", L"fn.9"},	// freebsd
-		{L"\033[[V", L"fn.10"},	// freebsd
-		{L"\033[[W", L"fn.11"},	// freebsd
-		{L"\033[[X", L"fn.12"},	// freebsd
-		{L"\033[[Y", L"s-fn.1"},	// freebsd
-		{L"\033[[Z", L"s-fn.2"},	// freebsd
-		{L"\033[[a", L"s-fn.3"},	// freebsd
-		{L"\033[[b", L"s-fn.4"},	// freebsd
-		{L"\033[[c", L"s-fn.5"},	// freebsd
-		{L"\033[[d", L"s-fn.6"},	// freebsd
-		{L"\033[[e", L"s-fn.7"},	// freebsd
-		{L"\033[[f", L"s-fn.8"},	// freebsd
-		{L"\033[[g", L"s-fn.9"},	// freebsd
-		{L"\033[[h", L"s-fn.10"},	// freebsd
-		{L"\033[[i", L"s-fn.11"},	// freebsd
-		{L"\033[[j", L"s-fn.12"},	// freebsd
-		{L"\033[[k", L"c-fn.1"},	// freebsd
-		{L"\033[[l", L"c-fn.2"},	// freebsd
-		{L"\033[[m", L"c-fn.3"},	// freebsd
-		{L"\033[[n", L"c-fn.4"},	// freebsd
-		{L"\033[[o", L"c-fn.5"},	// freebsd
-		{L"\033[[p", L"c-fn.6"},	// freebsd
-		{L"\033[[q", L"c-fn.7"},	// freebsd
-		{L"\033[[r", L"c-fn.8"},	// freebsd
-		{L"\033[[s", L"c-fn.9"},	// freebsd
-		{L"\033[[t", L"c-fn.10"},	// freebsd
-		{L"\033[[u", L"c-fn.11"},	// freebsd
-		{L"\033[[v", L"c-fn.12"},	// freebsd
-		{L"\033[[w", L"s-c-fn.1"},	// freebsd
-		{L"\033[[x", L"s-c-fn.2"},	// freebsd
-		{L"\033[[y", L"s-c-fn.3"},	// freebsd
-		{L"\033[[z", L"s-c-fn.4"},	// freebsd
-		{L"\033[[@", L"s-c-fn.5"},	// freebsd
-		{L"\033[[[", L"s-c-fn.6"},	// freebsd
-		{L"\033[[\\", L"s-c-fn.7"}, // freebsd
-		{L"\033[[]", L"s-c-fn.8"},	// freebsd
-		{L"\033[[^", L"s-c-fn.9"},	// freebsd
-		{L"\033[[_", L"s-c-fn.10"}, // freebsd
-		{L"\033[[`", L"s-c-fn.11"}, // freebsd
-		{L"\033[[{", L"s-c-fn.12"}, // freebsd
+	    {L"\033[[M", L"fn.1"},	// freebsd
+	    {L"\033[[N", L"fn.2"},	// freebsd
+	    {L"\033[[O", L"fn.3"},	// freebsd
+	    {L"\033[[P", L"fn.4"},	// freebsd
+	    {L"\033[[Q", L"fn.5"},	// freebsd
+	    {L"\033[[R", L"fn.6"},	// freebsd
+	    {L"\033[[S", L"fn.7"},	// freebsd
+	    {L"\033[[T", L"fn.8"},	// freebsd
+	    {L"\033[[U", L"fn.9"},	// freebsd
+	    {L"\033[[V", L"fn.10"},	// freebsd
+	    {L"\033[[W", L"fn.11"},	// freebsd
+	    {L"\033[[X", L"fn.12"},	// freebsd
+	    {L"\033[[Y", L"s-fn.1"},	// freebsd
+	    {L"\033[[Z", L"s-fn.2"},	// freebsd
+	    {L"\033[[a", L"s-fn.3"},	// freebsd
+	    {L"\033[[b", L"s-fn.4"},	// freebsd
+	    {L"\033[[c", L"s-fn.5"},	// freebsd
+	    {L"\033[[d", L"s-fn.6"},	// freebsd
+	    {L"\033[[e", L"s-fn.7"},	// freebsd
+	    {L"\033[[f", L"s-fn.8"},	// freebsd
+	    {L"\033[[g", L"s-fn.9"},	// freebsd
+	    {L"\033[[h", L"s-fn.10"},	// freebsd
+	    {L"\033[[i", L"s-fn.11"},	// freebsd
+	    {L"\033[[j", L"s-fn.12"},	// freebsd
+	    {L"\033[[k", L"c-fn.1"},	// freebsd
+	    {L"\033[[l", L"c-fn.2"},	// freebsd
+	    {L"\033[[m", L"c-fn.3"},	// freebsd
+	    {L"\033[[n", L"c-fn.4"},	// freebsd
+	    {L"\033[[o", L"c-fn.5"},	// freebsd
+	    {L"\033[[p", L"c-fn.6"},	// freebsd
+	    {L"\033[[q", L"c-fn.7"},	// freebsd
+	    {L"\033[[r", L"c-fn.8"},	// freebsd
+	    {L"\033[[s", L"c-fn.9"},	// freebsd
+	    {L"\033[[t", L"c-fn.10"},	// freebsd
+	    {L"\033[[u", L"c-fn.11"},	// freebsd
+	    {L"\033[[v", L"c-fn.12"},	// freebsd
+	    {L"\033[[w", L"s-c-fn.1"},	// freebsd
+	    {L"\033[[x", L"s-c-fn.2"},	// freebsd
+	    {L"\033[[y", L"s-c-fn.3"},	// freebsd
+	    {L"\033[[z", L"s-c-fn.4"},	// freebsd
+	    {L"\033[[@", L"s-c-fn.5"},	// freebsd
+	    {L"\033[[[", L"s-c-fn.6"},	// freebsd
+	    {L"\033[[\\", L"s-c-fn.7"}, // freebsd
+	    {L"\033[[]", L"s-c-fn.8"},	// freebsd
+	    {L"\033[[^", L"s-c-fn.9"},	// freebsd
+	    {L"\033[[_", L"s-c-fn.10"}, // freebsd
+	    {L"\033[[`", L"s-c-fn.11"}, // freebsd
+	    {L"\033[[{", L"s-c-fn.12"}, // freebsd
 
-		{L"\033[11~", L"fn.1"},
-		{L"\033[12~", L"fn.2"},
-		{L"\033[13~", L"fn.3"},
-		{L"\033[14~", L"fn.4"},
-		{L"\033[15~", L"fn.5"},
-		{L"\033[17~", L"fn.6"},
-		{L"\033[18~", L"fn.7"},
-		{L"\033[19~", L"fn.8"},
-		{L"\033[20~", L"fn.9"},
-		{L"\033[21~", L"fn.10"},
-		{L"\033[23~", L"fn.11"},
-		{L"\033[24~", L"fn.12"},
-		{L"\033[25~", L"fn.13"}, // shift-f1 on linux - shift-f3 on xterm
-		{L"\033[26~", L"fn.14"},
-		{L"\033[28~", L"fn.15"},
-		{L"\033[29~", L"fn.16"},
-		{L"\033[31~", L"fn.17"},
-		{L"\033[32~", L"fn.18"},
-		{L"\033[33~", L"fn.19"},
-		{L"\033[34~", L"fn.20"},
+	    {L"\033[11~", L"fn.1"},
+	    {L"\033[12~", L"fn.2"},
+	    {L"\033[13~", L"fn.3"},
+	    {L"\033[14~", L"fn.4"},
+	    {L"\033[15~", L"fn.5"},
+	    {L"\033[17~", L"fn.6"},
+	    {L"\033[18~", L"fn.7"},
+	    {L"\033[19~", L"fn.8"},
+	    {L"\033[20~", L"fn.9"},
+	    {L"\033[21~", L"fn.10"},
+	    {L"\033[23~", L"fn.11"},
+	    {L"\033[24~", L"fn.12"},
+	    {L"\033[25~", L"fn.13"}, // shift-f1 on linux - shift-f3 on xterm
+	    {L"\033[26~", L"fn.14"},
+	    {L"\033[28~", L"fn.15"},
+	    {L"\033[29~", L"fn.16"},
+	    {L"\033[31~", L"fn.17"},
+	    {L"\033[32~", L"fn.18"},
+	    {L"\033[33~", L"fn.19"},
+	    {L"\033[34~", L"fn.20"},
 
-		{L"\033[23;2~", L"fn.21"}, // shift-11 on xterm
-		{L"\033[24;2~", L"fn.22"}, // shift-12 on xterm
+	    {L"\033[23;2~", L"fn.21"}, // shift-11 on xterm
+	    {L"\033[24;2~", L"fn.22"}, // shift-12 on xterm
 
-		{L"\033OA", L"up"},
-		{L"\033OB", L"down"},
-		{L"\033OC", L"right"},
-		{L"\033OD", L"left"},
-		{L"\033OH", L"home"},
-		{L"\033OF", L"end"},
+	    {L"\033OA", L"up"},
+	    {L"\033OB", L"down"},
+	    {L"\033OC", L"right"},
+	    {L"\033OD", L"left"},
+	    {L"\033OH", L"home"},
+	    {L"\033OF", L"end"},
 
-		{L"\033OP", L"fn.1"},
-		{L"\033OQ", L"fn.2"},
-		{L"\033OR", L"fn.3"},
-		{L"\033OS", L"fn.4"},
+	    {L"\033OP", L"fn.1"},
+	    {L"\033OQ", L"fn.2"},
+	    {L"\033OR", L"fn.3"},
+	    {L"\033OS", L"fn.4"},
 
-		{L"\033<", L"m-<"},
-		{L"\033>", L"m->"},
+	    {L"\033<", L"m-<"},
+	    {L"\033>", L"m->"},
 
-		{NULL, NULL}};
+	    {NULL, NULL}};
 
 my_wstring mterm::convert_input(int i)
 {
@@ -614,7 +614,7 @@ my_wstring mterm::convert_input(int i)
 
 	bool can = false;
 
-	for (const auto& key : keys)
+	for (const auto &key : keys)
 	{
 		if (sofar == key.escape_sequence)
 		{
