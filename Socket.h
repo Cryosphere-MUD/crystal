@@ -96,24 +96,15 @@ class Socket
 	void connected();
 
       public:
-	bool getdead()
-	{
-		return dead;
-	}
-	bool getpend()
-	{
-		return pending;
-	}
+	bool getdead() { return dead; }
+	bool getpend() { return pending; }
 	Socket(bool ssl);
 	int connect(InAddrPtr where);
 	int read(char *, int);
 	int write(const char *, int);
 	void close();
 	virtual ~Socket();
-	int getfd()
-	{
-		return fd;
-	}
+	int getfd() { return fd; }
 };
 
 struct url

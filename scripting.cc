@@ -57,7 +57,7 @@ int count_timers()
 {
 	return 0;
 }
-void dotimers(){};
+void dotimers() {};
 std::string lookup_host(const std::string &s)
 {
 	return "";

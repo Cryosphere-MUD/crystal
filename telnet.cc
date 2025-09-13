@@ -88,7 +88,7 @@ void sendwinsize(conn_t *conn)
 	str += (wide >> 8);
 	str += (wide & 0xff);
 	str += (high) >> 8;
-	str += (high)&0xff;
+	str += (high) & 0xff;
 
 	conn->telnet->subneg_send(TELOPT_NAWS, str);
 }
