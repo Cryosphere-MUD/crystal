@@ -5,7 +5,6 @@ crystal.spec
 config.h
 config.status
 config.h.in
-COPYING
 INSTALL
 CMakeCache.txt
 CMakeFiles/
