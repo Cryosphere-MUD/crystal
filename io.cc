@@ -565,8 +565,7 @@ static struct
 
 	    {L"\033<", L"m-<"},
 	    {L"\033>", L"m->"},
-
-	    {NULL, NULL}};
+};
 
 my_wstring mterm::convert_input(int i)
 {
