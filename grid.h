@@ -79,11 +79,7 @@ struct ansi_context
 	}
 };
 
-struct line_t
-{
-	cell_t i[MAXWIDTH];
-	int len;
-};
+typedef std::vector<cell_t> line_t;
 
 #define GRIDHEIGHT 10000
 
@@ -148,10 +144,10 @@ class grid_t : public ansi_context
 		if (r > (first + n))
 			return myblank();
 
-		if (c > lines[r % lcount].len)
+		if (c < 0 || c >= lines[r % lcount].size())
 			return myblank();
 
-		return lines[r % lcount].i[c];
+		return lines[r % lcount][c];
 	}
 
 	void newline()
@@ -171,8 +167,9 @@ class grid_t : public ansi_context
 		row++;
 		col = 0;
 		n++;
-		for (int i = 0; i < MAXWIDTH; i++)
-			lines[row % lcount].i[i] = myblank();
+
+		lines[row % lcount].clear();
+
 		if (n > lcount)
 		{
 			first++;
@@ -183,8 +180,7 @@ class grid_t : public ansi_context
 
 	void eraseline(int from)
 	{
-		for (int i = from; i < MAXWIDTH; i++)
-			lines[row % lcount].i[i] = blank;
+		lines[row % lcount].resize(from);
 	}
 
 	int get_len(int r)
@@ -194,14 +190,16 @@ class grid_t : public ansi_context
 		if (r > (first + n))
 			return 0;
 
-		return lines[r % lcount].len;
+		return lines[r % lcount].size();
 	}
 
 	void set(int r, int c, cell_t ch)
 	{
-		if (lines[r % lcount].len <= c)
-			lines[r % lcount].len = c + 1;
-		lines[r % lcount].i[c] = ch;
+		if (c >= 0 && c < MAXWIDTH)
+		{
+			lines[r % lcount].resize(std::max(size_t(c + 1), lines[r % lcount].size()));
+			lines[r % lcount][c] = ch;
+		}
 	}
 
 	int nlw;
