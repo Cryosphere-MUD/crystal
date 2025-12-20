@@ -44,39 +44,21 @@
 struct ansi_context
 {
 	// the escape mode
-	int mode;
+	int mode = 0;
 
 	// parameters so far
 	std::list<int> pars;
 
-	// current paremeter
-	int par;
+	// current parameter
+	int par = 0;
 
 	std::string osc_string;
 
-	Intensity inten;
-	int forecol, backcol;
-	bool scs, it, fr, inv, os, hidden, ol;
-	int ul : 2;
-	int defbc, deffc;
-
-	void init()
-	{
-		mode = 0;
-		pars = std::list<int>();
-		par = 0;
-		inten = I_NORM;
-		deffc = forecol = COL_DEFAULT;
-		defbc = backcol = COL_DEFAULT;
-		scs = 0;
-		ul = 0;
-		it = 0;
-		fr = 0;
-		inv = 0;
-		os = 0;
-		ol = 0;
-		hidden = 0;
-	}
+	Intensity inten = I_NORM;
+	int forecol = COL_DEFAULT, backcol = COL_DEFAULT;
+	bool scs = false, it = false, fr = false, inv = false, os = false, hidden = false, ol = false;
+	int ul = 0;
+	int defbc = COL_DEFAULT, deffc = COL_DEFAULT;
 };
 
 template<class T> bool check_in_range(const T &vec, int index)
@@ -89,41 +71,28 @@ typedef std::vector<cell_t> line_t;
 class grid_t : public ansi_context
 {
       public:
-	conn_t *conn;
+	conn_t *conn = nullptr;
 
 	std::vector<line_t> lines;
 
-	int row;
-	int col;
+	int row = 0;
+	int col = 0;
 
-	int lastprompt;
+	bool lastprompt = false;
 
-	int height;
-	int width;
+	int height = 0;
+	int width = 0;
 
-	int visible;
+	bool visible = true;
 
-	int changed;
+	bool changed = false;
 
 	cellstring cstoredprompt;
 
 	void set_conn(conn_t *c) { conn = c; }
 
-	grid_t(conn_t *c)
-	{
-		conn = 0;
-		lastprompt = 0;
-		nlw = 0;
-		row = 0;
-		col = 0;
-		visible = 1;
-		changed = 0;
-
-		height = 0;
-		width = 0;
-
-		init();
-	}
+	grid_t(const grid_t&) = delete;
+	grid_t() = default;
 
 	cell_t myblank()
 	{
@@ -189,7 +158,7 @@ class grid_t : public ansi_context
 		}
 	}
 
-	int nlw;
+	int nlw = 0;
 
 	void wantnewline() { nlw++; }
 
@@ -218,7 +187,7 @@ class grid_t : public ansi_context
 
 inline void have_prompt(grid_t *grid)
 {
-	grid->lastprompt = 1;
+	grid->lastprompt = true;
 
 	my_wstring s;
 	for (int i = 0; i < grid->get_len(grid->row); i++)
@@ -226,6 +195,6 @@ inline void have_prompt(grid_t *grid)
 	scripting::doprompt(s);
 }
 
-extern int info_to_stderr;
+extern bool info_to_stderr;
 
 #endif

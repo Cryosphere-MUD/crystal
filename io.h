@@ -161,9 +161,9 @@ struct mterm
 		const struct winsize *ws = &wws;
 		ioctl(0, TIOCGWINSZ, ws);
 		if (ws->ws_row)
-			HEIGHT = MIN(ws->ws_row, MAXHEIGHT) - 1;
+			HEIGHT = std::min(int(ws->ws_row), MAXHEIGHT) - 1;
 		if (ws->ws_col)
-			WIDTH = MIN(ws->ws_col, MAXWIDTH);
+			WIDTH = std::min(int(ws->ws_col), MAXWIDTH);
 	}
 
 	void getterm()

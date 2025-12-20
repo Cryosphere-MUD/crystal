@@ -50,7 +50,7 @@ void conn_t::show_lines_at(int from, int to, int num)
 				tty.wantbuffer[i + to - 1][j] = blank2;
 			continue;
 		}
-		int mw = MIN(tty.WIDTH, grid->get_len(i + from));
+		int mw = std::min(tty.WIDTH, grid->get_len(i + from));
 		int j;
 		if (tty.utf8)
 			mw++;
@@ -138,7 +138,7 @@ void conn_t::display_buffer()
 			else
 				conn->show_lines_at(start, 1, tty.HEIGHT);
 		}
-		grid.changed = 0;
+		grid.changed = false;
 	}
 
 	if (conn->overlay && conn->overlay->visible)
@@ -240,7 +240,7 @@ void conn_t::display_buffer()
 		rcol = 0;
 
 	printf("\033[%i;%if", tty.HEIGHT + 1, rcol - scroll + 1 + prlen);
-	grid.changed = 0;
+	grid.changed = false;
 
 	fflush(stdout);
 }

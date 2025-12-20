@@ -365,18 +365,18 @@ void telnet_state::handle_mplex(conn_t *conn)
 		{
 			if (subneg_data[1] == 1 && conn->overlay)
 			{
-				conn->overlay->visible = 0;
-				conn->overlay->changed = 1;
-				conn->grid->changed = 1;
+				conn->overlay->visible = false;
+				conn->overlay->changed = true;
+				conn->grid->changed = true;
 			}
 		}
 		if (subneg_data[0] == MPLEX_SHOW)
 		{
 			if (subneg_data[1] == 1 && conn->overlay)
 			{
-				conn->overlay->visible = 1;
-				conn->overlay->changed = 1;
-				conn->grid->changed = 1;
+				conn->overlay->visible = true;
+				conn->overlay->changed = true;
+				conn->grid->changed = true;
 			}
 		}
 	}
@@ -386,7 +386,7 @@ void telnet_state::handle_mplex(conn_t *conn)
 		{
 			conn->overlay->width = (subneg_data[2] << 8) | (subneg_data[3]);
 			conn->overlay->height = (subneg_data[4] << 8) | (subneg_data[5]);
-			conn->overlay->changed = 1;
+			conn->overlay->changed = true;
 		}
 	}
 }
@@ -399,7 +399,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 
 		if (ch == EOR || ch == GA)
 		{
-			will_eor = 1;
+			will_eor = true;
 			have_prompt(conn->grid);
 		}
 		if (ch == NOP)
@@ -471,8 +471,8 @@ void telnet_state::tstack(conn_t *conn, int ch)
 
 		if (ch == TELOPT_ECHO)
 		{
-			allstars = 1;
-			will_echo = 1;
+			allstars = true;
+			will_echo = true;
 			mode = 0;
 			reply(IAC, DO, TELOPT_ECHO);
 			debug_fprintf((stderr, "\n"));
@@ -496,7 +496,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 		if (!rcvd_iac)
 			reply(IAC, WILL, TELOPT_LINEMODE);
 #endif
-		rcvd_iac = 1;
+		rcvd_iac = true;
 
 		if (ch == TELOPT_COMPRESS4)
 		{
@@ -522,7 +522,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			if (!will_eor)
 			{
 				reply(IAC, DO, TELOPT_EOR);
-				will_eor = 1;
+				will_eor = true;
 			}
 			mode = 0;
 			return;
@@ -532,7 +532,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 		{
 			reply(IAC, DO, TELOPT_SGA);
 			mode = 0;
-			charmode = 1;
+			charmode = true;
 			return;
 		}
 #ifdef NEGOTIATE_MXP
@@ -562,8 +562,8 @@ void telnet_state::tstack(conn_t *conn, int ch)
 		debug_fprintf((stderr, "%s ", nam(ch).c_str()));
 		if (ch == TELOPT_ECHO)
 		{
-			allstars = 0;
-			will_echo = 0;
+			allstars = false;
+			will_echo = false;
 			reply(IAC, DONT, TELOPT_ECHO);
 		}
 		else
@@ -572,7 +572,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			if (!rcvd_iac)
 				reply(IAC, WILL, TELOPT_LINEMODE);
 #endif
-			rcvd_iac = 1;
+			rcvd_iac = true;
 		}
 
 		mode = 0;
@@ -586,7 +586,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 
 		if (ch == TELOPT_LINEMODE)
 		{
-			charmode = 0;
+			charmode = false;
 			mode = 0;
 		}
 
@@ -594,7 +594,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 		if (!rcvd_iac)
 			reply(IAC, WILL, TELOPT_LINEMODE);
 #endif
-		rcvd_iac = 1;
+		rcvd_iac = true;
 
 		if (ch == TELOPT_SGA)
 		{
@@ -610,7 +610,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			if (!do_naws)
 			{
 				reply(IAC, WILL, TELOPT_NAWS);
-				do_naws = 1;
+				do_naws = true;
 				sendwinsize(conn);
 			}
 
@@ -623,7 +623,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			if (!will_ttype)
 			{
 				reply(IAC, WILL, TELOPT_TTYPE);
-				will_ttype = 1;
+				will_ttype = true;
 			}
 			mode = 0;
 			return;
@@ -653,10 +653,10 @@ void telnet_state::tstack(conn_t *conn, int ch)
 		if (!rcvd_iac)
 			reply(IAC, WILL, TELOPT_LINEMODE);
 #endif
-		rcvd_iac = 1;
+		rcvd_iac = true;
 #ifdef WILL_LINEMODE
 		if (ch == TELOPT_LINEMODE)
-			charmode = 1;
+			charmode = true;
 #endif
 		mode = 0;
 		return;

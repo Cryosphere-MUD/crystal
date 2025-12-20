@@ -52,13 +52,6 @@ typedef char *iconv_inptr_t;
 #undef MIN
 #endif
 
-inline int MIN(int a, int b)
-{
-	if (a > b)
-		return b;
-	return a;
-}
-
 typedef std::basic_string<wchar_t> my_wstring;
 
 std::string mks(const my_wstring &w);

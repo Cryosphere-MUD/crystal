@@ -126,34 +126,12 @@ const struct cell_t blank2('\0');
 
 conn_t::conn_t(grid_t *gr)
 {
-	never_echo = 0;
-	quit = 0;
-
-	nofuture = true;
-
-	addrs = 0;
-	addr_i = 0;
-
 	cur_grid = grid = gr;
-	overlay = new grid_t(NULL);
+	overlay = new grid_t();
 
 	overlay->defbc = 0;
 	overlay->backcol = 0;
-	overlay->visible = 0;
-
-	telnet = 0;
-
-	buffer = L"";
-	cursor = 0;
-
-	cutbuffer = L"";
-	logfile = 0;
-
-	lp_prompts = 1;
-	mud_cset = "ISO-8859-1";
-
-	commandmode = false;
-	hardscroll = 0;
+	overlay->visible = false;
 
 	gr->set_conn(this);
 	if (overlay)
@@ -185,7 +163,7 @@ void conn_t::dofindnext()
 					hardscroll = i + 1;
 					if (hardscroll > (grid->row - tty.HEIGHT))
 						hardscroll = 0;
-					grid->changed = 1;
+					grid->changed = true;
 					return;
 				}
 				l = s.find(*it, l + 1);
@@ -193,7 +171,7 @@ void conn_t::dofindnext()
 		}
 	}
 	hardscroll = 0;
-	grid->changed = 1;
+	grid->changed = true;
 }
 
 void conn_t::dotoggleoverlay()
@@ -201,7 +179,7 @@ void conn_t::dotoggleoverlay()
 	if (overlay)
 	{
 		overlay->visible = !overlay->visible;
-		overlay->changed = 1;
+		overlay->changed = true;
 	}
 }
 
@@ -220,19 +198,19 @@ void conn_t::doscrollstart()
 	if (grid->row < tty.HEIGHT)
 		return;
 	hardscroll = 1;
-	grid->changed = 1;
+	grid->changed = true;
 }
 
 void conn_t::doscrollend()
 {
 	hardscroll = 0;
-	grid->changed = 1;
+	grid->changed = true;
 }
 
 void conn_t::dorefresh()
 {
-	grid->changed = 1;
-	tty.bad_have = 1;
+	grid->changed = true;
+	tty.bad_have = true;
 }
 
 void conn_t::dosuspend()
@@ -245,8 +223,8 @@ void conn_t::dosuspend()
 
 	tty.grabwinsize();
 
-	tty.bad_have = 1;
-	grid->changed = 1;
+	tty.bad_have = true;
+	grid->changed = true;
 	tty.show_want();
 	if (tty.titleset)
 	{
@@ -332,15 +310,15 @@ void conn_t::doenter()
 		conn->grid->cstoredprompt.erase();
 	}
 
-	conn->grid->lastprompt = 0;
+	conn->grid->lastprompt = false;
 
-	int toecho = 1, tohistory = 1;
+	bool toecho = true, tohistory = true;
 
 	if (conn->never_echo)
-		toecho = 0;
+		toecho = false;
 
 	if (conn->telnet && conn->telnet->will_echo)
-		tohistory = toecho = 0;
+		tohistory = toecho = false;
 
 	if (tohistory && wproper.length())
 	{
@@ -361,7 +339,7 @@ void conn_t::doenter()
 			conn->grid->place(&c);
 		}
 		conn->grid->wantnewline();
-		conn->grid->changed = 1;
+		conn->grid->changed = true;
 	}
 
 	proper += "\r\n";
@@ -379,7 +357,7 @@ void conn_t::doscrolldown()
 		hardscroll += 10;
 	if (hardscroll > (grid->row - tty.HEIGHT))
 		hardscroll = 0;
-	grid->changed = 1;
+	grid->changed = true;
 }
 
 void conn_t::doscrollup()
@@ -393,14 +371,14 @@ void conn_t::doscrollup()
 		hardscroll = (grid->row - tty.HEIGHT) - 9;
 	if (hardscroll < 1)
 		hardscroll = 1;
-	grid->changed = 1;
+	grid->changed = true;
 }
 
 void conn_t::docommandmode()
 {
 	if (!commandmode)
 		doclearline();
-	commandmode = 1;
+	commandmode = true;
 }
 
 void conn_t::connected()
@@ -409,11 +387,11 @@ void conn_t::connected()
 
 	conn->grid->infof(_("/// connected with %s\n"), conn->ssl ? "TLS" : "telnet");
 
-	static int a = 0;
-	if (!a)
+	static int printed_escape_line = 0;
+	if (!printed_escape_line)
 	{
 		conn->grid->infof(_("/// escape character is '%s'\n"), "^]");
-		a = 1;
+		printed_escape_line = 1;
 	}
 
 	if (conn->ssl)
@@ -465,7 +443,7 @@ void conn_t::connect(const char *host, int port, bool ssl)
 	telnet.reset();
 
 	if (overlay)
-		overlay->visible = 0;
+		overlay->visible = false;
 	if (grid->col)
 		grid->newline();
 
@@ -522,7 +500,7 @@ bool conn_t::disconnected(int bts, int pend)
 			if (conn->try_addr(conn->host.c_str(), conn->port, conn->ssl))
 			{
 				conn->display_buffer();
-				conn->grid->changed = 1;
+				conn->grid->changed = true;
 				fflush(stdout);
 				return true;
 			}
@@ -535,8 +513,8 @@ bool conn_t::disconnected(int bts, int pend)
 	conn->display_buffer();
 	fflush(stdout);
 	conn->telnet.reset();
-	conn->commandmode = 1;
-	conn->grid->changed = 1;
+	conn->commandmode = true;
+	conn->grid->changed = true;
 	return false;
 }
 
@@ -545,10 +523,10 @@ void conn_t::main_loop()
 	conn_t *conn = this;
 
 	if (!conn->telnet)
-		conn->commandmode = 1;
+		conn->commandmode = true;
 
-	conn->grid->changed = 1;
-	tty.bad_have = 1;
+	conn->grid->changed = true;
+	tty.bad_have = true;
 
 	conn->display_buffer();
 
@@ -601,14 +579,14 @@ void conn_t::main_loop()
 		{
 			sendwinsize(conn);
 			had_winch = 0;
-			conn->grid->changed = 1;
-			tty.bad_have = 1;
+			conn->grid->changed = true;
+			tty.bad_have = true;
 		}
 
 		for (int i = 0; i < conn->grid->nlw; i++)
 		{
 			conn->grid->newline();
-			conn->grid->changed = 1;
+			conn->grid->changed = true;
 		}
 		conn->grid->nlw = 0;
 
@@ -616,7 +594,7 @@ void conn_t::main_loop()
 		    (FD_ISSET(conn->telnet->s->getfd(), &r) || FD_ISSET(conn->telnet->s->getfd(), &e) ||
 		     FD_ISSET(conn->telnet->s->getfd(), &w)))
 		{
-			int ok = 0;
+			bool ok = false;
 			do
 			{
 				unsigned char mbuffer[1000];
@@ -627,7 +605,7 @@ void conn_t::main_loop()
 				if (pend && !conn->telnet->s->getpend() && !conn->telnet->s->getdead())
 					conn->connected();
 
-				ok = 0;
+				ok = false;
 				if (bts == 0 || (bts == -1 && conn->telnet->s->getdead()))
 				{
 					if (conn->disconnected(bts, pend))
@@ -641,7 +619,7 @@ void conn_t::main_loop()
 				else if (bts != -1)
 				{
 					conn->telnet->handle_read(conn, mbuffer, bts);
-					ok = 1;
+					ok = true;
 				}
 			}
 			while (ok);
@@ -673,7 +651,7 @@ void conn_t::main_loop()
 
 					if (!conn->telnet)
 						conn->commandmode = 1;
-					conn->grid->changed = 1;
+					conn->grid->changed = true;
 				}
 				else
 				{

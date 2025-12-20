@@ -87,13 +87,13 @@ class commandeditor_t
 {
       public:
 	//! are we in command mode (true) or mud mode (false)
-	bool commandmode;
+	bool commandmode = false;
 
 	my_wstring buffer;
-	size_t cursor;
+	size_t cursor = 0;
 
 	my_wstring future;
-	bool nofuture;
+	bool nofuture = true;
 
 	my_wstring cutbuffer;
 

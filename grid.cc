@@ -559,7 +559,7 @@ void grid_t::wterminal(wchar_t ch)
 	}
 }
 
-int info_to_stderr = 1;
+bool info_to_stderr = true;
 
 void grid_t::infof(const char *fmt, ...)
 {
