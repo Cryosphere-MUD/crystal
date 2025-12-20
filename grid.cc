@@ -658,7 +658,7 @@ bool grid_t::file_dump(const char *file)
 	ctime_str = ctime_str.substr(0, ctime_str.length() - 1);
 
 	fprintf(dumpfile, _("---=== Dump generated on %s by crystal ===---\n"), ctime_str.c_str());
-	for (int i = first; i < row; i++)
+	for (int i = 0; i < row; i++)
 	{
 		for (int j = 0; j < get_len(i); j++)
 			fprintf(dumpfile, "%lc", get(i, j).ch);

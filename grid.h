@@ -79,9 +79,12 @@ struct ansi_context
 	}
 };
 
-typedef std::vector<cell_t> line_t;
+template<class T> bool check_in_range(const T &vec, int index)
+{
+	return index >= 0 && index < vec.size();
+}
 
-#define GRIDHEIGHT 10000
+typedef std::vector<cell_t> line_t;
 
 class grid_t : public ansi_context
 {
@@ -89,9 +92,6 @@ class grid_t : public ansi_context
 	conn_t *conn;
 
 	std::vector<line_t> lines;
-	int first;
-	int n;
-	int lcount;
 
 	int row;
 	int col;
@@ -112,10 +112,6 @@ class grid_t : public ansi_context
 	grid_t(conn_t *c)
 	{
 		conn = 0;
-		first = 0;
-		n = 0;
-		lcount = GRIDHEIGHT;
-		lines.reserve(lcount);
 		lastprompt = 0;
 		nlw = 0;
 		row = 0;
@@ -139,15 +135,13 @@ class grid_t : public ansi_context
 
 	cell_t get(int r, int c)
 	{
-		if (r < first)
-			return myblank();
-		if (r > (first + n))
+		if (!check_in_range(lines, r))
 			return myblank();
 
-		if (c < 0 || c >= lines[r % lcount].size())
+		if (!check_in_range(lines[r], c))
 			return myblank();
 
-		return lines[r % lcount][c];
+		return lines[r][c];
 	}
 
 	void newline()
@@ -166,39 +160,32 @@ class grid_t : public ansi_context
 
 		row++;
 		col = 0;
-		n++;
 
-		lines[row % lcount].clear();
+		if (row >= lines.size())
+			lines.resize(row + 1);
 
-		if (n > lcount)
-		{
-			first++;
-			n--;
-		}
 		scripting::dotrigger(s);
 	}
 
 	void eraseline(int from)
 	{
-		lines[row % lcount].resize(from);
+		lines[row].resize(from);
 	}
 
 	int get_len(int r)
 	{
-		if (r < first)
-			return 0;
-		if (r > (first + n))
+		if (!check_in_range(lines, r))
 			return 0;
 
-		return lines[r % lcount].size();
+		return lines[r].size();
 	}
 
 	void set(int r, int c, cell_t ch)
 	{
-		if (c >= 0 && c < MAXWIDTH)
+		if (check_in_range(lines, r) && c >= 0 && c < MAXWIDTH)
 		{
-			lines[r % lcount].resize(std::max(size_t(c + 1), lines[r % lcount].size()));
-			lines[r % lcount][c] = ch;
+			lines[r].resize(std::max(size_t(c + 1), lines[r].size()));
+			lines[r][c] = ch;
 		}
 	}
 
