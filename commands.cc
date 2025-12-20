@@ -39,7 +39,7 @@
 
 void cmd_quit(conn_t *conn, const cmd_args &arg)
 {
-	conn->quit = 1;
+	conn->quit = true;
 }
 
 void cmd_z(conn_t *conn, const cmd_args &arg)

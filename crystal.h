@@ -51,37 +51,37 @@ class conn_t : public commandeditor_t
 {
       private:
 	//! the amount we have scrolled to in the buffer
-	int hardscroll;
+	int hardscroll = 0;
 
       public:
 	//! are we in never echo mode (default: no)
-	bool never_echo;
+	bool never_echo = false;
 
 	//! are we in kludge lp prompts mode (default: yes)
-	bool lp_prompts;
+	bool lp_prompts = true;
 
       public:
 	//! are we quitting?
-	bool quit;
+	bool quit = false;
 
       private:
-	InAddrListPtr addrs;
-	int addr_i;
+	InAddrListPtr addrs = nullptr;
+	int addr_i = 0;
 
       public:
 	std::string host;
 	int port;
-	bool ssl;
+	bool ssl = false;
 
-	grid_t *grid;
+	grid_t *grid = nullptr;
 
-	grid_t *overlay;
-	grid_t *cur_grid;
+	grid_t *overlay = nullptr;
+	grid_t *cur_grid = nullptr;
 
-	std::shared_ptr<telnet_state> telnet;
-	FILE *logfile;
+	std::shared_ptr<telnet_state> telnet =  nullptr;
+	FILE *logfile = nullptr;
 
-	std::string mud_cset;
+	std::string mud_cset = "ISO-8859-1";
 
 	void dorefresh();
 
@@ -99,8 +99,10 @@ class conn_t : public commandeditor_t
 
 	void show_lines_at(int from, int to, int num);
 
-	~conn_t();
 	conn_t(grid_t *);
+	conn_t(const conn_t&) = delete;
+	conn_t() = delete;
+	~conn_t();
 
 	void initbindings();
 	void dispatch_key(const my_wstring &s);

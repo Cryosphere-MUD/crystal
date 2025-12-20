@@ -74,12 +74,12 @@ extern "C"
 #include "lualib.h"
 }
 
-lua_State *l = 0;
-int badlua = 0;
+lua_State *l = nullptr;
+bool badlua = false;
 
 namespace scripting {
 
-grid_t *ergrid = 0;
+grid_t *ergrid = nullptr;
 
 #ifdef HAVE_LUA50
 void set_lua_error(lua_State *L, const char *errorString)
@@ -121,7 +121,7 @@ lua_State *do_lua_open()
 
 void kill_lua()
 {
-	l = 0;
+	l = nullptr;
 }
 
 void kill_if_bad()
@@ -130,11 +130,11 @@ void kill_if_bad()
 	if (badlua)
 	{
 		i++;
-		badlua = 0;
+		badlua = false;
 		if (l)
 			kill_lua();
-		badlua = 0;
-		l = 0;
+		badlua = false;
+		l = nullptr;
 	}
 }
 
@@ -272,7 +272,7 @@ static int lua_register_auto(lua_State *L)
 
 std::string trig = "", prompt = "", host = "";
 
-static int triggered = 0;
+static bool triggered = false;
 
 void dotrigger(const my_wstring &s)
 {
@@ -280,7 +280,7 @@ void dotrigger(const my_wstring &s)
 		return;
 	if (triggered || s[0] == '/')
 		return;
-	triggered = 1;
+	triggered = true;
 	std::string rs;
 	for (size_t i = 0; i < s.size(); i++)
 		rs += s[i];
@@ -290,7 +290,7 @@ void dotrigger(const my_wstring &s)
 		lua_pushstring(l, rs.c_str());
 		do_lua_call(l, 1, 0);
 	}
-	triggered = 0;
+	triggered = false;
 	kill_if_bad();
 }
 
@@ -300,7 +300,7 @@ void doprompt(const my_wstring &s)
 		return;
 	if (triggered || s[0] == '/')
 		return;
-	triggered = 1;
+	triggered = true;
 	std::string rs;
 	for (size_t i = 0; i < s.size(); i++)
 		rs += s[i];
@@ -429,7 +429,7 @@ static int lua_get_port(lua_State *L)
 
 static int luaerror(lua_State *L)
 {
-	badlua = 1;
+	badlua = true;
 	ergrid->infof("/// lua error: %s\n", lua_tostring(L, 1));
 	return 0;
 }
@@ -450,7 +450,7 @@ void start()
 	if (l)
 	{
 		kill_lua();
-		badlua = 0;
+		badlua = false;
 	}
 
 	trig = "";
@@ -494,8 +494,8 @@ void start()
 	if (badlua)
 	{
 		lua_close(l);
-		l = 0;
-		badlua = 0;
+		l = nullptr;
+		badlua = false;
 	}
 
 	//  kill_if_bad();

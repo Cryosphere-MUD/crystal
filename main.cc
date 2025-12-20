@@ -145,8 +145,9 @@ int main(int argc, char **argv)
 
 	tty.getterm();
 
-	grid_t grid(NULL);
+	grid_t grid;
 	conn_t conn(&grid);
+
 	grid.set_conn(&conn);
 
 	conn.initbindings();
