@@ -5,9 +5,7 @@ Crystal is a simple mud client for people who terminals.
 Crystal works on Linux, Mac OS, and possibly other unixes. Install cmake,
 and then build like so
 
-git submodule init
-git submodule update
-mkdir -p build && cd build && cmake .. && make
+git submodule init && git submodule update && mkdir -p build && cd build && cmake .. && make
 
 # Features
 
