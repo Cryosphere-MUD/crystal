@@ -42,6 +42,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <wchar.h>
+#include <sstream>
 
 extern mterm tty;
 
@@ -114,19 +115,19 @@ void grid_t::place(const cell_t *ri)
 std::string q(int ch)
 {
 	if (ch == ESC)
-		return "ESC";
+		return "\\e";
 	if (ch == CR)
-		return "CR";
+		return "\\r";
 	if (ch == CSI)
-		return "CSI";
+		return "\\e[";
 	if (ch == BS)
-		return "BS";
+		return "\\b";
 	if (ch == LF)
-		return "LF";
+		return "\\n";
 	if (ch == BEL)
-		return "BEL";
+		return "\\a";
 	if (ch == 0)
-		return "NUL";
+		return "\\0";
 	char a[2] = {char(ch), 0};
 	return a;
 }
@@ -141,7 +142,7 @@ void grid_t::osc_end()
 	osc_string = "";
 }
 
-static int parse_truecol(std::list<int>::iterator &parit, const std::list<int>::iterator end, int def)
+static int parse_truecol(std::vector<int>::iterator &parit, const std::vector<int>::iterator end, int def)
 {
 	int comps[3];
 	for (int i = 0; i < 3; i++)
@@ -154,9 +155,28 @@ static int parse_truecol(std::list<int>::iterator &parit, const std::list<int>::
 	return make_truecol(comps[0], comps[1], comps[2]);
 }
 
+int last_mode = -1;
+
+std::vector<int> parse(const std::string& s) {
+    std::vector<int> result;
+    std::stringstream ss(s);
+    std::string token;
+
+    while (std::getline(ss, token, ';'))
+        result.push_back(std::stoi(token));
+
+    return result;
+}
+
 void grid_t::wterminal(wchar_t ch)
 {
-	//  fprintf(stderr, "mode: %3s, got:%3s.\n", q(mode).c_str(), q(ch).c_str());
+	// if (last_mode != mode)
+	// {
+	// 	fprintf(stderr, "\nmode: %3s, got:%s.\n", q(mode).c_str(), q(ch).c_str());
+	// 	last_mode = mode;
+	// }
+	// else
+	// 	fprintf(stderr, "%s", q(ch).c_str());
 
 	if (mode == 0)
 	{
@@ -191,14 +211,12 @@ void grid_t::wterminal(wchar_t ch)
 
 		case ESC:
 			mode = ESC;
-			par = -1;
-			pars.clear();
+			param_string = "";
 			return;
 
 		case CSI:
 			mode = CSI;
-			par = -1;
-			pars.clear();
+			param_string = "";
 			return;
 
 		default:
@@ -322,29 +340,18 @@ void grid_t::wterminal(wchar_t ch)
 	if (mode == CSI)
 	{
 
-		if (isdigit(ch))
+		if (isdigit(ch) || ch == ';')
 		{
-			if (par == -1)
-				par = (ch - '0');
-			else
-				par = (par * 10) + (ch - '0');
+			param_string += ch;
 			return;
 		}
 
-		if (ch == ';')
-		{
-			pars.insert(pars.end(), par);
-			par = -1;
-			return;
-		}
-
-		if (par != -1)
-			pars.insert(pars.end(), par);
+		auto params = parse(param_string);
 
 		if (ch == 'A')
 		{ /* CUU - CUrsor Up */
-			if (pars.begin() != pars.end())
-				row -= *pars.begin();
+			if (params.size())
+				row -= params[0];
 			else
 				row--;
 			if (row < 0)
@@ -369,8 +376,8 @@ void grid_t::wterminal(wchar_t ch)
 
 		if (ch == 'D')
 		{ /* CUL - cursor left */
-			if (pars.begin() != pars.end())
-				col -= *pars.begin();
+			if (params.size())
+				col -= params[0];
 			else
 				col--;
 			if (col < 0)
@@ -382,8 +389,8 @@ void grid_t::wterminal(wchar_t ch)
 
 		if (ch == 'C')
 		{ /* CUR - cursor right */
-			if (pars.begin() != pars.end())
-				col += *pars.begin();
+			if (params.size())
+				col += params[0];
 			else
 				col++;
 			if (col >= tty.WIDTH)
@@ -395,14 +402,14 @@ void grid_t::wterminal(wchar_t ch)
 
 		if (ch == 'K')
 		{ /* EL - Erase in Line */
-			if (pars.begin() == pars.end())
-				pars.insert(pars.end(), 0);
+			if (params.empty())
+				params.push_back(0);
 
 			/* 0 - default - cursor to end of line */
 			/* 1 -           start to cursor (including) */
 			/* 2 -           all of line */
 
-			par = *pars.begin();
+			int par = params[0];
 			if (par == 0)
 				eraseline(col);
 			else if (par == 2)
@@ -411,7 +418,7 @@ void grid_t::wterminal(wchar_t ch)
 
 		if (ch == 'n') /* DEVICE STATUS REPORT */
 		{
-			if (pars.size() == 1 && *pars.begin() == 6)
+			if (params.size() == 1 && params[0] == 6)
 			{
 				/* request of cursor position */
 				char blah[1024];
@@ -422,11 +429,11 @@ void grid_t::wterminal(wchar_t ch)
 
 		if (ch == 'm')
 		{ /* SGR - Select Graphics Rendition */
-			if (pars.begin() == pars.end())
-				pars.insert(pars.end(), 0);
+			if (params.empty())
+				params.push_back(0);
 
-			std::list<int>::iterator parit = pars.begin();
-			while (parit != pars.end())
+			auto parit = params.begin();
+			while (parit != params.end())
 			{
 				int parm = *parit;
 				parit++;
@@ -498,12 +505,12 @@ void grid_t::wterminal(wchar_t ch)
 					forecol = deffc;
 					break;
 				case 38:
-					if (parit != pars.end())
+					if (parit != params.end())
 					{
 						if (*parit == 5)
 						{
 							parit++;
-							if (parit != pars.end())
+							if (parit != params.end())
 							{
 								forecol = *parit;
 								parit++;
@@ -513,7 +520,7 @@ void grid_t::wterminal(wchar_t ch)
 						if (*parit == 2)
 						{
 							parit++;
-							forecol = parse_truecol(parit, pars.end(), 7);
+							forecol = parse_truecol(parit, params.end(), 7);
 							continue;
 						}
 					}
@@ -525,12 +532,12 @@ void grid_t::wterminal(wchar_t ch)
 					backcol = defbc;
 					break;
 				case 48:
-					if (parit != pars.end())
+					if (parit != params.end())
 					{
 						if (*parit == 5)
 						{
 							parit++;
-							if (parit != pars.end())
+							if (parit != params.end())
 							{
 								backcol = *parit;
 								parit++;
@@ -540,7 +547,7 @@ void grid_t::wterminal(wchar_t ch)
 						if (*parit == 2)
 						{
 							parit++;
-							backcol = parse_truecol(parit, pars.end(), 0);
+							backcol = parse_truecol(parit, params.end(), 0);
 							continue;
 						}
 					}
@@ -555,16 +562,15 @@ void grid_t::wterminal(wchar_t ch)
 			}
 
 			mode = 0;
-			par = -1;
-			pars.clear();
+			param_string.clear();
 			return;
 		}
 
 		if (ch >= 0x30 && ch <= 0x7e)
 		{
+			infof("unrecognised ANSI command %c", ch);
 			mode = 0;
-			par = -1;
-			pars.clear();
+			param_string.clear();
 		}
 
 		return;

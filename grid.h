@@ -46,11 +46,7 @@ struct ansi_context
 	// the escape mode
 	int mode = 0;
 
-	// parameters so far
-	std::list<int> pars;
-
-	// current parameter
-	int par = 0;
+	std::string param_string;
 
 	std::string osc_string;
 
