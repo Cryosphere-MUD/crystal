@@ -37,6 +37,7 @@
 
 #include "grid.h"
 #include "common.h"
+#include "telnet.h"
 
 #include <ctype.h>
 #include <time.h>
@@ -406,6 +407,17 @@ void grid_t::wterminal(wchar_t ch)
 				eraseline(col);
 			else if (par == 2)
 				eraseline(0);
+		}
+
+		if (ch == 'n') /* DEVICE STATUS REPORT */
+		{
+			if (pars.size() == 1 && *pars.begin() == 6)
+			{
+				/* request of cursor position */
+				char blah[1024];
+				sprintf(blah, "\033[%i;%iR", row, col);
+				conn->telnet->send(blah);
+			}
 		}
 
 		if (ch == 'm')
