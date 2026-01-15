@@ -121,9 +121,7 @@ int flag_table[] = {
 
 void decode(conn_t *conn, grid_t *grid, int ch)
 {
-	int pass = (ch >= 0x20 && ch <= 0x7f) || ch == 033 || ch == '\n' || ch == '\r' || ch == 0;
-
-	if (pass || conn->mud_cset == "ISO-8859-1")
+	if (conn->mud_cset == "ISO-8859-1")
 	{
 		grid->wterminal(ch);
 		return;

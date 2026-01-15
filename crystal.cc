@@ -264,41 +264,31 @@ void conn_t::doenter()
 	my_wstring wproper = L"";
 	std::string proper = "";
 
-	for (size_t i = 0; i < conn->buffer.length(); i++)
+	for (wchar_t sb : conn->buffer)
 	{
-		wchar_t sb = conn->buffer[i];
-
 		wproper += sb;
 
-		if (sb < 0x80)
+		static iconv_t i = 0;
+		static std::string cur_cset = "";
+
+		if (!i || cur_cset != conn->mud_cset)
 		{
-			proper += sb;
+			if (i)
+				iconv_close(i);
+			i = iconv_open(conn->mud_cset.c_str(), "WCHAR_T");
+			cur_cset = conn->mud_cset;
 		}
-		else
+		wchar_t ic = sb;
+		iconv_inptr_t ibuf = (iconv_inptr_t)&ic;
+		size_t ilen = 4;
+		char o[11];
+		char *obuf = o;
+		size_t olen = 10;
+		iconv(i, &ibuf, &ilen, &obuf, &olen);
+		if (olen != 10)
 		{
-
-			static iconv_t i = 0;
-			static std::string cur_cset = "";
-
-			if (!i || cur_cset != conn->mud_cset)
-			{
-				if (i)
-					iconv_close(i);
-				i = iconv_open(conn->mud_cset.c_str(), "WCHAR_T");
-				cur_cset = conn->mud_cset;
-			}
-			wchar_t ic = sb;
-			iconv_inptr_t ibuf = (iconv_inptr_t)&ic;
-			size_t ilen = 4;
-			char o[11];
-			char *obuf = o;
-			size_t olen = 10;
-			iconv(i, &ibuf, &ilen, &obuf, &olen);
-			if (olen != 10)
-			{
-				*obuf = 0;
-				proper += o;
-			}
+			*obuf = 0;
+			proper += o;
 		}
 	}
 
