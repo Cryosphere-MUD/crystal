@@ -568,7 +568,7 @@ void grid_t::wterminal(wchar_t ch)
 
 		if (ch >= 0x30 && ch <= 0x7e)
 		{
-			infof("unrecognised ANSI command %c", ch);
+			// infof("unrecognised ANSI command %c", ch);
 			mode = 0;
 			param_string.clear();
 		}
