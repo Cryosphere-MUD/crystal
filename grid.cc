@@ -361,7 +361,48 @@ void grid_t::wterminal(wchar_t ch)
 			return;
 		}
 
-		if (ch == 'H')
+                /* 'B' CUD : CUrsor Down */
+
+                if (ch == 'C')
+		{ /* CUF - cursor forward  */
+			if (params.size())
+				col += params[0];
+			else
+				col++;
+			if (col >= tty.WIDTH)
+				col = tty.WIDTH - 1;
+			mode = 0;
+			changed = 1;
+			return;
+		}
+
+		if (ch == 'D')
+		{ /* CUB - cursor back */
+			if (params.size())
+				col -= params[0];
+			else
+				col--;
+			if (col < 0)
+				col = 0;
+			mode = 0;
+			changed = 1;
+			return;
+		}
+
+                /* CHA - cursor horizontal absolute */
+                if (ch == 'G')
+		{
+                        if (params.size())
+			    col = params[0] - 1;
+                        else
+                            col = 0;
+			mode = 0;
+			changed = 1;
+			return;
+		}
+
+                /* CUP - cursor position (only home implemented) */
+                if (ch == 'H')
 		{
 			if (conn->grid != this)
 			{
@@ -374,34 +415,9 @@ void grid_t::wterminal(wchar_t ch)
 			return;
 		}
 
-		if (ch == 'D')
-		{ /* CUL - cursor left */
-			if (params.size())
-				col -= params[0];
-			else
-				col--;
-			if (col < 0)
-				col = 0;
-			mode = 0;
-			changed = 1;
-			return;
-		}
-
-		if (ch == 'C')
-		{ /* CUR - cursor right */
-			if (params.size())
-				col += params[0];
-			else
-				col++;
-			if (col >= tty.WIDTH)
-				col = tty.WIDTH - 1;
-			mode = 0;
-			changed = 1;
-			return;
-		}
-
-		if (ch == 'K')
-		{ /* EL - Erase in Line */
+		 /* EL - Erase in Line */
+                if (ch == 'K')
+		{
 			if (params.empty())
 				params.push_back(0);
 
