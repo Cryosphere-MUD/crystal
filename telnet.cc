@@ -36,6 +36,10 @@
 #undef TELCMDS
 #undef TELOPTS
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <nlohmann/json.hpp>
 
 #include "Socket.h"
@@ -389,6 +393,87 @@ void telnet_state::handle_mplex(conn_t *conn)
 	}
 }
 
+struct FileDescriptor
+{
+	int fd;
+	explicit FileDescriptor(int fd) : fd(fd) { }
+	~FileDescriptor()
+	{
+		if (fd != -1)
+			close(fd);
+	}
+	operator int() const { return fd; }
+};
+
+std::map<std::string, std::function<void(telnet_state *telnet, conn_t *conn, const nlohmann::json &)>> gmcp_handlers = {
+	std::make_pair(std::string("IRE.Composer.Edit"), [] (telnet_state *telnet, conn_t *conn, const nlohmann::json &values)
+	{
+		char fname[] = "/tmp/crystal-XXXXXX";
+
+		FileDescriptor fd(mkstemp(fname));
+
+		if (fd == -1)
+		{
+			conn->grid->infof("failed to open temp file: %s\n", fname);
+			return;
+		}
+
+		std::string existing = values["text"];
+
+		if (write(fd, existing.data(), existing.size()) != existing.size())
+			return;
+
+		const char *editor = getenv("EDITOR");
+
+		std::string cmdline = editor ? editor : "vi";
+		cmdline += " ";
+		cmdline += fname;
+		system(cmdline.c_str());
+		struct stat statbuf;
+
+		if (fstat(fd, &statbuf) != 0)
+			return;
+
+		std::string new_text;
+		new_text.resize(statbuf.st_size);
+
+		lseek(fd, 0, SEEK_SET);
+		ssize_t new_size = read(fd, &new_text[0], new_text.size());
+		if (new_size > 0)
+		{
+			nlohmann::json buffer = new_text.substr(0, new_size);
+			telnet->subneg_send(TELOPT_GMCP, "IRE.Composer.SetBuffer " + buffer.dump());
+		}
+	})
+};
+
+void telnet_state::handle_gmcp(conn_t *conn, const std::string &gmcp_data)
+{
+	auto package_end = gmcp_data.find(' ');
+	if (package_end == std::string::npos)
+		return;
+
+	auto package = gmcp_data.substr(0, package_end);
+	auto payload = gmcp_data.substr(package_end + 1);
+
+	auto handler = gmcp_handlers.find(package);
+	if (handler == gmcp_handlers.end())
+		return;
+
+	nlohmann::json values;
+
+	try
+	{
+		values = nlohmann::json::parse(payload);
+		gmcp_handlers[package](this, conn, values);
+	}
+	catch (const nlohmann::json::parse_error &e)
+	{
+		conn->grid->infof("parse error: %s\n", e.what());
+		return;
+	}
+}
+
 void telnet_state::tstack(conn_t *conn, int ch)
 {
 	if (mode == IAC)
@@ -435,6 +520,8 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			if (subneg_type == TELOPT_COMPRESS4)
 				handle_compress4(conn);
 #endif
+			if (subneg_type == TELOPT_GMCP)
+				handle_gmcp(conn, subneg_data);
 			subneg_type = 0;
 			mode = 0;
 			debug_fprintf((stderr, "\n"));
@@ -482,10 +569,15 @@ void telnet_state::tstack(conn_t *conn, int ch)
 			gmcp = true;
 			mode = 0;
 			reply(IAC, DO, TELOPT_GMCP);
+
 			nlohmann::json hello;
 			hello["Client"] = "Crystal";
 			hello["Version"] = VERSION;
-			subneg_send(TELOPT_GMCP, hello.dump());
+			subneg_send(TELOPT_GMCP, "Core.Hello " + hello.dump());
+
+			nlohmann::json supports = {"IRE.Composer 1"};
+			subneg_send(TELOPT_GMCP, "Core.Supports.Set " + supports.dump());
+
 			debug_fprintf((stderr, "\n"));
 			return;
 		}
