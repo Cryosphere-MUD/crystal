@@ -224,11 +224,12 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 				return;
 			}
 
-			input_buffer = input_buffer.substr(inbuffer.pos);
 			for (int idx = 0; idx < outbuffer.pos; idx++)
 				conn->telnet->tstack(conn, outdata[idx]);
 		}
 		while (outbuffer.pos == outbuffer.size);
+
+		input_buffer = input_buffer.substr(inbuffer.pos);
 
 		if (rval == 0)
 		{
