@@ -32,14 +32,15 @@
 
 #define _XOPEN_SOURCE
 
-#include "io.h"
-
 #include <ctype.h>
 #include <langinfo.h>
 #include <locale.h>
 #include <string.h>
 #include <unistd.h>
+#include <utfcpp/source/utf8/checked.h>
 #include <wchar.h>
+
+#include "io.h"
 
 void truecol_to_str(char *buf, int value)
 {
@@ -50,42 +51,24 @@ void truecol_to_str(char *buf, int value)
 	sprintf(buf, "2;%i;%i;%i;", red, green, blue);
 }
 
-int mterm::getinput()
+my_wstring mterm::decode_feed()
 {
-	unsigned char buf[10];
-	if (read(0, buf, 1) == 1)
+	auto it = _decodebuffer.begin();
+	const auto end = _decodebuffer.end();
+	my_wstring out;
+	while (it < end)
 	{
-
-		if (utf8)
+		try
 		{
-			if (buf[0] < 0x80)
-				return buf[0];
-
-			if (buf[0] > 0xc0 && buf[0] <= 0xdf)
-			{
-				read(0, buf + 1, 1);
-				buf[2] = 0;
-
-				int ucs = (buf[0] - 0xc0) << 6;
-				ucs |= (buf[1] & 63);
-				return ucs;
-			}
-			if (buf[0] >= 0xe0)
-			{
-				read(0, buf + 1, 2);
-				buf[3] = 0;
-
-				int ucs = (buf[0] - 0xe0) << 12;
-				ucs |= (buf[1] & 63) << 6;
-				ucs |= (buf[2] & 63);
-
-				return ucs;
-			}
+			out.push_back(utf8::next(it, end));
 		}
-		return buf[0];
+		catch (utf8::not_enough_room & e)
+		{
+			break;
+		}
 	}
-	else
-		return -1;
+	_decodebuffer.erase(_decodebuffer.begin(), it);
+	return out;
 }
 
 void mterm::plonk(const cell_t &g, bool allow_dead)
