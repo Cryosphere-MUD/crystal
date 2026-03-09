@@ -101,7 +101,7 @@ if(ENABLE_SCRIPTING)
   endif()
 endif()
 
-target_include_directories(crystal PRIVATE json/include)
+target_include_directories(crystal PRIVATE vendor/json/include vendor)
 
 # Manpage installation
 install(FILES crystal.6 DESTINATION share/man/man6)

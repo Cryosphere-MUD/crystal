@@ -619,12 +619,22 @@ void conn_t::main_loop()
 
 			while (1)
 			{
-				int foo;
-				ioctl(0, FIONREAD, &foo);
-				if (foo)
-				{
-					wchar_t i = tty.getinput();
+				int bytes_available = 0;
+				ioctl(0, FIONREAD, &bytes_available);
+				if (bytes_available == 0)
+					break;
 
+				std::vector<char> from_stdin;
+				from_stdin.resize(bytes_available);
+				int rval = read(0, from_stdin.data(), bytes_available);
+				if (rval < 0)
+					break;
+
+				from_stdin.resize(rval);
+				tty.feed(std::string(from_stdin.data(), from_stdin.size()));
+
+				for (wchar_t i : tty.decode_feed())
+				{
 					if (conn->telnet && conn->telnet->charmode && !conn->commandmode && i != 0x1d)
 					{
 						std::string p;
@@ -640,11 +650,8 @@ void conn_t::main_loop()
 
 					if (!conn->telnet)
 						conn->commandmode = 1;
+
 					conn->grid->changed = true;
-				}
-				else
-				{
-					break;
 				}
 			}
 		}
