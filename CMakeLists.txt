@@ -12,14 +12,14 @@ option(ENABLE_SCRIPTING "Enable Lua scripting support" ON)
 
 # Define executable sources
 set(SOURCES
-  crystal.cc Socket.cc io.cc grid.cc telnet.cc wcwidth.c
-  scripting.cc commands.cc common.cc commandeditor.cc keybindings.cc display.cc main.cc
+  src/crystal.cc src/Socket.cc src/io.cc src/grid.cc src/telnet.cc src/wcwidth.c
+  src/scripting.cc src/commands.cc src/common.cc src/commandeditor.cc src/keybindings.cc src/display.cc src/main.cc
 )
 
 # Define headers for IDEs
 set(HEADERS
-  Socket.h common.h crystal.h grid.h io.h telnet.h
-  scripting.h commands.h commandeditor.h url.h
+  src/Socket.h src/common.h src/crystal.h src/grid.h src/io.h src/telnet.h
+  src/scripting.h src/commands.h src/commandeditor.h src/url.h
 )
 
 add_executable(crystal ${SOURCES} ${HEADERS})
