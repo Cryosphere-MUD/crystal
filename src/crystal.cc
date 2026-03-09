@@ -121,8 +121,7 @@ size_t real_wcwidth(wchar_t u)
 	return 1;
 }
 
-const struct cell_t blank(' ');
-const struct cell_t blank2('\0');
+const cell_t blank(0);
 
 conn_t::conn_t(grid_t *gr)
 {

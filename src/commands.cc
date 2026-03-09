@@ -126,18 +126,20 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 	conn->connect(u.hostname.c_str(), p, u.protocol == "telnets" || force_tls);
 }
 
+my_wstring join_from(const cmd_args &args, int from)
+{
+	my_wstring ws;
+	for (int i = from ; i < args.size(); i++)
+		ws += L" " + args[i];
+	return ws.substr(1);
+}
+
 void cmd_match(conn_t *conn, const cmd_args &arg)
 {
-	if (arg.size() != 2 && arg.size() != 1)
-	{
-		conn->grid->infof(_("/// match [pattern]\n"));
-		return;
-	}
-
 	if (arg.size() == 1)
 		conn->hl_matches = std::set<my_wstring>();
 	else
-		conn->hl_matches.insert(arg[1]);
+		conn->hl_matches.insert(join_from(arg, 1));
 
 	conn->grid->changed = 1;
 }

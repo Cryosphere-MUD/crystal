@@ -166,7 +166,7 @@ struct cell_t
 };
 
 extern const cell_t blank;
-extern const cell_t blank2;
+extern const cell_t blank;
 
 #define MAXHEIGHT 200
 #define MAXWIDTH 320
