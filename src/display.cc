@@ -47,7 +47,7 @@ void conn_t::show_lines_at(int from, int to, int num)
 		if (i + from == grid->row && !(telnet && telnet->charmode))
 		{
 			for (int j = 0; j < tty.WIDTH; j++)
-				tty.wantbuffer[i + to - 1][j] = blank2;
+				tty.wantbuffer[i + to - 1][j] = blank;
 			continue;
 		}
 		int mw = std::min(tty.WIDTH, grid->get_len(i + from));
@@ -78,7 +78,7 @@ void conn_t::show_lines_at(int from, int to, int num)
 
 		while (j < tty.WIDTH)
 		{
-			tty.wantbuffer[i + to - 1][j] = blank2;
+			tty.wantbuffer[i + to - 1][j] = blank;
 			j++;
 		}
 	}
