@@ -86,15 +86,14 @@ endif()
 # Optional: Lua scripting
 if(ENABLE_SCRIPTING)
   find_path(LUA_INCLUDE_DIR lua.h
-    PATH_SUFFIXES lua5.4 lua5.3 lua5.2 lua5.1 lua50 lua
+    PATH_SUFFIXES lua5.4
   )
 
-  find_library(LUA_LIBRARY NAMES lua lua5.4 lua5.3 lua5.2 lua5.1 lua50)
-  find_library(LUALIB_LIBRARY NAMES lualib lualib50)
+  find_library(LUA_LIBRARY NAMES lua5.4)
 
-  if(LUA_INCLUDE_DIR AND LUA_LIBRARY AND LUALIB_LIBRARY)
+  if(LUA_INCLUDE_DIR AND LUA_LIBRARY)
     target_include_directories(crystal PRIVATE ${LUA_INCLUDE_DIR})
-    target_link_libraries(crystal PRIVATE ${LUA_LIBRARY} ${LUALIB_LIBRARY})
+    target_link_libraries(crystal PRIVATE ${LUA_LIBRARY})
     target_compile_definitions(crystal PRIVATE HAVE_LUA)
   else()
     message(WARNING "Lua not found - scripting will not be built.")
