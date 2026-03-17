@@ -81,11 +81,9 @@ namespace scripting {
 
 grid_t *ergrid = nullptr;
 
-#ifdef HAVE_LUA50
 void set_lua_error(lua_State *L, const char *errorString)
 {
-	lua_pushstring(L, errorString);
-	lua_error(L);
+	luaL_error(L, errorString);
 }
 
 void do_lua_call(lua_State *L, int args, int rets)
@@ -100,24 +98,8 @@ void do_lua_call(lua_State *L, int args, int rets)
 
 lua_State *do_lua_open()
 {
-	return lua_open();
+	return luaL_newstate();
 }
-#else
-void set_lua_error(lua_State *L, const char *errorString)
-{
-	lua_error(L, errorString);
-}
-
-void do_lua_call(lua_State *L, int args, int rets)
-{
-	lua_call(L, args, rets);
-}
-
-lua_State *do_lua_open()
-{
-	return lua_open(100);
-}
-#endif
 
 void kill_lua()
 {
@@ -460,13 +442,7 @@ void start()
 	l = do_lua_open();
 	badlua = 0;
 
-	lua_baselibopen(l);
-	lua_iolibopen(l);
-	lua_strlibopen(l);
-	lua_mathlibopen(l);
-#ifdef HAVE_LUA50
-	lua_tablibopen(l);
-#endif
+	luaL_openlibs(l);
 
 	lua_register(l, "_ERRORMESSAGE", luaerror);
 	lua_register(l, "register_auto", lua_register_auto);
@@ -489,7 +465,7 @@ void start()
 
 	std::string f = getRcFile();
 	if (f.length())
-		lua_dofile(l, f.c_str());
+		luaL_dofile(l, f.c_str());
 
 	if (badlua)
 	{
