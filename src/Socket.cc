@@ -40,6 +40,8 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <openssl/x509v3.h>
+#include <openssl/err.h>
 #include <unistd.h>
 
 #include "Socket.h"
@@ -157,7 +159,9 @@ class Ctx
 	{
 		SSL_load_error_strings();
 		SSL_library_init();
-		c = SSL_CTX_new(SSLv23_client_method());
+		c = SSL_CTX_new(TLS_client_method());
+		SSL_CTX_set_default_verify_paths(c);
+		SSL_CTX_set_min_proto_version(c, TLS1_2_VERSION);
 	}
 	static SSL_CTX *c;
 } c;
@@ -181,9 +185,62 @@ void Socket::connected()
 	if (s)
 	{
 		SSL_set_fd(s, fd);
-		SSL_set_verify(s, 0, 0);
-		SSL_connect(s);
+		SSL_set_verify(s, SSL_VERIFY_PEER, NULL);
+		SSL_set_tlsext_host_name(s, "bad.example.com");
 	}
+#endif
+}
+
+extern grid_t *ggrid;
+
+bool Socket::do_ssl_handshake()
+{
+#ifdef HAVE_SSL
+    if (!s || ssl_handshake_done)
+        return true;
+
+    ggrid->infof("doing handshake\n");
+
+    int ret = SSL_connect(s);
+    if (ret == 1)
+    {
+        if (SSL_get_verify_result(s) != X509_V_OK)
+        {
+	    ggrid->infof("problem with certificate\n");
+            dead = 1;
+            return false;
+        }
+
+        X509 *cert = SSL_get_peer_certificate(s);
+        if (!cert || X509_check_host(cert, hostname.c_str(), 0, 0, NULL) != 1)
+        {
+            if (cert) X509_free(cert);
+	    ggrid->infof("problem with certificate\n");
+            dead = 1;
+            return false;
+        }
+        X509_free(cert);
+
+	ggrid->infof("success!\n");
+        ssl_handshake_done = true;
+        return true;
+    }
+
+    ggrid->infof("ret %i\n", ret);
+
+    int err = SSL_get_error(s, ret);
+
+    if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE)
+    {
+        return false;
+    }
+
+    ggrid->infof("error of some kind %s\n", ERR_error_string(err, NULL));
+
+    dead = 1;
+    return false;
+#else
+    return true;
 #endif
 }
 
@@ -223,6 +280,8 @@ int Socket::connect(InAddrPtr addr)
 
 int Socket::read(char *data, int size)
 {
+	do_ssl_handshake();
+
 	if (pending)
 	{
 		int opt = 0;
@@ -271,6 +330,8 @@ int Socket::read(char *data, int size)
 
 int Socket::write(const char *data, int size)
 {
+	do_ssl_handshake();
+	
 	if (pending)
 	{
 		pendingoutput += std::string(data, size);

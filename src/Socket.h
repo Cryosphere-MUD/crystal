@@ -94,6 +94,8 @@ class Socket
 	SSL *s;
 #endif
 	void connected();
+	bool ssl_handshake_done = false;
+	std::string hostname;
 
       public:
 	bool getdead() { return dead; }
@@ -103,6 +105,7 @@ class Socket
 	int read(char *, int);
 	int write(const char *, int);
 	void close();
+	bool do_ssl_handshake();
 	virtual ~Socket();
 	int getfd() { return fd; }
 };

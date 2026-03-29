@@ -136,6 +136,8 @@ void winch(int)
 	had_winch = 1;
 }
 
+grid_t *ggrid;
+
 int main(int argc, char **argv)
 {
 	char *pname = argv[0];
@@ -146,6 +148,7 @@ int main(int argc, char **argv)
 	tty.getterm();
 
 	grid_t grid;
+	ggrid = &grid;
 	conn_t conn(&grid);
 
 	grid.set_conn(&conn);
