@@ -378,9 +378,11 @@ void conn_t::connected()
 {
 	conn_t *conn = this;
 
+        std::cerr << "sending to grid " << conn->grid << std::endl;
+
 	conn->grid->infof(_("/// connected is %p\n"), conn);
 
-	conn->grid->infof(_("/// connected with %s\n"));
+	conn->grid->infof(_("/// connected with %s\n"), "telnet");
 
 	static int printed_escape_line = 0;
 	if (!printed_escape_line)

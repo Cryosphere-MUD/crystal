@@ -55,6 +55,9 @@ void conn_t::show_lines_at(int from, int to, int num)
 		int j;
 		if (tty.utf8)
 			mw++;
+
+		std::cerr << "width of line " << (i + from) << " " << mw << std::endl;
+
 		for (j = 0; j < mw; j++)
 		{
 			cell_t g = grid->get(i + from, j);
@@ -94,7 +97,7 @@ void conn_t::display_buffer()
 
 	grid_t &grid = *conn->grid;
 
-	std::cerr << "display_buffer " << grid.changed << " " << std::endl;
+	// std::cerr << "display_buffer " << grid.changed << " " << std::endl;
 
 	if (!grid.changed && !conn->overlay->changed)
 		return;
@@ -110,6 +113,8 @@ void conn_t::display_buffer()
 	int start = grid.row - tty.HEIGHT;
 	if (start < 0)
 		start = 0;
+
+	std::cerr << "start line " << start << std::endl;
 
 	if (hardscroll)
 		start = hardscroll - 1;
@@ -137,9 +142,16 @@ void conn_t::display_buffer()
 		else
 		{
 			if (grid.row < tty.HEIGHT)
+			{
+				std::cerr << "showing lines " << start << " " << tty.HEIGHT - grid.row + 1 << " " << tty.HEIGHT << std::endl;
 				conn->show_lines_at(start, tty.HEIGHT - grid.row + 1, tty.HEIGHT);
+			}
 			else
+			{
+				std::cerr << "showing lines " << start << " " << 1 << " " << tty.HEIGHT << std::endl
+				;
 				conn->show_lines_at(start, 1, tty.HEIGHT);
+			}
 		}
 		grid.changed = false;
 	}
