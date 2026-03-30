@@ -34,6 +34,7 @@
 #define CRYSTAL_H
 
 #include <asio.hpp>
+#include <asio/ssl.hpp>
 
 #include <memory>
 #include <set>
@@ -42,6 +43,8 @@
 #include "commandeditor.h"
 #include "common.h"
 
+using asio::ip::tcp;
+
 struct telnet_state;
 class grid_t;
 class InAddrList;
@@ -49,7 +52,7 @@ typedef std::shared_ptr<InAddrList> InAddrListPtr;
 
 class hlist;
 
-class conn_t : public commandeditor_t
+class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_t>
 {
       private:
 	//! the amount we have scrolled to in the buffer
@@ -101,14 +104,14 @@ class conn_t : public commandeditor_t
 
 	void show_lines_at(int from, int to, int num);
 
-	conn_t(grid_t *grid);
+	conn_t(asio::io_context& io, grid_t *grid);
 	~conn_t();
 
 	void initbindings();
 	void dispatch_key(const my_wstring &s);
 	void addbinding(const wchar_t *key, const char *bind);
 
-	void connect(std::string host, int port, bool ssl);
+	void connect(const std::string &host, const std::string &port, bool ssl);
 	bool file_log(const char *filename);
 	void do_read_from_socket();
 
@@ -121,7 +124,31 @@ class conn_t : public commandeditor_t
 
 	void main_loop(asio::io_context &io_context);
 
+	void fail(const std::string& what, asio::error_code ec);
+
+	void start(const std::string& host, const std::string& port);
+
+	   void on_connected();
+
+    void do_read_socket();
+
 	std::set<my_wstring> hl_matches;
+
+	std::array<char, 4096> stdin_raw_;
+	std::array<char, 4096> socket_raw_;
+
+	tcp::resolver resolver_;
+	tcp::socket socket_;
+
+	asio::ssl::context ssl_ctx_;
+	asio::ssl::stream<tcp::socket&> ssl_stream_;
+
+	asio::posix::stream_descriptor stdin_;
+
+	asio::streambuf socket_buf_;
+	asio::streambuf stdin_buf_;
+
+	bool use_ssl_ = false;
 };
 
 extern int exitValue;

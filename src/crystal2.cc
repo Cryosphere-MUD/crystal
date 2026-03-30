@@ -15,7 +15,7 @@ void cleanup()
 int main() {
     asio::io_context io;
 
-    std::cerr << "\033[2J";
+    // std::cerr << "\033[2J";
 
     auto session = std::make_shared<Session>(io, false);
 

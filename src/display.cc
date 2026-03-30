@@ -56,7 +56,7 @@ void conn_t::show_lines_at(int from, int to, int num)
 		if (tty.utf8)
 			mw++;
 
-		std::cerr << "width of line " << (i + from) << " " << mw << std::endl;
+		// std::cerr << "width of line " << (i + from) << " " << mw << std::endl;
 
 		for (j = 0; j < mw; j++)
 		{
@@ -114,7 +114,7 @@ void conn_t::display_buffer()
 	if (start < 0)
 		start = 0;
 
-	std::cerr << "start line " << start << std::endl;
+	// std::cerr << "start line " << start << std::endl;
 
 	if (hardscroll)
 		start = hardscroll - 1;
@@ -143,13 +143,13 @@ void conn_t::display_buffer()
 		{
 			if (grid.row < tty.HEIGHT)
 			{
-				std::cerr << "showing lines " << start << " " << tty.HEIGHT - grid.row + 1 << " " << tty.HEIGHT << std::endl;
+				// std::cerr << "showing lines " << start << " " << tty.HEIGHT - grid.row + 1 << " " << tty.HEIGHT << std::endl;
 				conn->show_lines_at(start, tty.HEIGHT - grid.row + 1, tty.HEIGHT);
 			}
 			else
 			{
-				std::cerr << "showing lines " << start << " " << 1 << " " << tty.HEIGHT << std::endl
-				;
+				// std::cerr << "showing lines " << start << " " << 1 << " " << tty.HEIGHT << std::endl
+				// ;
 				conn->show_lines_at(start, 1, tty.HEIGHT);
 			}
 		}

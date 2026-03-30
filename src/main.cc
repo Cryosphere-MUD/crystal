@@ -149,10 +149,10 @@ int main(int argc, char **argv)
 	asio::io_context io_context;
 
 	grid_t grid;
-	conn_t conn(io_context, &grid);
-	grid.set_conn(&conn);
+	auto conn = std::make_shared<conn_t>(io_context, &grid);
+	grid.set_conn(conn.get());
 
-	conn.initbindings();
+	conn->initbindings();
 
 	scripting::set_grid(&grid);
 	scripting::start();
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
 	if (strcmp(codeset, "UTF-8") == 0)
 	{
 		tty.utf8 = 1;
-		conn.mud_cset = "UTF-8";
+		conn->mud_cset = "UTF-8";
 	}
 
 	if (argv[1] && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-v")))
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 	{
 		if (strcmp(argv[1], "-n") == 0)
 		{
-			conn.never_echo = 1;
+			conn->never_echo = 1;
 			argv++;
 			argc--;
 			continue;
@@ -222,16 +222,16 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 
-		int port = lookup_service(u.service);
-		if (port == -1)
-		{
-			fprintf(stderr, _("%s: Bad port - '%s'.\n"), pname, u.service.c_str());
-			exit(1);
-		}
+		// int port = lookup_service(u.service);
+		// if (port == -1)
+		// {
+		// 	fprintf(stderr, _("%s: Bad port - '%s'.\n"), pname, u.service.c_str());
+		// 	exit(1);
+		// }
 
-		conn.connect(u.hostname.c_str(), port, u.protocol == "telnets");
-		if (!conn.telnet)
-			exit(1);
+		conn->connect(u.hostname, u.service, u.protocol == "telnets");
+		// if (!conn->telnet)
+		// 	exit(1);
 
 		wchar_t blah[1000];
 		if (argc > 2)
@@ -253,12 +253,12 @@ int main(int argc, char **argv)
 	cfmakeraw(&ti);
 	tcsetattr(0, TCSADRAIN, &ti);
 
-	cleanupConn = &conn;
+	cleanupConn = conn.get();
 	atexit(cleanup);
 
 	signal(SIGWINCH, winch);
 
-	conn.main_loop(io_context);
+	conn->main_loop(io_context);
 
 	cleanup();
 	printf("\n");

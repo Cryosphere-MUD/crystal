@@ -12,10 +12,10 @@ option(ENABLE_SCRIPTING "Enable Lua scripting support" ON)
 
 # Define executable sources
 set(SOURCES
-  src/crystal2.cc src/keybindings.cc src/crystal.cc 
+  src/main.cc src/keybindings.cc src/crystal.cc 
   src/grid.cc src/commandeditor.cc src/display.cc
   src/telnet.cc src/io.cc src/commands.cc src/common.cc
-  src/scripting.cc src/wcwidth.c
+  src/scripting.cc src/wcwidth.c src/url.cc
 )
 
 # Define headers for IDEs

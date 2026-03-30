@@ -39,6 +39,7 @@
 #include "scripting.h"
 
 #include <list>
+#include <iostream>
 #include <vector>
 
 struct ansi_context

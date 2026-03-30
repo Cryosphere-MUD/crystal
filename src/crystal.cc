@@ -127,7 +127,13 @@ size_t real_wcwidth(wchar_t u)
 
 const cell_t blank(0);
 
-conn_t::conn_t(grid_t *gr) 
+conn_t::conn_t(asio::io_context& io, grid_t *gr) 
+: resolver_(io),
+          socket_(io),
+          ssl_ctx_(asio::ssl::context::tls_client),
+          ssl_stream_(socket_, ssl_ctx_),
+          stdin_(io, ::dup(STDIN_FILENO))
+        //   use_ssl_(false)
 {
 	cur_grid = grid = gr;
 	overlay = new grid_t();
@@ -378,9 +384,7 @@ void conn_t::connected()
 {
 	conn_t *conn = this;
 
-        std::cerr << "sending to grid " << conn->grid << std::endl;
-
-	conn->grid->infof(_("/// connected is %p\n"), conn);
+        // std::cerr << "sending to grid " << conn->grid << std::endl;
 
 	conn->grid->infof(_("/// connected with %s\n"), "telnet");
 
@@ -484,6 +488,10 @@ void handle_input(conn_t* conn,
 		conn->display_buffer();
 		fflush(stdout);
 	}
+	else
+	{
+		exit(0);
+	}
 
     }
 }
@@ -510,155 +518,6 @@ void conn_t::main_loop(asio::io_context &io_context)
 
 	conn->display_buffer();
 
-#if 0
-	while (!conn->quit)
-	{
-		fd_set r, e, w;
-
-		int maxfd = 1;
-
-		FD_ZERO(&r);
-		FD_ZERO(&e);
-		FD_ZERO(&w);
-
-		if (conn->telnet && conn->telnet->s)
-		{
-			FD_SET(conn->telnet->s->getfd(), &r);
-			FD_SET(conn->telnet->s->getfd(), &e);
-			if (conn->telnet->s->getpend())
-				FD_SET(conn->telnet->s->getfd(), &w);
-
-			maxfd = conn->telnet->s->getfd() + 1;
-		}
-
-		FD_SET(0, &r);
-
-		struct timeval tm;
-		struct timeval *tmp = &tm;
-		if (conn->grid->nlw)
-		{
-			tm.tv_usec = 100000;
-			tm.tv_sec = 0;
-		}
-		else if (scripting::count_timers())
-		{
-			tm.tv_usec = 0;
-			tm.tv_sec = 1;
-		}
-		else
-		{
-			tmp = NULL;
-		}
-
-		select(maxfd, &r, &w, &e, tmp);
-
-		scripting::dotimers();
-
-		extern bool had_winch;
-
-		if (had_winch)
-		{
-			sendwinsize(conn);
-			had_winch = 0;
-			conn->grid->changed = true;
-			tty.bad_have = true;
-		}
-
-		for (int i = 0; i < conn->grid->nlw; i++)
-		{
-			conn->grid->newline();
-			conn->grid->changed = true;
-		}
-		conn->grid->nlw = 0;
-
-		if (conn->telnet && conn->telnet &&
-		    (FD_ISSET(conn->telnet->s->getfd(), &r) || FD_ISSET(conn->telnet->s->getfd(), &e) ||
-		     FD_ISSET(conn->telnet->s->getfd(), &w)))
-		{
-			bool ok = false;
-			do
-			{
-				unsigned char mbuffer[1000];
-
-				int pend = conn->telnet->s->getpend();
-				int bts = conn->telnet->s->read((char *)mbuffer, 500);
-
-				if (pend && !conn->telnet->s->getpend() && !conn->telnet->s->getdead())
-					conn->connected();
-
-				ok = false;
-				if (bts == 0 || (bts == -1 && conn->telnet->s->getdead()))
-				{
-					if (conn->disconnected(bts, pend))
-						continue;
-					else
-					{
-						ok = false;
-						break;
-					}
-				}
-				else if (bts != -1)
-				{
-					conn->telnet->handle_read(conn, mbuffer, bts);
-					ok = true;
-				}
-			}
-			while (ok);
-		}
-
-		if (FD_ISSET(0, &r))
-		{
-
-			while (1)
-			{
-				int bytes_available = 0;
-				ioctl(0, FIONREAD, &bytes_available);
-				if (bytes_available == 0)
-					break;
-
-				std::vector<char> from_stdin;
-				from_stdin.resize(bytes_available);
-				int rval = read(0, from_stdin.data(), bytes_available);
-				if (rval < 0)
-					break;
-
-				from_stdin.resize(rval);
-				tty.feed(std::string(from_stdin.data(), from_stdin.size()));
-
-				for (wchar_t i : tty.decode_feed())
-				{
-					if (conn->telnet && conn->telnet->charmode && !conn->commandmode && i != 0x1d)
-					{
-						std::string p;
-						p += i;
-						conn->telnet->send(p);
-					}
-					else
-					{
-						my_wstring s = tty.convert_input(i);
-						if (s.length())
-							conn->dispatch_key(s);
-					}
-
-					if (!conn->telnet)
-						conn->commandmode = 1;
-
-					conn->grid->changed = true;
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-
-		if (!conn->quit)
-		{
-			conn->display_buffer();
-			fflush(stdout);
-		}
-	}
-#endif
 	asio::posix::stream_descriptor stdin_desc(io_context, STDIN_FILENO);
 
 	std::array<char, 256> input_buffer;
@@ -675,4 +534,101 @@ void conn_t::main_loop(asio::io_context &io_context)
 	stdin_desc.release();
 }
 
-struct termios oldti;
+void conn_t::connect(const std::string& host, const std::string& port, bool ssl) {
+        // host_ = host;
+        // port_ = port;
+
+        grid->infof("/// resolving %s\n", host.c_str());
+        grid->changed = true;
+        commandmode = false;
+        display_buffer();
+
+	std::cerr << "going to resolve " << std::endl;
+
+        resolver_.async_resolve(host, port,
+            [self = shared_from_this()](auto ec, auto results) {
+
+                if (ec) return self->fail("resolve", ec);
+
+		std::cerr << "resolved happened " << std::endl;
+
+        for (auto const& entry : results) {
+            auto endpoint = entry.endpoint();
+            std::string ip = endpoint.address().to_string(); // e.g., "93.184.216.34"
+            unsigned short port = endpoint.port();           // e.g., 80
+            self->grid->infof("/// connecting to %s:%i\n", ip.c_str(), port);
+        }
+
+	        self->grid->changed = true;
+	        self->display_buffer();
+
+                asio::async_connect(self->socket_, results,
+                    [self](auto ec, auto) {
+
+			std::cerr << "connect happened? " << std::endl;
+
+                        if (ec) return self->fail("connect", ec);
+
+                        if (self->use_ssl_) {
+                            self->ssl_stream_.async_handshake(
+                                asio::ssl::stream_base::client,
+                                [self](auto ec) {
+                                    if (ec) return self->fail("handshake", ec);
+                                    self->on_connected();
+                                });
+                        } else {
+                            self->on_connected();
+                        }
+                    });
+            });
+    }
+
+
+	   void conn_t::on_connected() {
+        // std::cout << "Connected to " << host_ << ":" << port_ << "\n";
+        connected();
+
+        telnet = std::make_shared<telnet_state>(socket_);
+
+        do_read_socket();
+    }
+
+    void conn_t::do_read_socket() {
+        auto self = shared_from_this();
+
+        // std::cerr << __PRETTY_FUNCTION__ << std::endl;
+
+        // auto handler = 
+
+        socket_.async_read_some(asio::buffer(socket_raw_), [self](auto ec, std::size_t n) {
+            if (ec) return self->fail("read", ec);
+
+            std::string data(self->socket_raw_.data(), n);
+
+            const char *data2 = data.data();
+
+            self->telnet->handle_read(self.get(), (unsigned char*)data2, data.size());
+
+            // std::istream is(&self->socket_buf_);
+            // std::string line;
+            // std::getline(is, line);
+
+            // std::cout << "[remote] " << line << "\n";
+
+            if (self->grid->changed)
+                self->display_buffer();
+
+            self->do_read_socket();
+        });
+}
+
+void conn_t::fail(const std::string& what, asio::error_code ec) {
+        	telnet.reset();
+		commandmode = true;
+
+        	asio::error_code ignored;
+        	socket_.close(ignored);
+		display_buffer();
+    	}
+
+    struct termios oldti;

@@ -52,8 +52,8 @@ public:
         host_ = host;
         port_ = port;
 
-        std::cerr << __PRETTY_FUNCTION__ << " " << host_ << std::endl;
-        std::cerr << "sending to grid " << conn->grid << std::endl;
+        // std::cerr << __PRETTY_FUNCTION__ << " " << host_ << std::endl;
+        // std::cerr << "sending to grid " << conn->grid << std::endl;
         conn->grid->infof("/// Crystal\n");
         conn->grid->infof("/// resolving %s\n", host.c_str());
         conn->grid->changed = true;
@@ -96,7 +96,7 @@ private:
     void do_read_socket() {
         auto self = shared_from_this();
 
-        std::cerr << __PRETTY_FUNCTION__ << std::endl;
+        // std::cerr << __PRETTY_FUNCTION__ << std::endl;
 
         // auto handler = 
 
@@ -130,7 +130,7 @@ private:
 
     public:
 void do_read_stdin() {
-    std::cerr << __PRETTY_FUNCTION__ << std::endl;
+    // std::cerr << __PRETTY_FUNCTION__ << std::endl;
 
     auto self = shared_from_this();
 
@@ -150,7 +150,7 @@ void do_read_stdin() {
 
 				tty.feed(data);
 
-                std::cerr << "feed " << esc(data) << std::endl;
+                // std::cerr << "feed " << esc(data) << std::endl;
 
 				for (wchar_t i : tty.decode_feed())
 				{
