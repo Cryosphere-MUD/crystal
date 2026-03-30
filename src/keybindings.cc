@@ -36,6 +36,9 @@
 #include "commands.h"
 #include "crystal.h"
 #include "grid.h"
+#include "esc.h"
+
+#include <iostream>
 
 typedef void (conn_t::*keybinding_method_t)();
 
@@ -162,7 +165,10 @@ void conn_t::dispatch_key(const my_wstring &s)
 	{
 		keybinding_method_t handler = keys[s];
 		if (handler)
+		{
+			std::cerr << "going to handler for " << handler << std::endl;
 			(this->*handler)();
+		}
 		else
 			grid->infof(_("/// missing handler for %ls\n"), s.c_str());
 		return;
@@ -174,6 +180,8 @@ void conn_t::dispatch_key(const my_wstring &s)
 		triggerfn(cs.c_str() + 3);
 		return;
 	}
+
+	std::cerr << "couldnt find a handler for " << esc(s) << std::endl;
 }
 
 void cmd_bind(conn_t *conn, const cmd_args &arg)

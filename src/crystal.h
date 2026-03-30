@@ -51,13 +51,6 @@ class hlist;
 
 class conn_t : public commandeditor_t
 {
-    	asio::io_context& m_io_context;
-    	asio::ip::tcp::resolver m_resolver;
-    	asio::ip::tcp::socket m_socket;
-	std::array<unsigned char, 2048> m_socket_buffer;
-
-	public:
-
       private:
 	//! the amount we have scrolled to in the buffer
 	int hardscroll = 0;
@@ -78,10 +71,6 @@ class conn_t : public commandeditor_t
 	int addr_i = 0;
 
       public:
-	std::string host;
-	int port;
-	bool ssl = false;
-
 	grid_t *grid = nullptr;
 
 	grid_t *overlay = nullptr;
@@ -89,6 +78,10 @@ class conn_t : public commandeditor_t
 
 	std::shared_ptr<telnet_state> telnet =  nullptr;
 	FILE *logfile = nullptr;
+
+	std::string host = "?";
+	int port = 9999;
+	bool ssl = false;
 
 	std::string mud_cset = "ISO-8859-1";
 
@@ -108,9 +101,7 @@ class conn_t : public commandeditor_t
 
 	void show_lines_at(int from, int to, int num);
 
-	conn_t() = delete;
-	conn_t(const conn_t &conn) = delete;
-	conn_t(asio::io_context& io_context, grid_t *);
+	conn_t(grid_t *grid);
 	~conn_t();
 
 	void initbindings();

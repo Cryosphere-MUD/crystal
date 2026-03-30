@@ -32,6 +32,7 @@
  * version.  If you delete this exception statement from all source
  * files in the program, then also delete it here.
  */
+#include <iostream>
 
 #include "crystal.h"
 #include "grid.h"
@@ -92,6 +93,8 @@ void conn_t::display_buffer()
 	conn_t *conn = this;
 
 	grid_t &grid = *conn->grid;
+
+	std::cerr << "display_buffer " << grid.changed << " " << std::endl;
 
 	if (!grid.changed && !conn->overlay->changed)
 		return;

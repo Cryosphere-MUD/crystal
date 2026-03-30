@@ -36,6 +36,7 @@
 #include "grid.h"
 #include "telnet.h"
 #include "url.h"
+#include "esc.h"
 
 void cmd_quit(conn_t *conn, const cmd_args &arg)
 {
@@ -106,24 +107,24 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 	std::string cport = mks(port);
 	std::string chost = mks(host);
 
-	url u = url(chost.c_str());
-	if (cport.length() != 0)
-		u.service = cport;
+	// url u = url(chost.c_str());
+	// if (cport.length() != 0)
+	// 	u.service = cport;
 
-	if (!valid_protocol(u.protocol))
-	{
-		conn->grid->infof(_("/// bad protocol : '%s'.\n"), cport.c_str());
-		return;
-	}
+	// if (!valid_protocol(u.protocol))
+	// {
+	// 	conn->grid->infof(_("/// bad protocol : '%s'.\n"), cport.c_str());
+	// 	return;
+	// }
 
-	int p = lookup_service(u.service);
-	if (p == -1)
-	{
-		conn->grid->infof(_("/// bad port : '%s'.\n"), cport.c_str());
-		return;
-	}
+	// int p = lookup_service(u.service);
+	// if (p == -1)
+	// {
+	// 	conn->grid->infof(_("/// bad port : '%s'.\n"), cport.c_str());
+	// 	return;
+	// }
 
-	conn->connect(u.hostname.c_str(), p, u.protocol == "telnets" || force_tls);
+	// conn->connect(u.hostname.c_str(), p, u.protocol == "telnets" || force_tls);
 }
 
 my_wstring join_from(const cmd_args &args, int from)

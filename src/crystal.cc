@@ -127,9 +127,7 @@ size_t real_wcwidth(wchar_t u)
 
 const cell_t blank(0);
 
-conn_t::conn_t(asio::io_context& io_context, grid_t *gr) 
-        	: m_io_context(io_context), m_resolver(io_context), m_socket(io_context)
-
+conn_t::conn_t(grid_t *gr) 
 {
 	cur_grid = grid = gr;
 	overlay = new grid_t();
@@ -382,7 +380,7 @@ void conn_t::connected()
 
 	conn->grid->infof(_("/// connected is %p\n"), conn);
 
-	conn->grid->infof(_("/// connected with %s\n"), conn->ssl ? "TLS" : "telnet");
+	conn->grid->infof(_("/// connected with %s\n"));
 
 	static int printed_escape_line = 0;
 	if (!printed_escape_line)
@@ -397,77 +395,6 @@ void conn_t::connected()
 		tty.title(_("telnet://%s:%i - Crystal"), conn->host.c_str(), conn->port);
 
     	display_buffer();
-}
-
-void conn_t::do_read_from_socket() {
-    // Ensure the object remains alive for the duration of the async operation
-
-    // Call async_read_some on the socket
-    m_socket.async_read_some(asio::buffer(m_socket_buffer),
-        [this](const asio::error_code& ec, size_t bytes_transferred) {
-            // This lambda is the handler that runs when the read completes
-            if (!ec) {
-                // Read was successful, process the data
-		telnet->handle_read(this, m_socket_buffer.data(), bytes_transferred);
-
-		display_buffer();
-
-                // Start another read operation to continue listening for data
-                this->do_read_from_socket();
-            } else {
-                // An error occurred, handle the connection loss
-                std::cerr << "Socket read error: " << ec.message() << std::endl;
-                // You might want to close the connection here
-                // this->m_socket.close();
-            }
-        });
-}
-
-bool conn_t::try_addr(const asio::ip::tcp::resolver::results_type& endpoints,
-		      std::string host, int port, bool ssl)
-{
-  	asio::async_connect(m_socket, endpoints,
-        	[this, host, port, ssl](const asio::error_code& ec, 
-                                   const asio::ip::tcp::endpoint& endpoint) {
-            if (!ec) {
-                grid->infof(_("/// connected to %s:%d\n"), host.c_str(), port);
-		connected();
-		do_read_from_socket();
-    		this->telnet = std::make_shared<telnet_state>(m_socket);
-            } else {
-                grid->infof(_("/// connection failed: %s\n"), ec.message().c_str());
-            }
-		this->grid->cstoredprompt.erase();
-        });
-
-	return true;
-}
-
-void conn_t::connect(std::string host, int port, bool ssl)
-{
-	/* nuke old stuff */
-	telnet.reset();
-
-	if (overlay)
-		overlay->visible = false;
-	if (grid->col)
-		grid->newline();
-
-	grid->infof(_("/// resolving %s\n"), host.c_str());
-	display_buffer();
-
-    	// Resolve the host asynchronously
-    	m_resolver.async_resolve(host, std::to_string(port),
-        	[this, host, port, ssl](const asio::error_code& ec, 
-                                   asio::ip::tcp::resolver::results_type endpoints) {
-            if (!ec) {
-                // Resolution successful, now try to connect
-                this->try_addr(endpoints, host, port, ssl);
-            } else {
-                grid->infof(_("/// resolve failed: %s\n"), ec.message().c_str());
-            }
-    	    display_buffer();
-        });
 }
 
 bool conn_t::file_log(const char *filename)

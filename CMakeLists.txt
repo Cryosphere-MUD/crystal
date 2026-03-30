@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(crystal VERSION 0.3.0)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Localization
@@ -12,8 +12,10 @@ option(ENABLE_SCRIPTING "Enable Lua scripting support" ON)
 
 # Define executable sources
 set(SOURCES
-  src/crystal.cc src/Socket.cc src/io.cc src/grid.cc src/telnet.cc src/wcwidth.c
-  src/scripting.cc src/commands.cc src/common.cc src/commandeditor.cc src/keybindings.cc src/display.cc src/main.cc
+  src/crystal2.cc src/keybindings.cc src/crystal.cc 
+  src/grid.cc src/commandeditor.cc src/display.cc
+  src/telnet.cc src/io.cc src/commands.cc src/common.cc
+  src/scripting.cc src/wcwidth.c
 )
 
 # Define headers for IDEs
