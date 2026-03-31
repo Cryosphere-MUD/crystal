@@ -82,8 +82,8 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 	std::shared_ptr<telnet_state> telnet =  nullptr;
 	FILE *logfile = nullptr;
 
-	std::string host = "?";
-	int port = 9999;
+	std::string host;
+	int port = 0;
 	bool ssl = false;
 
 	std::string mud_cset = "ISO-8859-1";
@@ -117,6 +117,8 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	void display_buffer();
 
+	void queue_repaint();
+
 	bool disconnected(int bts, int pend);
 	void connected();
 	bool try_addr(const asio::ip::tcp::resolver::results_type& endpoints,
@@ -141,6 +143,8 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	tcp::resolver resolver_;
 	tcp::socket socket_;
+
+	asio::io_context &io_;
 
 	asio::ssl::context ssl_ctx_;
 	asio::ssl::stream<tcp::socket&> ssl_stream_;

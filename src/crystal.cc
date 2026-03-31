@@ -128,7 +128,8 @@ size_t real_wcwidth(wchar_t u)
 const cell_t blank(0);
 
 conn_t::conn_t(asio::io_context& io, grid_t *gr) 
-: resolver_(io),
+: io_(io),
+resolver_(io),
           socket_(io),
           ssl_ctx_(asio::ssl::context::tls_client),
           ssl_stream_(socket_, ssl_ctx_),
@@ -400,7 +401,7 @@ void conn_t::connected()
 	else
 		tty.title(_("telnet://%s:%i - Crystal"), conn->host.c_str(), conn->port);
 
-    	display_buffer();
+    	queue_repaint();
 }
 
 bool conn_t::file_log(const char *filename)
@@ -454,12 +455,23 @@ bool conn_t::disconnected(int bts, int pend)
 #if 0
 	}
 #endif
-	conn->display_buffer();
 	fflush(stdout);
+	asio::error_code ignored;
+        socket_.close(ignored);
 	conn->telnet.reset();
 	conn->set_commandmode(true);
-	conn->grid->changed = true;
+
+	queue_repaint();
+
 	return false;
+}
+
+void conn_t::queue_repaint()
+{
+	asio::post(io_, [self = shared_from_this()] {
+		self->grid->changed = true;
+		self->display_buffer();
+	});
 }
 
 void do_read(conn_t *conn,
@@ -535,8 +547,8 @@ void conn_t::main_loop(asio::io_context &io_context)
 }
 
 void conn_t::connect(const std::string& host, const std::string& port, bool ssl) {
-        // host_ = host;
-        // port_ = port;
+        this->host = host;
+        this->port = atoi(port.c_str());
 
 	this->ssl = ssl;
 
@@ -566,8 +578,6 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
                 asio::async_connect(self->socket_, results,
                     [self](auto ec, auto) {
-
-			std::cerr << "connect happened? " << std::endl;
 
                         if (ec) return self->fail("connect", ec);
 
@@ -628,12 +638,17 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 }
 
 void conn_t::fail(const std::string& what, asio::error_code ec) {
-        	telnet.reset();
-		set_commandmode(true);
 
-        	asio::error_code ignored;
-        	socket_.close(ignored);
-		display_buffer();
+	disconnected(0, 0);
+
+        	// telnet.reset();
+		// set_commandmode(true);
+
+        	// asio::error_code ignored;
+        	// socket_.close(ignored);
+	        // grid->changed = true;
+
+		// display_buffer();
     	}
 
 void conn_t::set_commandmode(bool new_command_mode)
