@@ -54,7 +54,7 @@ hlist *commandeditor_t::chist()
 {
 	static hlist hist;
 
-	if (commandmode)
+	if (in_commandmode())
 		return &cmdhist;
 
 	return &hist;
@@ -236,3 +236,4 @@ void commandeditor_t::dopaste()
 {
 	buffer.insert(cursor, cutbuffer);
 }
+

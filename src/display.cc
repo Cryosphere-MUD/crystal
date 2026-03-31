@@ -119,7 +119,7 @@ void conn_t::display_buffer()
 	if (hardscroll)
 		start = hardscroll - 1;
 
-	if (conn->telnet && conn->telnet->charmode && !commandmode)
+	if (conn->telnet && conn->telnet->charmode && !in_commandmode())
 	{
 		if (grid.row < tty.HEIGHT)
 			conn->show_lines_at(start, tty.HEIGHT - grid.row + 1, tty.HEIGHT + 1);
@@ -168,7 +168,7 @@ void conn_t::display_buffer()
 
 	cellstring crealprompt;
 
-	if (commandmode)
+	if (in_commandmode())
 	{
 		const char *str = _("crystal> ");
 		int max = strlen(str);
@@ -216,7 +216,7 @@ void conn_t::display_buffer()
 		tty.wantbuffer[tty.HEIGHT][i] = crealprompt[i];
 
 	wid -= prlen;
-	if (!(conn->telnet && conn->telnet->allstars) || commandmode)
+	if (!(conn->telnet && conn->telnet->allstars) || in_commandmode())
 	{
 		while (alen && wid)
 		{
@@ -251,7 +251,7 @@ void conn_t::display_buffer()
 		if (real_wcwidth(txt[i]) == 2)
 			rcol++;
 
-	if ((conn->telnet && conn->telnet->allstars) && !commandmode)
+	if ((conn->telnet && conn->telnet->allstars) && !in_commandmode())
 		rcol = 0;
 
 	printf("\033[%i;%if", tty.HEIGHT + 1, rcol - scroll + 1 + prlen);

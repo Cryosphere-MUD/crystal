@@ -246,20 +246,20 @@ void conn_t::doenter()
 {
 	conn_t *conn = this;
 
-	if (commandmode)
+	if (in_commandmode())
 	{
 		my_wstring s = conn->buffer;
 		conn->doclearline();
 
 		if (s.length() == 0)
 		{
-			commandmode = 0;
+			set_commandmode(false);
 			return;
 		}
 
 		chist()->insert(s);
 
-		commandmode = 0;
+		set_commandmode(false);
 
 		conn->grid->info(_("crystal> "));
 		conn->grid->info(s);
@@ -375,9 +375,9 @@ void conn_t::doscrollup()
 
 void conn_t::docommandmode()
 {
-	if (!commandmode)
+	if (!in_commandmode())
 		doclearline();
-	commandmode = true;
+	set_commandmode(true);
 }
 
 void conn_t::connected()
@@ -457,7 +457,7 @@ bool conn_t::disconnected(int bts, int pend)
 	conn->display_buffer();
 	fflush(stdout);
 	conn->telnet.reset();
-	conn->commandmode = true;
+	conn->set_commandmode(true);
 	conn->grid->changed = true;
 	return false;
 }
@@ -478,7 +478,7 @@ void handle_input(conn_t* conn,
                 conn->dispatch_key(s);
             }
 		if (!conn->telnet)
-			conn->commandmode = 1;
+			conn->set_commandmode(true);
 		conn->grid->changed = 1;
         }
         
@@ -510,8 +510,8 @@ void conn_t::main_loop(asio::io_context &io_context)
 {
 	conn_t *conn = this;
 
-	if (!conn->telnet)
-		conn->commandmode = true;
+	// if (!conn->telnet)
+	// 	conn->set_commandmode(true);
 
 	conn->grid->changed = true;
 	tty.bad_have = true;
@@ -538,19 +538,21 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
         // host_ = host;
         // port_ = port;
 
+	this->ssl = ssl;
+
         grid->infof("/// resolving %s\n", host.c_str());
         grid->changed = true;
-        commandmode = false;
+        set_commandmode(false);
         display_buffer();
 
-	std::cerr << "going to resolve " << std::endl;
+	// std::cerr << "going to resolve " << std::endl;
 
         resolver_.async_resolve(host, port,
-            [self = shared_from_this()](auto ec, auto results) {
+            [self = shared_from_this()](asio::error_code ec, auto results) {
 
                 if (ec) return self->fail("resolve", ec);
 
-		std::cerr << "resolved happened " << std::endl;
+		// std::cerr << "resolved happened " << std::endl;
 
         for (auto const& entry : results) {
             auto endpoint = entry.endpoint();
@@ -569,7 +571,7 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
                         if (ec) return self->fail("connect", ec);
 
-                        if (self->use_ssl_) {
+                        if (self->ssl) {
                             self->ssl_stream_.async_handshake(
                                 asio::ssl::stream_base::client,
                                 [self](auto ec) {
@@ -598,9 +600,7 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
         // std::cerr << __PRETTY_FUNCTION__ << std::endl;
 
-        // auto handler = 
-
-        socket_.async_read_some(asio::buffer(socket_raw_), [self](auto ec, std::size_t n) {
+        auto handler = [self](auto ec, std::size_t n) {
             if (ec) return self->fail("read", ec);
 
             std::string data(self->socket_raw_.data(), n);
@@ -619,16 +619,32 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
                 self->display_buffer();
 
             self->do_read_socket();
-        });
+        };
+
+	if (ssl)
+	        ssl_stream_.async_read_some(asio::buffer(socket_raw_), handler);
+	else
+	        socket_.async_read_some(asio::buffer(socket_raw_), handler);
 }
 
 void conn_t::fail(const std::string& what, asio::error_code ec) {
         	telnet.reset();
-		commandmode = true;
+		set_commandmode(true);
 
         	asio::error_code ignored;
         	socket_.close(ignored);
 		display_buffer();
     	}
+
+void conn_t::set_commandmode(bool new_command_mode)
+{
+	if (in_commandmode() == new_command_mode)
+		return;
+
+	// grid->infof("///set_commandmode called with %i\n", new_command_mode);
+	// display_buffer();
+
+	commandeditor_t::set_commandmode(new_command_mode);
+}
 
     struct termios oldti;

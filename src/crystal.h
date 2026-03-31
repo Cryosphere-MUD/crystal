@@ -130,6 +130,8 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	   void on_connected();
 
+	void set_commandmode(bool new_command_mode) override;
+
     void do_read_socket();
 
 	std::set<my_wstring> hl_matches;
@@ -147,8 +149,6 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	asio::streambuf socket_buf_;
 	asio::streambuf stdin_buf_;
-
-	bool use_ssl_ = false;
 };
 
 extern int exitValue;
