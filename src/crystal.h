@@ -142,12 +142,14 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 	std::array<char, 4096> socket_raw_;
 
 	tcp::resolver resolver_;
-	tcp::socket socket_;
 
 	asio::io_context &io_;
 
 	asio::ssl::context ssl_ctx_;
-	asio::ssl::stream<tcp::socket&> ssl_stream_;
+
+	std::unique_ptr<tcp::socket> socket_;
+	std::unique_ptr<asio::ssl::stream<tcp::socket&>> ssl_stream_;
+	// asio::ssl::stream<tcp::socket&> ssl_stream_;
 
 	asio::posix::stream_descriptor stdin_;
 

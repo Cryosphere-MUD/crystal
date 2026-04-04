@@ -130,9 +130,7 @@ const cell_t blank(0);
 conn_t::conn_t(asio::io_context& io, grid_t *gr) 
 : io_(io),
 resolver_(io),
-          socket_(io),
           ssl_ctx_(asio::ssl::context::tls_client),
-          ssl_stream_(socket_, ssl_ctx_),
           stdin_(io, ::dup(STDIN_FILENO))
         //   use_ssl_(false)
 {
@@ -434,7 +432,7 @@ bool conn_t::disconnected(int bts, int pend)
 
 	fflush(stdout);
 	asio::error_code ignored;
-        socket_.close(ignored);
+        socket_->close(ignored);
 	conn->telnet.reset();
 	conn->set_commandmode(true);
 
@@ -529,6 +527,12 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
 	this->ssl = ssl;
 
+	socket_ = std::make_unique<tcp::socket>(io_);
+
+	if (ssl) {
+    		ssl_stream_ = std::make_unique<asio::ssl::stream<tcp::socket&>>(*socket_, ssl_ctx_);
+	}
+
         grid->infof("/// resolving %s\n", host.c_str());
         grid->changed = true;
         set_commandmode(false);
@@ -553,13 +557,13 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 	        self->grid->changed = true;
 	        self->display_buffer();
 
-                asio::async_connect(self->socket_, results,
+                asio::async_connect(*self->socket_, results,
                     [self](auto ec, auto) {
 
                         if (ec) return self->fail("connect", ec);
 
                         if (self->ssl) {
-                            self->ssl_stream_.async_handshake(
+                            self->ssl_stream_->async_handshake(
                                 asio::ssl::stream_base::client,
                                 [self](auto ec) {
                                     if (ec) return self->fail("handshake", ec);
@@ -577,7 +581,7 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
         // std::cout << "Connected to " << host_ << ":" << port_ << "\n";
         connected();
 
-	telnet = std::make_shared<telnet_state>(socket_, &ssl_stream_);
+	telnet = std::make_shared<telnet_state>(*socket_.get(), ssl_stream_.get());
 
         do_read_socket();
     }
@@ -609,9 +613,9 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
         };
 
 	if (ssl)
-	        ssl_stream_.async_read_some(asio::buffer(socket_raw_), handler);
+	        ssl_stream_->async_read_some(asio::buffer(socket_raw_), handler);
 	else
-	        socket_.async_read_some(asio::buffer(socket_raw_), handler);
+	        socket_->async_read_some(asio::buffer(socket_raw_), handler);
 }
 
 void conn_t::fail(const std::string& what, asio::error_code ec) {
