@@ -48,4 +48,18 @@ inline bool valid_protocol(const std::string &s)
 	return 0;
 }
 
+struct url
+{
+	std::string protocol;
+	std::string hostname;
+	std::string service;
+
+	std::string username;
+	bool has_username;
+	std::string password;
+	bool has_password;
+
+	url(const char *);
+};
+
 #endif

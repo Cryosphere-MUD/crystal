@@ -38,7 +38,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include "Socket.h"
 #include "io.h"
 #include "telnet.h"
 
@@ -74,9 +73,6 @@ void sendwinsize(conn_t *conn)
 	if (!conn->telnet)
 		return;
 
-	if (!conn->telnet->s)
-		return;
-
 	if (!conn->telnet->do_naws)
 		return;
 
@@ -110,7 +106,10 @@ void telnet_state::reply(int a, int b, int c)
 	buf[0] = a;
 	buf[1] = b;
 	buf[2] = c;
-	s->write(buf, 3);
+	if (ssl)
+		asio::write(*ssl, asio::buffer(buf, 3));
+	else
+		asio::write(raw, asio::buffer(buf, 3));
 	debug_fprintf((stderr, "SEND %s %s %s\n", nam(a).c_str(), nam(b).c_str(), nam(c).c_str()));
 }
 
@@ -325,7 +324,7 @@ void telnet_state::handle_ttype(conn_t *conn)
 	}
 	else if (ttype_count == 1)
 	{
-		str += "crystal:000_003_001";
+		str += "crystal:000_004_001";
 	}
 	else if (ttype_count == 2 || ttype_count == 3)
 	{
@@ -681,8 +680,6 @@ void telnet_state::tstack(conn_t *conn, int ch)
 
 void telnet_state::send(const std::string &proper)
 {
-	if (!s)
-		return;
 	std::string p2;
 	const unsigned char *b = (const unsigned char *)proper.c_str();
 	while (*b)
@@ -692,7 +689,10 @@ void telnet_state::send(const std::string &proper)
 		p2 += *b;
 		b++;
 	}
-	s->write(p2.c_str(), p2.length());
+	if (ssl)
+		asio::write(*ssl, asio::buffer(p2.data(), p2.size()));
+	else
+		asio::write(raw, asio::buffer(p2.data(), p2.size()));
 }
 
 void telnet_state::subneg_send(int subneg, const std::string &proper)
@@ -716,5 +716,8 @@ void telnet_state::subneg_send(int subneg, const std::string &proper)
 	s2 += (unsigned char)IAC;
 	s2 += (unsigned char)SE;
 
-	s->write(s2.c_str(), s2.length());
+	if (ssl)
+		asio::write(*ssl, asio::buffer(s2.data(), s2.size()));
+	else
+		asio::write(raw, asio::buffer(s2.data(), s2.size()));
 }

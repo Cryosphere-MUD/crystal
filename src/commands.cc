@@ -108,22 +108,9 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 
 	url u = url(chost.c_str());
 	if (cport.length() != 0)
-		u.service = cport;
+	 	u.service = cport;
 
-	if (!valid_protocol(u.protocol))
-	{
-		conn->grid->infof(_("/// bad protocol : '%s'.\n"), cport.c_str());
-		return;
-	}
-
-	int p = lookup_service(u.service);
-	if (p == -1)
-	{
-		conn->grid->infof(_("/// bad port : '%s'.\n"), cport.c_str());
-		return;
-	}
-
-	conn->connect(u.hostname.c_str(), p, u.protocol == "telnets" || force_tls);
+	conn->connect(u.hostname, u.service, u.protocol == "telnets" || force_tls);
 }
 
 my_wstring join_from(const cmd_args &args, int from)

@@ -33,12 +33,17 @@
 #ifndef CRYSTAL_H
 #define CRYSTAL_H
 
+#include <asio.hpp>
+#include <asio/ssl.hpp>
+
 #include <memory>
 #include <set>
 #include <string>
 
 #include "commandeditor.h"
 #include "common.h"
+
+using asio::ip::tcp;
 
 struct telnet_state;
 class grid_t;
@@ -47,7 +52,7 @@ typedef std::shared_ptr<InAddrList> InAddrListPtr;
 
 class hlist;
 
-class conn_t : public commandeditor_t
+class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_t>
 {
       private:
 	//! the amount we have scrolled to in the buffer
@@ -69,10 +74,6 @@ class conn_t : public commandeditor_t
 	int addr_i = 0;
 
       public:
-	std::string host;
-	int port;
-	bool ssl = false;
-
 	grid_t *grid = nullptr;
 
 	grid_t *overlay = nullptr;
@@ -80,6 +81,10 @@ class conn_t : public commandeditor_t
 
 	std::shared_ptr<telnet_state> telnet =  nullptr;
 	FILE *logfile = nullptr;
+
+	std::string host;
+	int port = 0;
+	bool ssl = false;
 
 	std::string mud_cset = "ISO-8859-1";
 
@@ -99,27 +104,59 @@ class conn_t : public commandeditor_t
 
 	void show_lines_at(int from, int to, int num);
 
-	conn_t(grid_t *);
-	conn_t(const conn_t&) = delete;
-	conn_t() = delete;
+	conn_t(asio::io_context& io, grid_t *grid);
 	~conn_t();
 
 	void initbindings();
 	void dispatch_key(const my_wstring &s);
 	void addbinding(const wchar_t *key, const char *bind);
 
-	void connect(const char *host, int port, bool ssl);
+	void connect(const std::string &host, const std::string &port, bool ssl);
 	bool file_log(const char *filename);
+	void do_read_from_socket();
 
 	void display_buffer();
 
+	void queue_repaint();
+
 	bool disconnected(int bts, int pend);
 	void connected();
-	bool try_addr(const char *host, int port, bool ssl);
+	bool try_addr(const asio::ip::tcp::resolver::results_type& endpoints,
+		      std::string host, int port, bool ssl);
 
-	void main_loop();
+	void main_loop(asio::io_context &io_context);
+
+	void fail(const std::string& what, asio::error_code ec);
+
+	void start(const std::string& host, const std::string& port);
+
+	   void on_connected();
+
+	void set_commandmode(bool new_command_mode) override;
+
+    void do_read_socket();
 
 	std::set<my_wstring> hl_matches;
+
+	std::array<char, 4096> stdin_raw_;
+	std::array<char, 4096> socket_raw_;
+
+	tcp::resolver resolver_;
+
+	asio::io_context &io_;
+
+	asio::ssl::context ssl_ctx_;
+
+	bool reconnecting = false;
+
+	std::unique_ptr<tcp::socket> socket_;
+	std::unique_ptr<asio::ssl::stream<tcp::socket&>> ssl_stream_;
+	// asio::ssl::stream<tcp::socket&> ssl_stream_;
+
+	asio::posix::stream_descriptor stdin_;
+
+	asio::streambuf socket_buf_;
+	asio::streambuf stdin_buf_;
 };
 
 extern int exitValue;

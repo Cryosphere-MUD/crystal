@@ -12,9 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: 'recursive'
+    - name: Install asio
+      run: sudo apt install libasio-dev
     - name: cmake
       run: cmake -S . -B build/
     - name: make

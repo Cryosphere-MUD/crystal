@@ -85,9 +85,13 @@ extern hlist cmdhist;
 
 class commandeditor_t
 {
-      public:
 	//! are we in command mode (true) or mud mode (false)
-	bool commandmode = false;
+	bool _commandmode = true;
+      public:
+
+	bool in_commandmode() const { return _commandmode; }
+
+	virtual void set_commandmode(bool new_command_mode) { _commandmode = new_command_mode; }
 
 	my_wstring buffer;
 	size_t cursor = 0;

@@ -37,6 +37,8 @@
 #include "crystal.h"
 #include "grid.h"
 
+#include <iostream>
+
 typedef void (conn_t::*keybinding_method_t)();
 
 struct keycommand_t
@@ -162,7 +164,9 @@ void conn_t::dispatch_key(const my_wstring &s)
 	{
 		keybinding_method_t handler = keys[s];
 		if (handler)
+		{
 			(this->*handler)();
+		}
 		else
 			grid->infof(_("/// missing handler for %ls\n"), s.c_str());
 		return;

@@ -605,6 +605,24 @@ void grid_t::infof(const char *fmt, ...)
 	info(buf);
 }
 
+template<class T> std::string esc(const T &data)
+{
+    std::string out = "";
+    for (auto ch: data)
+    {
+        if (ch < 0x20)
+        {
+            char tmp[1024]; 
+            sprintf(tmp, "\\x%02x", ch);
+            out += tmp;
+            continue;
+        }
+        if (isprint(ch))
+            out += ch;
+    }
+    return out;
+}
+
 void grid_t::infoc(wchar_t w)
 {
 	if (info_to_stderr)

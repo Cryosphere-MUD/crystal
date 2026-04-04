@@ -1,10 +1,17 @@
+0.4
+  The previous networking code has been replaced with usage of the asio
+  C++ library.  This is probably the largest change we've made in our history,
+  so please be on the lookout for any issues, and report them at
+
+    https://github.com/Cryosphere-MUD/crystal/issues
+
 0.3
   TrueColor support. See https://github.com/termstandard/colors. We pass
   these through directly from the MUD without trying a fallback.
 
   Add support for the MTTS standard for client capabilities.
 
-  Autotools make setup has been remaked with CMake.
+  Autotools make setup has been replaced with CMake.
 
 0.2.4
   Links against Lua 5 if available.  Note that it prefers Lua 5 over Lua 4, 
