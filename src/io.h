@@ -195,10 +195,7 @@ struct mterm
 
 	my_wstring convert_input(int i);
 	int getinput();
-	void feed(const std::string &data)
-	{
-		_decodebuffer += data;
-	}
+	void feed(const std::string &data) { _decodebuffer += data; }
 	my_wstring decode_feed();
 
       private:

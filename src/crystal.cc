@@ -126,12 +126,9 @@ size_t real_wcwidth(wchar_t u)
 
 const cell_t blank(0);
 
-conn_t::conn_t(asio::io_context& io, grid_t *gr) 
-: io_(io),
-resolver_(io),
-          ssl_ctx_(asio::ssl::context::tls_client),
-          stdin_(io, ::dup(STDIN_FILENO))
-        //   use_ssl_(false)
+conn_t::conn_t(asio::io_context &io, grid_t *gr)
+    : io_(io), resolver_(io), ssl_ctx_(asio::ssl::context::tls_client), stdin_(io, ::dup(STDIN_FILENO))
+//   use_ssl_(false)
 {
 	cur_grid = grid = gr;
 	overlay = new grid_t();
@@ -396,7 +393,7 @@ void conn_t::connected()
 	else
 		tty.title(_("telnet://%s:%i - Crystal"), conn->host.c_str(), conn->port);
 
-    	queue_repaint();
+	queue_repaint();
 }
 
 bool conn_t::file_log(const char *filename)
@@ -431,7 +428,7 @@ bool conn_t::disconnected(int bts, int pend)
 
 	fflush(stdout);
 	asio::error_code ignored;
-        socket_->close(ignored);
+	socket_->close(ignored);
 	conn->telnet.reset();
 
 	if (!reconnecting)
@@ -444,55 +441,50 @@ bool conn_t::disconnected(int bts, int pend)
 
 void conn_t::queue_repaint()
 {
-	asio::post(io_, [self = shared_from_this()] {
-		self->grid->changed = true;
-		self->display_buffer();
-	});
+	asio::post(io_,
+		   [self = shared_from_this()]
+		   {
+			   self->grid->changed = true;
+			   self->display_buffer();
+		   });
 }
 
-void do_read(conn_t *conn,
-	     asio::posix::stream_descriptor& stream_desc, 
-             std::array<char, 256>& buffer);
+void do_read(conn_t *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer);
 
-void handle_input(conn_t* conn,
-		  const asio::error_code& error, 
-                  size_t bytes_transferred, 
-                  asio::posix::stream_descriptor& stream_desc, 
-                  std::array<char, 256>& buffer) {
-    if (!error) {
-        for (size_t idx = 0; idx < bytes_transferred; idx++) {
-            my_wstring s = tty.convert_input(buffer[idx]);
-            if (s.length()) {
-                conn->dispatch_key(s);
-            }
-		if (!conn->telnet)
-			conn->set_commandmode(true);
-		conn->grid->changed = 1;
-        }
-        
-	if (!conn->quit)
+void handle_input(conn_t *conn, const asio::error_code &error, size_t bytes_transferred, asio::posix::stream_descriptor &stream_desc,
+		  std::array<char, 256> &buffer)
+{
+	if (!error)
 	{
-	        do_read(conn, stream_desc, buffer);
-		conn->display_buffer();
-		fflush(stdout);
-	}
-	else
-	{
-		exit(0);
-	}
+		for (size_t idx = 0; idx < bytes_transferred; idx++)
+		{
+			my_wstring s = tty.convert_input(buffer[idx]);
+			if (s.length())
+				conn->dispatch_key(s);
+			if (!conn->telnet)
+				conn->set_commandmode(true);
+			conn->grid->changed = 1;
+		}
 
-    }
+		if (!conn->quit)
+		{
+			do_read(conn, stream_desc, buffer);
+			conn->display_buffer();
+			fflush(stdout);
+		}
+		else
+		{
+			exit(0);
+		}
+	}
 }
 
-void do_read(conn_t * conn,
-	     asio::posix::stream_descriptor& stream_desc, 
-             std::array<char, 256>& buffer) {
-   stream_desc.async_read_some(asio::buffer(buffer), 
-        [conn, &stream_desc, &buffer](const asio::error_code& error, size_t bytes_transferred) {
-            handle_input(conn, error, bytes_transferred, stream_desc, buffer);
-        });
+void do_read(conn_t *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer)
+{
+	stream_desc.async_read_some(asio::buffer(buffer),
+				    [conn, &stream_desc, &buffer](const asio::error_code &error, size_t bytes_transferred)
+				    { handle_input(conn, error, bytes_transferred, stream_desc, buffer); });
 }
-
 
 void conn_t::main_loop(asio::io_context &io_context)
 {
@@ -515,9 +507,10 @@ void conn_t::main_loop(asio::io_context &io_context)
 	stdin_desc.release();
 }
 
-void conn_t::connect(const std::string& host, const std::string& port, bool ssl) {
-        this->host = host;
-        this->port = atoi(port.c_str());
+void conn_t::connect(const std::string &host, const std::string &port, bool ssl)
+{
+	this->host = host;
+	this->port = atoi(port.c_str());
 
 	this->ssl = ssl;
 
@@ -525,97 +518,108 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
 	socket_ = std::make_unique<tcp::socket>(io_);
 
-	if (ssl) {
-    		ssl_stream_ = std::make_unique<asio::ssl::stream<tcp::socket&>>(*socket_, ssl_ctx_);
-	} else {
+	if (ssl)
+		ssl_stream_ = std::make_unique<asio::ssl::stream<tcp::socket &>>(*socket_, ssl_ctx_);
+	else
 		ssl_stream_.reset();
-	}
 
-        grid->infof("/// resolving %s\n", host.c_str());
-        grid->changed = true;
+	grid->infof("/// resolving %s\n", host.c_str());
+	grid->changed = true;
 
-        resolver_.async_resolve(host, port,
-            [self = shared_from_this()](asio::error_code ec, auto results) {
+	resolver_.async_resolve(host, port,
+				[self = shared_from_this()](asio::error_code ec, auto results)
+				{
+					if (ec)
+					{
+						self->reconnecting = false;
+						return self->fail("resolve", ec);
+					}
 
-                if (ec) {
-			self->reconnecting = false;
-			return self->fail("resolve", ec);
-		}
+					for (auto const &entry : results)
+					{
+						auto endpoint = entry.endpoint();
+						std::string ip = endpoint.address().to_string(); // e.g., "93.184.216.34"
+						unsigned short port = endpoint.port();		 // e.g., 80
+						self->grid->infof("/// connecting to %s:%i\n", ip.c_str(), port);
+					}
 
-        for (auto const& entry : results) {
-            auto endpoint = entry.endpoint();
-            std::string ip = endpoint.address().to_string(); // e.g., "93.184.216.34"
-            unsigned short port = endpoint.port();           // e.g., 80
-            self->grid->infof("/// connecting to %s:%i\n", ip.c_str(), port);
-        }
+					self->grid->changed = true;
+					self->display_buffer();
 
-	        self->grid->changed = true;
-	        self->display_buffer();
+					asio::async_connect(*self->socket_, results,
+							    [self](auto ec, auto)
+							    {
+								    if (ec)
+								    {
+									    self->reconnecting = false;
+									    return self->fail("connect", ec);
+								    }
 
-                asio::async_connect(*self->socket_, results,
-                    [self](auto ec, auto) {
+								    if (self->ssl)
+								    {
+									    self->ssl_stream_->async_handshake(
+										asio::ssl::stream_base::client,
+										[self](auto ec)
+										{
+											if (ec)
+											{
+												self->reconnecting = false;
+												return self->fail("handshake", ec);
+											}
+											self->on_connected();
+											self->reconnecting = false;
+										});
+								    }
+								    else
+								    {
+									    self->on_connected();
+									    self->reconnecting = false;
+								    }
+							    });
+				});
 
-                        if (ec) {
-				self->reconnecting = false;
-				return self->fail("connect", ec);
-			}
+	set_commandmode(false);
+	display_buffer();
+}
 
-                        if (self->ssl) {
-                            self->ssl_stream_->async_handshake(
-                                asio::ssl::stream_base::client,
-                                [self](auto ec) {
-                                    if (ec) {
-					self->reconnecting = false;
-					return self->fail("handshake", ec);
-				    }
-                                    self->on_connected();
-				    self->reconnecting = false;
-                                });
-                        } else {
-                            self->on_connected();
-   			    self->reconnecting = false;
-                        }
-                    });
-            });
-
-	    set_commandmode(false);
-	        display_buffer();
-	}
-
-
-    void conn_t::on_connected() {
-        connected();
+void conn_t::on_connected()
+{
+	connected();
 
 	telnet = std::make_shared<telnet_state>(*socket_.get(), ssl_stream_.get());
 
-        do_read_socket();
-    }
-
-    void conn_t::do_read_socket() {
-        auto self = shared_from_this();
-
-        auto handler = [self](auto ec, std::size_t n) {
-            if (ec) return self->fail("read", ec);
-
-            std::string data(self->socket_raw_.data(), n);
-
-            const char *data2 = data.data();
-
-            self->telnet->handle_read(self.get(), (unsigned char*)data2, data.size());
-
-            if (self->grid->changed)
-                self->display_buffer();
-
-            self->do_read_socket();
-        };
-
-	if (ssl)
-	        ssl_stream_->async_read_some(asio::buffer(socket_raw_), handler);
-	else
-	        socket_->async_read_some(asio::buffer(socket_raw_), handler);
+	do_read_socket();
 }
 
-void conn_t::fail(const std::string& what, asio::error_code ec) {
+void conn_t::do_read_socket()
+{
+	auto self = shared_from_this();
+
+	auto handler = [self](auto ec, std::size_t n)
+	{
+		if (ec)
+			return self->fail("read", ec);
+
+		std::string data(self->socket_raw_.data(), n);
+
+		const char *data2 = data.data();
+
+		self->telnet->handle_read(self.get(), (unsigned char *)data2, data.size());
+
+		if (self->grid->changed)
+			self->display_buffer();
+
+		self->do_read_socket();
+	};
+
+	if (ssl)
+		ssl_stream_->async_read_some(asio::buffer(socket_raw_), handler);
+	else
+		socket_->async_read_some(asio::buffer(socket_raw_), handler);
+}
+
+void conn_t::fail(const std::string &what, asio::error_code ec)
+{
 	disconnected(0, 0);
 }
 
@@ -630,4 +634,4 @@ void conn_t::set_commandmode(bool new_command_mode)
 	commandeditor_t::set_commandmode(new_command_mode);
 }
 
-    struct termios oldti;
+struct termios oldti;

@@ -134,13 +134,9 @@ void conn_t::display_buffer()
 		else
 		{
 			if (grid.row < tty.HEIGHT)
-			{
 				conn->show_lines_at(start, tty.HEIGHT - grid.row + 1, tty.HEIGHT);
-			}
 			else
-			{
 				conn->show_lines_at(start, 1, tty.HEIGHT);
-			}
 		}
 		grid.changed = false;
 	}

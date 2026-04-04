@@ -122,7 +122,7 @@ void cleanup()
 		}
 
 		tcsetattr(0, TCSADRAIN, &oldti);
-	
+
 		printf("\n");
 
 		cleanupConn = 0;
