@@ -130,6 +130,9 @@ conn_t::conn_t(asio::io_context &io, grid_t *gr)
     : io_(io), resolver_(io), ssl_ctx_(asio::ssl::context::tls_client), stdin_(io, ::dup(STDIN_FILENO))
 //   use_ssl_(false)
 {
+	ssl_ctx_.set_verify_mode(asio::ssl::verify_peer);
+	ssl_ctx_.set_default_verify_paths();  // use system CA certificates
+
 	cur_grid = grid = gr;
 	overlay = new grid_t();
 
@@ -620,6 +623,7 @@ void conn_t::do_read_socket()
 
 void conn_t::fail(const std::string &what, asio::error_code ec)
 {
+	grid->infof("/// connection failed: %s\n", ec.message().c_str());
 	disconnected(0, 0);
 }
 
