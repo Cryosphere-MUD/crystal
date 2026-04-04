@@ -51,14 +51,13 @@ enum
 
 void ANSIGrid::place_batch(const std::vector<Cell> &batch)
 {
-	for (auto const &cell: batch)
-		place(&cell);
+	for (const auto &cell: batch)
+		place(cell);
 }
 
-void ANSIGrid::place(const Cell *ri)
+void ANSIGrid::place(const Cell &input_cell)
 {
-	Cell fi = *ri;
-	Cell *i = &fi;
+	Cell fi = input_cell;
 
 	if (conn->lp_prompts)
 	{
@@ -77,9 +76,9 @@ void ANSIGrid::place(const Cell *ri)
 		newline();
 	nlw = 0;
 
-	if (i->ch == '\r')
+	if (fi.ch == '\r')
 		return;
-	if (i->ch == '\t')
+	if (fi.ch == '\t')
 	{
 		set(row, col, myblank());
 		col++;
@@ -91,21 +90,21 @@ void ANSIGrid::place(const Cell *ri)
 		return;
 	}
 
-	if (col >= tty.WIDTH || i->ch == '\n')
+	if (col >= tty.WIDTH || fi.ch == '\n')
 	{
 		newline();
-		if (i->ch == '\n')
+		if (fi.ch == '\n')
 			return;
 	}
 
-	if (((i->ch < 0x20) || (i->ch >= 0x80 && i->ch <= 0x9f)))
-		i->ch = 0x241b;
+	if (((fi.ch < 0x20) || (fi.ch >= 0x80 && fi.ch <= 0x9f)))
+		fi.ch = 0x241b;
 
-	set(row, col, *i);
+	set(row, col, fi);
 	col++;
-	if (wcwidth(i->ch) == 2)
+	if (wcwidth(fi.ch) == 2)
 	{
-		set(row, col, Cell(-i->ch));
+		set(row, col, Cell(-fi.ch));
 		col++;
 	}
 }
@@ -225,8 +224,7 @@ void ANSIGrid::wterminal(wchar_t ch)
 			if (scs && (ch < '`' || ch > '~'))
 				scs = 0;
 
-			Cell a = Cell(ch, inten, forecol, backcol, scs, ul, it, fr, os, inv, ol);
-			place(&a);
+			place(Cell{ch, inten, forecol, backcol, scs, ul, it, fr, os, inv, ol});
 
 			changed = 1;
 		}
@@ -628,14 +626,12 @@ void ANSIGrid::infoc(wchar_t w)
 		}
 		for (size_t i = 0; i < isf.length(); i++)
 		{
-			Cell c = Cell(isf[i]);
-			place(&c);
+			place(isf[i]);
 		}
 
 		if (c != -1)
 		{
-			for (int i = 0; i < q.size(); i++)
-				place(&q[i]);
+			place_batch(q);
 			c = col;
 		}
 		lastprompt = p;

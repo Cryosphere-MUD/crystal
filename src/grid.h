@@ -157,13 +157,12 @@ class ANSIGrid : public ANSIContext
 
 	void wantnewline() { nlw++; }
 
-	void place(const Cell *ri);
+	void place(const Cell &ri);
+	void place_batch(const std::vector<Cell> &batch);
 
 	void osc_end();
 
 	void wterminal(wchar_t ch);
-
-	void place_batch(const std::vector<Cell> &batch);
 
 	bool file_dump(const std::string &file);
 

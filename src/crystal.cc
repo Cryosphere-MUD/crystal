@@ -340,10 +340,10 @@ void Runtime::doenter()
 		String32 a;
 		for (int i = 0; i < conn->grid->col; i++)
 			a += conn->grid->get(conn->grid->row, i).ch;
-		for (size_t i = 0; i < wproper.length(); i++)
+
+		for (auto wch: wproper)
 		{
-			Cell c = Cell(wproper[i]);
-			conn->grid->place(&c);
+			conn->grid->place(wch);
 		}
 		conn->grid->wantnewline();
 		conn->grid->changed = true;

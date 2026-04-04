@@ -178,11 +178,8 @@ void tomud_echo(std::string proper)
 		String32 a;
 		for (int i = 0; i < conn->grid->col; i++)
 			a += conn->grid->get(conn->grid->row, i).ch;
-		for (size_t i = 0; i < proper.length(); i++)
-		{
-			Cell c = proper[i];
-			conn->grid->place(&c);
-		}
+		for (auto ch: proper)
+			conn->grid->place(ch);
 		conn->grid->wantnewline();
 		conn->grid->changed = 1;
 	}
