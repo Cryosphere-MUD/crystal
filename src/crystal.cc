@@ -496,15 +496,8 @@ void do_read(conn_t * conn,
 
 void conn_t::main_loop(asio::io_context &io_context)
 {
-	conn_t *conn = this;
-
-	// if (!conn->telnet)
-	// 	conn->set_commandmode(true);
-
-	conn->grid->changed = true;
+	grid->changed = true;
 	tty.bad_have = true;
-
-	conn->display_buffer();
 
 	asio::posix::stream_descriptor stdin_desc(io_context, STDIN_FILENO);
 
@@ -549,8 +542,6 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 			return self->fail("resolve", ec);
 		}
 
-		// std::cerr << "resolved happened " << std::endl;
-
         for (auto const& entry : results) {
             auto endpoint = entry.endpoint();
             std::string ip = endpoint.address().to_string(); // e.g., "93.184.216.34"
@@ -593,7 +584,6 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
 
     void conn_t::on_connected() {
-        // std::cout << "Connected to " << host_ << ":" << port_ << "\n";
         connected();
 
 	telnet = std::make_shared<telnet_state>(*socket_.get(), ssl_stream_.get());
@@ -613,12 +603,6 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
             self->telnet->handle_read(self.get(), (unsigned char*)data2, data.size());
 
-            // std::istream is(&self->socket_buf_);
-            // std::string line;
-            // std::getline(is, line);
-
-            // std::cout << "[remote] " << line << "\n";
-
             if (self->grid->changed)
                 self->display_buffer();
 
@@ -632,18 +616,8 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 }
 
 void conn_t::fail(const std::string& what, asio::error_code ec) {
-
 	disconnected(0, 0);
-
-        	// telnet.reset();
-		// set_commandmode(true);
-
-        	// asio::error_code ignored;
-        	// socket_.close(ignored);
-	        // grid->changed = true;
-
-		// display_buffer();
-    	}
+}
 
 void conn_t::set_commandmode(bool new_command_mode)
 {

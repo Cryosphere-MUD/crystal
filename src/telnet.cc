@@ -324,7 +324,7 @@ void telnet_state::handle_ttype(conn_t *conn)
 	}
 	else if (ttype_count == 1)
 	{
-		str += "crystal:000_003_001";
+		str += "crystal:000_004_001";
 	}
 	else if (ttype_count == 2 || ttype_count == 3)
 	{

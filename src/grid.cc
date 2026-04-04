@@ -40,7 +40,6 @@
 #include "telnet.h"
 
 #include <ctype.h>
-#include <iostream>
 #include <time.h>
 #include <wchar.h>
 #include <sstream>
@@ -103,8 +102,6 @@ void grid_t::place(const cell_t *ri)
 
 	if (((i->ch < 0x20) || (i->ch >= 0x80 && i->ch <= 0x9f)))
 		i->ch = 0x241b;
-
-	// std::cerr << "placing " << row << "," << col << " " << i->ch << std::endl;
 
 	set(row, col, *i);
 	col++;
@@ -637,8 +634,6 @@ void grid_t::infoc(wchar_t w)
 
 	if (w == '\n')
 	{
-		// std::cerr << "infoc: " << esc(isf) << std::endl;
-
 		cellstring q;
 		int c = -1;
 		int p = lastprompt;
