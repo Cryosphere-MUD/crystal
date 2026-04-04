@@ -171,39 +171,4 @@ extern const Cell blank;
 #define MAXHEIGHT 200
 #define MAXWIDTH 320
 
-class CellString
-{
-	size_t els;
-	size_t siz;
-	Cell *s;
-
-      public:
-	CellString() : els(0), siz(0), s(0) {}
-	void erase() { els = 0; }
-	int length() const { return els; }
-	void operator+=(const Cell &c)
-	{
-		if ((els + 1) > siz)
-		{
-			siz *= 2;
-			if (siz == 0)
-				siz = 16;
-			s = (Cell *)realloc(s, sizeof(Cell) * siz);
-		}
-		s[els] = c;
-		els++;
-	}
-	const Cell &operator[](size_t i) const
-	{
-		if (i >= els)
-			return blank;
-		return s[i];
-	}
-	~CellString()
-	{
-		if (s)
-			free(s);
-	}
-};
-
 #endif

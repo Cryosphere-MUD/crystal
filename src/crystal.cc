@@ -310,12 +310,11 @@ void Runtime::doenter()
 		}
 	}
 
-	// If there was stored prompt, echo this into the buffer proper and erase it.
-	if (conn->grid->cstoredprompt.length())
+	// If there was a stored prompt, echo this into the buffer proper and erase it.
+	if (conn->grid->cstoredprompt.size())
 	{
-		for (int i = 0; i < conn->grid->cstoredprompt.length(); i++)
-			conn->grid->place(&conn->grid->cstoredprompt[i]);
-		conn->grid->cstoredprompt.erase();
+		conn->grid->place_batch(conn->grid->cstoredprompt);
+		conn->grid->cstoredprompt.clear();
 	}
 
 	conn->grid->lastprompt = false;

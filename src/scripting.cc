@@ -165,11 +165,10 @@ void tomud_echo(std::string proper)
 {
 	Runtime *conn = ergrid->conn;
 
-	if (conn->grid->cstoredprompt.length())
+	if (conn->grid->cstoredprompt.size())
 	{
-		for (int i = 0; i < conn->grid->cstoredprompt.length(); i++)
-			conn->grid->place(&conn->grid->cstoredprompt[i]);
-		conn->grid->cstoredprompt.erase();
+		conn->grid->place_batch(conn->grid->cstoredprompt);
+		conn->grid->cstoredprompt.clear();
 	}
 
 	conn->grid->lastprompt = 0;
