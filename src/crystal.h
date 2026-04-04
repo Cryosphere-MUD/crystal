@@ -63,11 +63,9 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 	//! are we in kludge lp prompts mode (default: yes)
 	bool lp_prompts = true;
 
-      public:
 	//! are we quitting?
 	bool quit = false;
 
-      public:
 	ANSIGrid *grid = nullptr;
 
 	ANSIGrid *overlay = nullptr;
@@ -81,6 +79,9 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 	bool ssl = false;
 
 	std::string mud_cset = "ISO-8859-1";
+
+	Runtime(asio::io_context &io, ANSIGrid *grid);
+	~Runtime();
 
 	void dorefresh();
 
@@ -98,9 +99,6 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 
 	void show_lines_at(int from, int to, int num);
 
-	Runtime(asio::io_context &io, ANSIGrid *grid);
-	~Runtime();
-
 	void initbindings();
 	void dispatch_key(const String32 &s);
 	void addbinding(const wchar_t *key, const std::string &bind);
@@ -115,7 +113,6 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 
 	bool disconnected(int bts, int pend);
 	void connected();
-	bool try_addr(const asio::ip::tcp::resolver::results_type &endpoints, std::string host, int port, bool ssl);
 
 	void main_loop(asio::io_context &io_context);
 

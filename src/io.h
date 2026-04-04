@@ -57,7 +57,6 @@ struct OutputState
 
 struct Output
 {
-      private:
 	std::string _decodebuffer;
 	Cell havebuffer[MAXHEIGHT][MAXWIDTH];
 
