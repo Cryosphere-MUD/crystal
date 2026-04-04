@@ -122,6 +122,8 @@ void cleanup()
 		}
 
 		tcsetattr(0, TCSADRAIN, &oldti);
+	
+		printf("\n");
 
 		cleanupConn = 0;
 	}
@@ -261,7 +263,6 @@ int main(int argc, char **argv)
 	conn->main_loop(io_context);
 
 	cleanup();
-	printf("\n");
 
 	return exitValue;
 }

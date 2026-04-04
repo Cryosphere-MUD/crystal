@@ -147,6 +147,8 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	asio::ssl::context ssl_ctx_;
 
+	bool reconnecting = false;
+
 	std::unique_ptr<tcp::socket> socket_;
 	std::unique_ptr<asio::ssl::stream<tcp::socket&>> ssl_stream_;
 	// asio::ssl::stream<tcp::socket&> ssl_stream_;

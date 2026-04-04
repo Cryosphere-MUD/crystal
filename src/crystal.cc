@@ -434,7 +434,9 @@ bool conn_t::disconnected(int bts, int pend)
 	asio::error_code ignored;
         socket_->close(ignored);
 	conn->telnet.reset();
-	conn->set_commandmode(true);
+
+	if (!reconnecting)
+		conn->set_commandmode(true);
 
 	queue_repaint();
 
@@ -527,6 +529,8 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
 	this->ssl = ssl;
 
+	reconnecting = true;
+
 	socket_ = std::make_unique<tcp::socket>(io_);
 
 	if (ssl) {
@@ -535,15 +539,16 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
         grid->infof("/// resolving %s\n", host.c_str());
         grid->changed = true;
-        set_commandmode(false);
-        display_buffer();
 
 	// std::cerr << "going to resolve " << std::endl;
 
         resolver_.async_resolve(host, port,
             [self = shared_from_this()](asio::error_code ec, auto results) {
 
-                if (ec) return self->fail("resolve", ec);
+                if (ec) {
+			self->reconnecting = false;
+			return self->fail("resolve", ec);
+		}
 
 		// std::cerr << "resolved happened " << std::endl;
 
@@ -560,21 +565,32 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
                 asio::async_connect(*self->socket_, results,
                     [self](auto ec, auto) {
 
-                        if (ec) return self->fail("connect", ec);
+                        if (ec) {
+				self->reconnecting = false;
+				return self->fail("connect", ec);
+			}
 
                         if (self->ssl) {
                             self->ssl_stream_->async_handshake(
                                 asio::ssl::stream_base::client,
                                 [self](auto ec) {
-                                    if (ec) return self->fail("handshake", ec);
+                                    if (ec) {
+					self->reconnecting = false;
+					return self->fail("handshake", ec);
+				    }
                                     self->on_connected();
+				    self->reconnecting = false;
                                 });
                         } else {
                             self->on_connected();
+   			    self->reconnecting = false;
                         }
                     });
             });
-    }
+
+	    set_commandmode(false);
+	        display_buffer();
+	}
 
 
     void conn_t::on_connected() {
