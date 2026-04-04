@@ -236,4 +236,3 @@ void commandeditor_t::dopaste()
 {
 	buffer.insert(cursor, cutbuffer);
 }
-

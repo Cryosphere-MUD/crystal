@@ -1,5 +1,7 @@
-#include "Socket.h"
+#include <string.h>
+
 #include "scripting.h"
+#include "url.h"
 
 int count_chars(const char *s, char ch)
 {

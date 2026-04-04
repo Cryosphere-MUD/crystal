@@ -36,7 +36,6 @@
 #include "grid.h"
 #include "telnet.h"
 #include "url.h"
-#include "esc.h"
 
 void cmd_quit(conn_t *conn, const cmd_args &arg)
 {

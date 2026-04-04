@@ -31,7 +31,6 @@
  */
 
 #include "scripting.h"
-#include "Socket.h"
 #include "commands.h"
 #include "common.h"
 #include "crystal.h"

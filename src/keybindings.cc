@@ -36,7 +36,6 @@
 #include "commands.h"
 #include "crystal.h"
 #include "grid.h"
-#include "esc.h"
 
 #include <iostream>
 

@@ -38,7 +38,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include "Socket.h"
 #include "io.h"
 #include "telnet.h"
 

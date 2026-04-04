@@ -91,7 +91,6 @@
 #undef newline
 #undef grid
 
-#include "Socket.h"
 #include "url.h"
 
 #undef SCROLL
@@ -535,12 +534,12 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
 	if (ssl) {
     		ssl_stream_ = std::make_unique<asio::ssl::stream<tcp::socket&>>(*socket_, ssl_ctx_);
+	} else {
+		ssl_stream_.reset();
 	}
 
         grid->infof("/// resolving %s\n", host.c_str());
         grid->changed = true;
-
-	// std::cerr << "going to resolve " << std::endl;
 
         resolver_.async_resolve(host, port,
             [self = shared_from_this()](asio::error_code ec, auto results) {
@@ -604,8 +603,6 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
 
     void conn_t::do_read_socket() {
         auto self = shared_from_this();
-
-        // std::cerr << __PRETTY_FUNCTION__ << std::endl;
 
         auto handler = [self](auto ec, std::size_t n) {
             if (ec) return self->fail("read", ec);

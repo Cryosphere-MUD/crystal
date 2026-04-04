@@ -87,7 +87,6 @@
 #undef newline
 #undef grid
 
-#include "Socket.h"
 #include "url.h"
 
 #undef SCROLL
@@ -104,6 +103,7 @@ class grid_t;
 #include "io.h"
 #include "scripting.h"
 #include "telnet.h"
+#include "url.h"
 
 extern mterm tty;
 

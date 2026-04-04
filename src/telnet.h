@@ -35,7 +35,6 @@
 
 #include <arpa/telnet.h>
 
-#include "Socket.h"
 #include "common.h"
 #include "crystal.h"
 #include "grid.h"
