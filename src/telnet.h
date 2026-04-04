@@ -67,7 +67,7 @@ struct MCCP4State
 struct telnet_state
 {
 	asio::ip::tcp::socket &raw;
-	asio::ssl::stream<asio::ip::tcp::socket&> *ssl;
+	asio::ssl::stream<asio::ip::tcp::socket &> *ssl;
 
 	bool gmcp = false;
 	bool will_eor = false;
@@ -91,13 +91,9 @@ struct telnet_state
 	MCCP4State mccp4_state;
 #endif
 
-	telnet_state(asio::ip::tcp::socket &raw, asio::ssl::stream<asio::ip::tcp::socket&> *ssl) : raw(raw), ssl(ssl)
-	{
-	}
+	telnet_state(asio::ip::tcp::socket &raw, asio::ssl::stream<asio::ip::tcp::socket &> *ssl) : raw(raw), ssl(ssl) {}
 
-	~telnet_state()
-	{
-	}
+	~telnet_state() {}
 
 	void tstack(conn_t *conn, int ch);
 

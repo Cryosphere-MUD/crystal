@@ -87,8 +87,8 @@ class commandeditor_t
 {
 	//! are we in command mode (true) or mud mode (false)
 	bool _commandmode = true;
-      public:
 
+      public:
 	bool in_commandmode() const { return _commandmode; }
 
 	virtual void set_commandmode(bool new_command_mode) { _commandmode = new_command_mode; }

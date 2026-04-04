@@ -40,9 +40,9 @@
 #include "telnet.h"
 
 #include <ctype.h>
+#include <sstream>
 #include <time.h>
 #include <wchar.h>
-#include <sstream>
 
 extern mterm tty;
 
@@ -157,15 +157,16 @@ static int parse_truecol(std::vector<int>::iterator &parit, const std::vector<in
 
 int last_mode = -1;
 
-std::vector<int> parse(const std::string& s) {
-    std::vector<int> result;
-    std::stringstream ss(s);
-    std::string token;
+std::vector<int> parse(const std::string &s)
+{
+	std::vector<int> result;
+	std::stringstream ss(s);
+	std::string token;
 
-    while (std::getline(ss, token, ';'))
-        result.push_back(std::stoi(token));
+	while (std::getline(ss, token, ';'))
+		result.push_back(std::stoi(token));
 
-    return result;
+	return result;
 }
 
 void grid_t::wterminal(wchar_t ch)
@@ -361,9 +362,9 @@ void grid_t::wterminal(wchar_t ch)
 			return;
 		}
 
-                /* 'B' CUD : CUrsor Down */
+		/* 'B' CUD : CUrsor Down */
 
-                if (ch == 'C')
+		if (ch == 'C')
 		{ /* CUF - cursor forward  */
 			if (params.size())
 				col += params[0];
@@ -389,20 +390,20 @@ void grid_t::wterminal(wchar_t ch)
 			return;
 		}
 
-                /* CHA - cursor horizontal absolute */
-                if (ch == 'G')
+		/* CHA - cursor horizontal absolute */
+		if (ch == 'G')
 		{
-                        if (params.size())
-			    col = params[0] - 1;
-                        else
-                            col = 0;
+			if (params.size())
+				col = params[0] - 1;
+			else
+				col = 0;
 			mode = 0;
 			changed = 1;
 			return;
 		}
 
-                /* CUP - cursor position (only home implemented) */
-                if (ch == 'H')
+		/* CUP - cursor position (only home implemented) */
+		if (ch == 'H')
 		{
 			if (conn->grid != this)
 			{
@@ -415,8 +416,8 @@ void grid_t::wterminal(wchar_t ch)
 			return;
 		}
 
-		 /* EL - Erase in Line */
-                if (ch == 'K')
+		/* EL - Erase in Line */
+		if (ch == 'K')
 		{
 			if (params.empty())
 				params.push_back(0);
@@ -605,22 +606,22 @@ void grid_t::infof(const char *fmt, ...)
 	info(buf);
 }
 
-template<class T> std::string esc(const T &data)
+template <class T> std::string esc(const T &data)
 {
-    std::string out = "";
-    for (auto ch: data)
-    {
-        if (ch < 0x20)
-        {
-            char tmp[1024]; 
-            sprintf(tmp, "\\x%02x", ch);
-            out += tmp;
-            continue;
-        }
-        if (isprint(ch))
-            out += ch;
-    }
-    return out;
+	std::string out = "";
+	for (auto ch : data)
+	{
+		if (ch < 0x20)
+		{
+			char tmp[1024];
+			sprintf(tmp, "\\x%02x", ch);
+			out += tmp;
+			continue;
+		}
+		if (isprint(ch))
+			out += ch;
+	}
+	return out;
 }
 
 void grid_t::infoc(wchar_t w)

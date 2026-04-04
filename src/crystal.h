@@ -79,7 +79,7 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 	grid_t *overlay = nullptr;
 	grid_t *cur_grid = nullptr;
 
-	std::shared_ptr<telnet_state> telnet =  nullptr;
+	std::shared_ptr<telnet_state> telnet = nullptr;
 	FILE *logfile = nullptr;
 
 	std::string host;
@@ -104,7 +104,7 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	void show_lines_at(int from, int to, int num);
 
-	conn_t(asio::io_context& io, grid_t *grid);
+	conn_t(asio::io_context &io, grid_t *grid);
 	~conn_t();
 
 	void initbindings();
@@ -121,20 +121,19 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	bool disconnected(int bts, int pend);
 	void connected();
-	bool try_addr(const asio::ip::tcp::resolver::results_type& endpoints,
-		      std::string host, int port, bool ssl);
+	bool try_addr(const asio::ip::tcp::resolver::results_type &endpoints, std::string host, int port, bool ssl);
 
 	void main_loop(asio::io_context &io_context);
 
-	void fail(const std::string& what, asio::error_code ec);
+	void fail(const std::string &what, asio::error_code ec);
 
-	void start(const std::string& host, const std::string& port);
+	void start(const std::string &host, const std::string &port);
 
-	   void on_connected();
+	void on_connected();
 
 	void set_commandmode(bool new_command_mode) override;
 
-    void do_read_socket();
+	void do_read_socket();
 
 	std::set<my_wstring> hl_matches;
 
@@ -150,7 +149,7 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 	bool reconnecting = false;
 
 	std::unique_ptr<tcp::socket> socket_;
-	std::unique_ptr<asio::ssl::stream<tcp::socket&>> ssl_stream_;
+	std::unique_ptr<asio::ssl::stream<tcp::socket &>> ssl_stream_;
 	// asio::ssl::stream<tcp::socket&> ssl_stream_;
 
 	asio::posix::stream_descriptor stdin_;

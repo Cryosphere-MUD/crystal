@@ -38,8 +38,8 @@
 #include "io.h"
 #include "scripting.h"
 
-#include <list>
 #include <iostream>
+#include <list>
 #include <vector>
 
 struct ansi_context
@@ -58,7 +58,7 @@ struct ansi_context
 	int defbc = COL_DEFAULT, deffc = COL_DEFAULT;
 };
 
-template<class T> bool check_in_range(const T &vec, int index)
+template <class T> bool check_in_range(const T &vec, int index)
 {
 	return index >= 0 && index < vec.size();
 }
@@ -88,7 +88,7 @@ class grid_t : public ansi_context
 
 	void set_conn(conn_t *c) { conn = c; }
 
-	grid_t(const grid_t&) = delete;
+	grid_t(const grid_t &) = delete;
 	grid_t() = default;
 
 	cell_t myblank()
@@ -133,10 +133,7 @@ class grid_t : public ansi_context
 		scripting::dotrigger(s);
 	}
 
-	void eraseline(int from)
-	{
-		lines[row].resize(from);
-	}
+	void eraseline(int from) { lines[row].resize(from); }
 
 	int get_len(int r)
 	{

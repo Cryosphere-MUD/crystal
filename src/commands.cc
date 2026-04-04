@@ -75,11 +75,17 @@ void cmd_compress(conn_t *conn, const cmd_args &arg)
 		return;
 	}
 
-	switch (conn->telnet->compression_mode) 
+	switch (conn->telnet->compression_mode)
 	{
-	case 2: conn->grid->info(_("/// zlib compression active\n")); break;
-	case 4: conn->grid->info(_("/// zstd compression active\n")); break;
-	default: conn->grid->info(_("/// no compression\n")); break;
+	case 2:
+		conn->grid->info(_("/// zlib compression active\n"));
+		break;
+	case 4:
+		conn->grid->info(_("/// zstd compression active\n"));
+		break;
+	default:
+		conn->grid->info(_("/// no compression\n"));
+		break;
 	}
 }
 
@@ -108,7 +114,7 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 
 	url u = url(chost.c_str());
 	if (cport.length() != 0)
-	 	u.service = cport;
+		u.service = cport;
 
 	conn->connect(u.hostname, u.service, u.protocol == "telnets" || force_tls);
 }
@@ -116,7 +122,7 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 my_wstring join_from(const cmd_args &args, int from)
 {
 	my_wstring ws;
-	for (int i = from ; i < args.size(); i++)
+	for (int i = from; i < args.size(); i++)
 		ws += L" " + args[i];
 	return ws.substr(1);
 }
