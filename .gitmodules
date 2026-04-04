@@ -4,3 +4,6 @@
 [submodule "vendor/utfcpp"]
 	path = vendor/utfcpp
 	url = https://github.com/nemtrif/utfcpp
+[submodule "vendor/fmt"]
+	path = vendor/fmt
+	url = https://github.com/fmtlib/fmt

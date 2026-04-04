@@ -90,7 +90,7 @@ void do_lua_call(lua_State *L, int args, int rets)
 	if (lua_pcall(L, args, rets, 0) != 0)
 	{
 		std::string s = lua_tostring(L, -1);
-		ergrid->infof("lua error: %s\n", s.c_str());
+		ergrid->infof("lua error: {}\n", s);
 		badlua = 1;
 	}
 }
@@ -229,7 +229,7 @@ static int lua_info(lua_State *L)
 	if (!lua_isstring(L, 1))
 		set_lua_error(L, "Wanted std::string for tomud.");
 	if (ergrid)
-		ergrid->infof("/// %s", lua_tostring(L, 1));
+		ergrid->infof("/// {}", lua_tostring(L, 1));
 	return 0;
 }
 
@@ -411,7 +411,7 @@ static int lua_get_port(lua_State *L)
 static int luaerror(lua_State *L)
 {
 	badlua = true;
-	ergrid->infof("/// lua error: %s\n", lua_tostring(L, 1));
+	ergrid->infof("/// lua error: {}\n", lua_tostring(L, 1));
 	return 0;
 }
 

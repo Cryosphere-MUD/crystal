@@ -91,21 +91,16 @@ struct mterm
 		fflush(stdout);
 	}
 
-	void title(const char *fmt, ...)
+	void title(const std::string &title)
 	{
 		if (xterm_title)
 		{
-			char buf[1000];
-			va_list a;
-			va_start(a, fmt);
-			vsprintf(buf, fmt, a);
-			if (!titleset || curtitle != buf)
+			if (!titleset || curtitle != title)
 			{
-				printf("\033]2;%s\033\\", buf);
-				curtitle = buf;
-				titleset = 1;
+				printf("\033]2;%s\033\\", title.c_str());
+				curtitle = title;
+				titleset = true;
 			}
-			va_end(a);
 		}
 	}
 

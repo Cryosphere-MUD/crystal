@@ -137,7 +137,7 @@ void grid_t::osc_end()
 	if (osc_string.substr(0, 2) == "0;" || osc_string.substr(0, 2) == "2;")
 	{
 		std::string new_title = osc_string.substr(2);
-		tty.title(_("%s - Crystal"), new_title.c_str());
+		tty.title(fmt::format(_("{} - Crystal"), new_title));
 	}
 	osc_string = "";
 }
@@ -585,7 +585,6 @@ void grid_t::wterminal(wchar_t ch)
 
 		if (ch >= 0x30 && ch <= 0x7e)
 		{
-			// infof("unrecognised ANSI command %c", ch);
 			mode = 0;
 			param_string.clear();
 		}
@@ -595,16 +594,6 @@ void grid_t::wterminal(wchar_t ch)
 }
 
 bool info_to_stderr = true;
-
-void grid_t::infof(const char *fmt, ...)
-{
-	char buf[10000];
-	va_list ap;
-	va_start(ap, fmt);
-	vsprintf(buf, fmt, ap);
-	va_end(ap);
-	info(buf);
-}
 
 template <class T> std::string esc(const T &data)
 {
@@ -696,15 +685,22 @@ void grid_t::info(const my_wstring &str)
 		infoc(str[i]);
 }
 
+void grid_t::info(const std::string &str)
+{
+	for (auto ch: mkws(str.c_str()))
+		infoc(ch);
+}
+
+
 bool grid_t::file_dump(const char *file)
 {
 	FILE *dumpfile = fopen(file, "a");
 	if (NULL == dumpfile)
 	{
-		infof(_("/// couldn't open '%s' to dump to\n"), file);
+		infof(_("/// couldn't open '{}' to dump to\n"), file);
 		return 0;
 	}
-	infof(_("/// dumping scroll history to '%s'\n"), file);
+	infof(_("/// dumping scroll history to '{}'\n"), file);
 
 	time_t cur_time = time(NULL);
 	std::string ctime_str = ctime(&cur_time);
