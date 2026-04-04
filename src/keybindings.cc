@@ -34,30 +34,30 @@
  */
 
 #include "commands.h"
-#include "crystal.h"
+#include "Runtime.h"
 #include "grid.h"
 
 #include <iostream>
 
-typedef void (Runtime::*keybinding_method_t)();
+using KeyBindingMethod = void(Runtime::*)();
 
-struct keycommand_t
+struct KeyCommand
 {
 
-	static std::map<std::string, keybinding_method_t> _commands;
+	static std::map<std::string, KeyBindingMethod> _commands;
 
       public:
-	keycommand_t(const std::string &cmdname, keybinding_method_t method) //: cmdname(cmdname), method(method)
+	KeyCommand(const std::string &cmdname, KeyBindingMethod method) //: cmdname(cmdname), method(method)
 	{
 		_commands[cmdname] = method;
 	}
 
-	static keybinding_method_t findcommand(const std::string &cmd) { return _commands[cmd]; }
+	static KeyBindingMethod findcommand(const std::string &cmd) { return _commands[cmd]; }
 };
 
-std::map<std::string, keybinding_method_t> keycommand_t::_commands;
+std::map<std::string, KeyBindingMethod> KeyCommand::_commands;
 
-#define DECLARE_COMMAND(str) keycommand_t str##obj(#str, &Runtime::do##str);
+#define DECLARE_COMMAND(str) KeyCommand str##obj(#str, &Runtime::do##str);
 
 DECLARE_COMMAND(commandmode)
 DECLARE_COMMAND(backspace)
@@ -86,43 +86,43 @@ DECLARE_COMMAND(toggleoverlay)
 DECLARE_COMMAND(clearline)
 DECLARE_COMMAND(enter)
 
-struct keybinding_t
+struct KeyBinding
 {
 	const wchar_t *s;
 	std::string cmdname;
 
-	keybinding_t(const wchar_t *s, const std::string &cmdname) : s(s), cmdname(cmdname) {}
+	KeyBinding(const wchar_t *s, const std::string &cmdname) : s(s), cmdname(cmdname) {}
 
-	keybinding_method_t command() const { return keycommand_t::findcommand(cmdname); }
+	KeyBindingMethod command() const { return KeyCommand::findcommand(cmdname); }
 };
 
-struct keybinding_t initkeys[] = {
-    keybinding_t(L"c-]", "commandmode"),     keybinding_t(L"backspace", "backspace"),
-    keybinding_t(L"tab", "findnext"),	     keybinding_t(L"c-a", "firstchar"),
-    keybinding_t(L"c-b", "prevchar"),	     keybinding_t(L"c-c", "clearline"),
-    keybinding_t(L"c-d", "delete"),	     keybinding_t(L"c-e", "lastchar"),
-    keybinding_t(L"c-f", "nextchar"),	     keybinding_t(L"c-k", "cutfromhere"),
-    keybinding_t(L"c-l", "refresh"),	     keybinding_t(L"c-n", "nexthistory"),
-    keybinding_t(L"c-p", "prevhistory"),     keybinding_t(L"c-t", "transpose"),
-    keybinding_t(L"c-u", "cuttohere"),	     keybinding_t(L"c-w", "killword"),
-    keybinding_t(L"c-y", "paste"),	     keybinding_t(L"c-z", "suspend"),
-    keybinding_t(L"m-b", "prevword"),	     keybinding_t(L"m-f", "nextword"),
-    keybinding_t(L"return", "enter"),	     keybinding_t(L"up", "prevhistory"),
-    keybinding_t(L"down", "nexthistory"),    keybinding_t(L"left", "prevchar"),
-    keybinding_t(L"right", "nextchar"),	     keybinding_t(L"m-<", "scrollstart"),
-    keybinding_t(L"m->", "scrollend"),	     keybinding_t(L"home", "firstchar"),
-    keybinding_t(L"end", "lastchar"),	     keybinding_t(L"delete", "delete"),
-    keybinding_t(L"pagedown", "scrolldown"), keybinding_t(L"pageup", "scrollup"),
-    keybinding_t(L"fn.12", "toggleoverlay")
+struct KeyBinding initkeys[] = {
+    KeyBinding(L"c-]", "commandmode"),     KeyBinding(L"backspace", "backspace"),
+    KeyBinding(L"tab", "findnext"),	     KeyBinding(L"c-a", "firstchar"),
+    KeyBinding(L"c-b", "prevchar"),	     KeyBinding(L"c-c", "clearline"),
+    KeyBinding(L"c-d", "delete"),	     KeyBinding(L"c-e", "lastchar"),
+    KeyBinding(L"c-f", "nextchar"),	     KeyBinding(L"c-k", "cutfromhere"),
+    KeyBinding(L"c-l", "refresh"),	     KeyBinding(L"c-n", "nexthistory"),
+    KeyBinding(L"c-p", "prevhistory"),     KeyBinding(L"c-t", "transpose"),
+    KeyBinding(L"c-u", "cuttohere"),	     KeyBinding(L"c-w", "killword"),
+    KeyBinding(L"c-y", "paste"),	     KeyBinding(L"c-z", "suspend"),
+    KeyBinding(L"m-b", "prevword"),	     KeyBinding(L"m-f", "nextword"),
+    KeyBinding(L"return", "enter"),	     KeyBinding(L"up", "prevhistory"),
+    KeyBinding(L"down", "nexthistory"),    KeyBinding(L"left", "prevchar"),
+    KeyBinding(L"right", "nextchar"),	     KeyBinding(L"m-<", "scrollstart"),
+    KeyBinding(L"m->", "scrollend"),	     KeyBinding(L"home", "firstchar"),
+    KeyBinding(L"end", "lastchar"),	     KeyBinding(L"delete", "delete"),
+    KeyBinding(L"pagedown", "scrolldown"), KeyBinding(L"pageup", "scrollup"),
+    KeyBinding(L"fn.12", "toggleoverlay")
 };
 
-std::map<String32, keybinding_method_t> keys;
+std::map<String32, KeyBindingMethod> keys;
 std::map<String32, std::string> keystr;
 
 void Runtime::addbinding(const wchar_t *key, const std::string &cmd)
 {
-	keybinding_t binding(key, cmd);
-	keybinding_method_t handler = binding.command();
+	KeyBinding binding(key, cmd);
+	KeyBindingMethod handler = binding.command();
 
 	if (!handler)
 	{
@@ -139,7 +139,7 @@ void Runtime::initbindings()
 {
 	for (const auto &binding: initkeys)
 	{
-		keybinding_method_t handler = binding.command();
+		KeyBindingMethod handler = binding.command();
 		if (!handler)
 		{
 			grid->infof(_("/// missing handler for {} ({})\n"), mks(binding.s), binding.cmdname);
@@ -162,7 +162,7 @@ void Runtime::dispatch_key(const String32 &s)
 
 	if (keys.find(s) != keys.end())
 	{
-		keybinding_method_t handler = keys[s];
+		KeyBindingMethod handler = keys[s];
 		if (handler)
 			(this->*handler)();
 		else

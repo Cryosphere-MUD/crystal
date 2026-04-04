@@ -34,7 +34,7 @@
 #define GRID_H
 
 #include "common.h"
-#include "crystal.h"
+#include "Runtime.h"
 #include "io.h"
 #include "scripting.h"
 

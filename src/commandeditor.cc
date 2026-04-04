@@ -42,7 +42,7 @@
  */
 
 #include "commandeditor.h"
-#include "crystal.h"
+#include "Runtime.h"
 #include "grid.h"
 #include "io.h"
 

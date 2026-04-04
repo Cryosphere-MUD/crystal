@@ -100,40 +100,13 @@
 class Runtime;
 class ANSIGrid;
 
-#include <widecharwidth/widechar_width.h>
-
 #include "commandeditor.h"
 #include "commands.h"
-#include "crystal.h"
+#include "Runtime.h"
 #include "grid.h"
 #include "io.h"
 #include "scripting.h"
 #include "telnet.h"
-
-Output tty;
-
-int real_wcwidth(char32_t ch)
-{
-        int width = widechar_wcwidth(ch);
-        switch (width)
-        {
-        case widechar_nonprint:
-                return 0;
-        case widechar_combining:
-                return 0;
-        case widechar_ambiguous:
-                return 1;
-        case widechar_private_use:
-                return 1;
-        case widechar_unassigned:
-                return 1;
-        case widechar_widened_in_9:
-                return 2;
-        case widechar_non_character:
-                return 0;
-        }
-        return width;
-}
 
 const Cell blank(0);
 
@@ -459,9 +432,9 @@ void Runtime::queue_repaint()
 		   });
 }
 
-void do_read(Runtime *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer);
+static void do_read(Runtime *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer);
 
-void handle_input(Runtime *conn, const asio::error_code &error, size_t bytes_transferred, asio::posix::stream_descriptor &stream_desc,
+static void handle_input(Runtime *conn, const asio::error_code &error, size_t bytes_transferred, asio::posix::stream_descriptor &stream_desc,
 		  std::array<char, 256> &buffer)
 {
 	if (!error)
@@ -489,7 +462,7 @@ void handle_input(Runtime *conn, const asio::error_code &error, size_t bytes_tra
 	}
 }
 
-void do_read(Runtime *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer)
+static void do_read(Runtime *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer)
 {
 	stream_desc.async_read_some(asio::buffer(buffer),
 				    [conn, &stream_desc, &buffer](const asio::error_code &error, size_t bytes_transferred)
@@ -641,5 +614,3 @@ void Runtime::set_commandmode(bool new_command_mode)
 
 	CommandEditor::set_commandmode(new_command_mode);
 }
-
-struct termios oldti;

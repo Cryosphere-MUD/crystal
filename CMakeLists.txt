@@ -12,7 +12,7 @@ option(ENABLE_SCRIPTING "Enable Lua scripting support" ON)
 
 # Define executable sources
 set(SOURCES
-  src/main.cc src/keybindings.cc src/crystal.cc 
+  src/main.cc src/keybindings.cc src/Runtime.cc 
   src/grid.cc src/commandeditor.cc src/display.cc
   src/telnet.cc src/io.cc src/commands.cc src/common.cc
   src/scripting.cc src/url.cc
@@ -20,7 +20,7 @@ set(SOURCES
 
 # Define headers for IDEs
 set(HEADERS
-  src/common.h src/crystal.h src/grid.h src/io.h src/telnet.h
+  src/common.h src/Runtime.h src/grid.h src/io.h src/telnet.h
   src/scripting.h src/commands.h src/commandeditor.h src/url.h
 )
 

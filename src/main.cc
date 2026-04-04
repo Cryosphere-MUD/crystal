@@ -98,7 +98,7 @@ class ANSIGrid;
 
 #include "commandeditor.h"
 #include "commands.h"
-#include "crystal.h"
+#include "Runtime.h"
 #include "grid.h"
 #include "io.h"
 #include "scripting.h"
@@ -106,6 +106,8 @@ class ANSIGrid;
 #include "url.h"
 
 Runtime *cleanupConn;
+
+struct termios oldti;
 
 void cleanup()
 {
