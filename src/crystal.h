@@ -50,7 +50,7 @@ class ANSIGrid;
 
 class CommandHistory;
 
-class Runtime : public commandeditor_t, public std::enable_shared_from_this<Runtime>
+class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtime>
 {
       private:
 	//! the amount we have scrolled to in the buffer

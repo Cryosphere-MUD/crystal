@@ -64,8 +64,6 @@
 
 #undef NEGOTIATE_MXP
 
-extern Output tty;
-
 std::string nam(int i);
 
 void sendwinsize(Runtime *conn)

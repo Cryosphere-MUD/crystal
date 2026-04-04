@@ -640,7 +640,7 @@ void Runtime::set_commandmode(bool new_command_mode)
 	if (in_commandmode() == new_command_mode)
 		return;
 
-	commandeditor_t::set_commandmode(new_command_mode);
+	CommandEditor::set_commandmode(new_command_mode);
 }
 
 struct termios oldti;

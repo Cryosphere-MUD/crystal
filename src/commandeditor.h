@@ -83,7 +83,7 @@ struct CommandHistory
 
 extern CommandHistory cmdhist;
 
-class commandeditor_t
+class CommandEditor
 {
 	//! are we in command mode (true) or mud mode (false)
 	bool _commandmode = true;

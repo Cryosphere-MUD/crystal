@@ -43,7 +43,7 @@
 #include <vector>
 #include <fmt/format.h>
 
-struct ansi_context
+struct ANSIContext
 {
 	// the escape mode
 	int mode = 0;
@@ -64,14 +64,14 @@ template <class T> bool check_in_range(const T &vec, int index)
 	return index >= 0 && index < vec.size();
 }
 
-typedef std::vector<Cell> line_t;
+typedef std::vector<Cell> ANSILine;
 
-class ANSIGrid : public ansi_context
+class ANSIGrid : public ANSIContext
 {
       public:
 	Runtime *conn = nullptr;
 
-	std::vector<line_t> lines;
+	std::vector<ANSILine> lines;
 
 	int row = 0;
 	int col = 0;

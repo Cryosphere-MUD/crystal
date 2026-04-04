@@ -44,8 +44,6 @@
 #include <time.h>
 #include <wchar.h>
 
-extern Output tty;
-
 enum
 {
 	OSC_ESCAPE = 256,

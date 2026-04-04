@@ -12,7 +12,7 @@ size_t count_chars(const std::string &s, char to_count)
 	return count;
 }
 
-url::url(const std::string &url) : has_username(false), has_password(false)
+URL::URL(const std::string &url) : has_username(false), has_password(false)
 {
 	const char *s = url.c_str();
 	protocol = "telnet";

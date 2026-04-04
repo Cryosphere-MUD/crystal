@@ -105,8 +105,6 @@ class ANSIGrid;
 #include "telnet.h"
 #include "url.h"
 
-extern Output tty;
-
 Runtime *cleanupConn;
 
 void cleanup()
@@ -208,7 +206,7 @@ int main(int argc, char **argv)
 #endif
 	if (argc > 1)
 	{
-		url u = url(argv[1]);
+		URL u{argv[1]};
 		if (argc > 2)
 			u.service = argv[2];
 		const char *tlsopt = "";

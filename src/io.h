@@ -208,4 +208,6 @@ struct Output
 	Cell havebuffer[MAXHEIGHT][MAXWIDTH];
 };
 
+extern Output tty;
+
 #endif
