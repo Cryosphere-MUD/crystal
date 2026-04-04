@@ -73,34 +73,34 @@ String32 Output::decode_feed()
 
 void Output::plonk(const Cell &g, bool allow_dead)
 {
-	if (g.scs != ccs)
+	if (g.scs != state.ccs)
 	{
 		if (g.scs)
 			emit(getinfo("smacs", "\033(0")); // setmode alternate character set
 		else
 			emit(getinfo("rmacs", "\033(B")); // resetmode alternate character set
 
-		ccs = g.scs;
+		state.ccs = g.scs;
 	}
 
 	std::string whats = "";
 
-	if ((g.fc != cfg && g.fc == COL_DEFAULT) || (g.bc != cbg && g.bc == COL_DEFAULT) || (!g.inv && cinv) || (!g.ul && cul) ||
-	    (!g.it && cit) || (!g.fr && cfr) || (!g.os && cos))
+	if ((g.fc != state.cfg && g.fc == COL_DEFAULT) || (g.bc != state.cbg && g.bc == COL_DEFAULT) || (!g.inv && state.cinv) || (!g.ul && state.cul) ||
+	    (!g.it && state.cit) || (!g.fr && state.cfr) || (!g.os && state.cos))
 	{
 		whats += "0;";
-		cfg = COL_DEFAULT;
-		cbg = COL_DEFAULT;
-		cint = I_NORM;
-		cul = 0;
-		cit = 0;
-		cfr = 0;
-		cinv = 0;
-		cos = 0;
-		col = 0;
+		state.cfg = COL_DEFAULT;
+		state.cbg = COL_DEFAULT;
+		state.cint = I_NORM;
+		state.cul = 0;
+		state.cit = 0;
+		state.cfr = 0;
+		state.cinv = 0;
+		state.cos = 0;
+		state.col = 0;
 	}
 
-	if (g.inten != cint)
+	if (g.inten != state.cint)
 	{
 		if (g.inten == I_BOLD)
 			whats += "1;";
@@ -109,10 +109,10 @@ void Output::plonk(const Cell &g, bool allow_dead)
 		else
 			whats += "22;";
 
-		cint = g.inten;
+		state.cint = g.inten;
 	}
 
-	if (g.fc != cfg)
+	if (g.fc != state.cfg)
 	{
 		static char blah[100];
 		if (g.fc == COL_DEFAULT)
@@ -138,10 +138,10 @@ void Output::plonk(const Cell &g, bool allow_dead)
 		}
 		whats += blah;
 
-		cfg = g.fc;
+		state.cfg = g.fc;
 	}
 
-	if (g.bc != cbg)
+	if (g.bc != state.cbg)
 	{
 		static char blah[100];
 		if (g.bc == COL_DEFAULT)
@@ -167,10 +167,10 @@ void Output::plonk(const Cell &g, bool allow_dead)
 		}
 		whats += blah;
 
-		cbg = g.bc;
+		state.cbg = g.bc;
 	}
 
-	if (g.ul != cul)
+	if (g.ul != state.cul)
 	{
 		if (g.ul)
 			whats += "21;";
@@ -178,53 +178,53 @@ void Output::plonk(const Cell &g, bool allow_dead)
 			whats += "4;";
 		else
 			whats += "24;";
-		cul = g.ul;
+		state.cul = g.ul;
 	}
 
-	if (g.it != cit)
+	if (g.it != state.cit)
 	{
 		if (g.it)
 			whats += "3;";
 		else
 			whats += "23;";
-		cit = g.it;
-		cfr = 0;
+		state.cit = g.it;
+		state.cfr = 0;
 	}
 
-	if (g.inv != cinv)
+	if (g.inv != state.cinv)
 	{
 		if (g.inv)
 			whats += "7;";
 		else
 			whats += "27;";
-		cinv = g.inv;
+		state.cinv = g.inv;
 	}
 
-	if (g.os != cos)
+	if (g.os != state.cos)
 	{
 		if (g.os)
 			whats += "9;";
 		else
 			whats += "29;";
-		cos = g.os;
+		state.cos = g.os;
 	}
 
-	if (g.fr != cfr)
+	if (g.fr != state.cfr)
 	{
 		if (g.fr)
 			whats += "20;";
 		else
 			whats += "23;";
-		cfr = g.fr;
+		state.cfr = g.fr;
 	}
 
-	if (g.ol != col)
+	if (g.ol != state.col)
 	{
 		if (g.ol)
 			whats += "53;";
 		else
 			whats += "55;";
-		cos = g.ol;
+		state.cos = g.ol;
 	}
 
 	if (whats.length())
@@ -243,10 +243,10 @@ void Output::plonk(const Cell &g, bool allow_dead)
 	}
 	else if (g.ch == 0)
 	{
-		if (!died)
+		if (!state.died)
 		{
 			emit(getinfo("el", "\033[K")); // clear to end of line
-			died = 1;
+			state.died = true;
 		}
 	}
 	else if ((g.ch < 256 || utf8) && (wcwidth(g.ch) > 0))
@@ -312,7 +312,7 @@ void Output::show_want()
 	{
 		int wanty = i + 1;
 		int wantx = 1;
-		died = 0;
+		state.died = 0;
 		int thislen = -1;
 		for (int j = 0; j < ((i == HEIGHT) ? WIDTH - 1 : WIDTH); j++)
 			if (wantbuffer[i][j].ch)
