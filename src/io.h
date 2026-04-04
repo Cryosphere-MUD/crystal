@@ -40,7 +40,7 @@
 
 #include "common.h"
 
-struct mterm
+struct Output
 {
 	bool utf8;
 	bool xterm_title;
@@ -75,7 +75,7 @@ struct mterm
 		died = false;
 	}
 
-	mterm()
+	Output()
 	    : utf8(false), xterm_title(false), col256(false), knowscroll(false), curtitle(""), titleset(false), acsc(""), acsc_set(0),
 	      bad_have(true)
 	{
@@ -190,22 +190,22 @@ struct mterm
 			col256 = 1;
 	}
 
-	void plonk(const cell_t &g, bool allow_dead);
+	void plonk(const Cell &g, bool allow_dead);
 
-	cell_t wantbuffer[MAXHEIGHT][MAXWIDTH];
+	Cell wantbuffer[MAXHEIGHT][MAXWIDTH];
 	bool bad_have;
 	int evillines[MAXHEIGHT];
 
 	void show_want();
 
-	my_wstring convert_input(int i);
+	String32 convert_input(int i);
 	int getinput();
 	void feed(const std::string &data) { _decodebuffer += data; }
-	my_wstring decode_feed();
+	String32 decode_feed();
 
       private:
 	std::string _decodebuffer;
-	cell_t havebuffer[MAXHEIGHT][MAXWIDTH];
+	Cell havebuffer[MAXHEIGHT][MAXWIDTH];
 };
 
 #endif

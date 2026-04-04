@@ -40,17 +40,17 @@
 #include "telnet.h"
 #include "url.h"
 
-void cmd_quit(conn_t *conn, const cmd_args &arg)
+void cmd_quit(Runtime *conn, const CommandArguments &arg)
 {
 	conn->quit = true;
 }
 
-void cmd_z(conn_t *conn, const cmd_args &arg)
+void cmd_z(Runtime *conn, const CommandArguments &arg)
 {
 	conn->dosuspend();
 }
 
-void cmd_close(conn_t *conn, const cmd_args &arg)
+void cmd_close(Runtime *conn, const CommandArguments &arg)
 {
 	if (!conn->telnet)
 	{
@@ -62,15 +62,15 @@ void cmd_close(conn_t *conn, const cmd_args &arg)
 	conn->grid->info(_("/// connection closed.\n"));
 }
 
-void cmd_reload(conn_t *conn, const cmd_args &arg)
+void cmd_reload(Runtime *conn, const CommandArguments &arg)
 {
 	scripting::start();
 	conn->grid->info(_("/// scripting restarted.\n"));
 }
 
-void cmd_help(conn_t *conn, const cmd_args &arg);
+void cmd_help(Runtime *conn, const CommandArguments &arg);
 
-void cmd_compress(conn_t *conn, const cmd_args &arg)
+void cmd_compress(Runtime *conn, const CommandArguments &arg)
 {
 	if (!conn->telnet)
 	{
@@ -92,7 +92,7 @@ void cmd_compress(conn_t *conn, const cmd_args &arg)
 	}
 }
 
-void cmd_connect(conn_t *conn, const cmd_args &arg)
+void cmd_connect(Runtime *conn, const CommandArguments &arg)
 {
 	if (arg.size() != 2 && arg.size() != 3 && arg.size() != 4)
 	{
@@ -109,8 +109,8 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 		cmd_root = 2;
 	}
 
-	my_wstring host = arg[cmd_root];
-	my_wstring port = arg.size() == cmd_root + 2 ? arg[cmd_root + 1] : L"";
+	String32 host = arg[cmd_root];
+	String32 port = arg.size() == cmd_root + 2 ? arg[cmd_root + 1] : L"";
 
 	std::string cport = mks(port);
 	std::string chost = mks(host);
@@ -122,25 +122,25 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 	conn->connect(u.hostname, u.service, u.protocol == "telnets" || force_tls);
 }
 
-my_wstring join_from(const cmd_args &args, int from)
+String32 join_from(const CommandArguments &args, int from)
 {
-	my_wstring ws;
+	String32 ws;
 	for (int i = from; i < args.size(); i++)
 		ws += L" " + args[i];
 	return ws.substr(1);
 }
 
-void cmd_match(conn_t *conn, const cmd_args &arg)
+void cmd_match(Runtime *conn, const CommandArguments &arg)
 {
 	if (arg.size() == 1)
-		conn->hl_matches = std::set<my_wstring>();
+		conn->hl_matches = std::set<String32>();
 	else
 		conn->hl_matches.insert(join_from(arg, 1));
 
 	conn->grid->changed = 1;
 }
 
-void cmd_charset(conn_t *conn, const cmd_args &arg)
+void cmd_charset(Runtime *conn, const CommandArguments &arg)
 {
 	if (arg.size() != 2)
 	{
@@ -152,7 +152,7 @@ void cmd_charset(conn_t *conn, const cmd_args &arg)
 	conn->grid->infof(_("/// charset '%s' selected\n"), conn->mud_cset);
 }
 
-void cmd_dump(conn_t *conn, const cmd_args &arg)
+void cmd_dump(Runtime *conn, const CommandArguments &arg)
 {
 	if (arg.size() != 2)
 	{
@@ -164,7 +164,7 @@ void cmd_dump(conn_t *conn, const cmd_args &arg)
 	conn->grid->file_dump(cfilename);
 }
 
-void cmd_log(conn_t *conn, const cmd_args &arg)
+void cmd_log(Runtime *conn, const CommandArguments &arg)
 {
 	if (arg.size() != 2)
 	{
@@ -176,7 +176,7 @@ void cmd_log(conn_t *conn, const cmd_args &arg)
 	conn->file_log(cfilename);
 }
 
-void cmd_dumplog(conn_t *conn, const cmd_args &arg)
+void cmd_dumplog(Runtime *conn, const CommandArguments &arg)
 {
 	if (arg.size() != 2)
 	{
@@ -192,17 +192,17 @@ void cmd_dumplog(conn_t *conn, const cmd_args &arg)
 struct option_t
 {
 	const char *name;
-	bool(conn_t::*option);
+	bool(Runtime::*option);
 };
 
 auto options = {
-    option_t{"neverecho", &conn_t::never_echo},
-    option_t{"lpprompts", &conn_t::lp_prompts},
+    option_t{"neverecho", &Runtime::never_echo},
+    option_t{"lpprompts", &Runtime::lp_prompts},
 };
 
-void cmd_bind(conn_t *conn, const cmd_args &arg);
+void cmd_bind(Runtime *conn, const CommandArguments &arg);
 
-void cmd_set(conn_t *conn, const cmd_args &arg)
+void cmd_set(Runtime *conn, const CommandArguments &arg)
 {
 	if (arg.size() != 1 && arg.size() != 3)
 	{
@@ -247,8 +247,8 @@ void cmd_set(conn_t *conn, const cmd_args &arg)
 
 struct cmd_t
 {
-	my_wstring commandname;
-	command_handler function;
+	String32 commandname;
+	CommandHandler function;
 	std::optional<std::string> args;
 	std::optional<std::string> help;
 };
@@ -280,9 +280,9 @@ std::vector<cmd_t> cmd_table = {
     {L"z", cmd_z, std::nullopt, "suspend"},
 };
 
-void cmd_help(conn_t *conn, const cmd_args &arg)
+void cmd_help(Runtime *conn, const CommandArguments &arg)
 {
-	command_handler prev_func = nullptr;
+	CommandHandler prev_func = nullptr;
 	for (const auto &cmd : cmd_table)
 	{
 		if (cmd.function != prev_func)
@@ -301,13 +301,13 @@ void cmd_help(conn_t *conn, const cmd_args &arg)
 	}
 }
 
-std::vector<my_wstring> tokenize(my_wstring s)
+std::vector<String32> tokenize(String32 s)
 {
-	std::vector<my_wstring> v;
+	std::vector<String32> v;
 	while (1)
 	{
-		my_wstring::size_type n = s.find(L' ');
-		if (n == my_wstring::npos)
+		String32::size_type n = s.find(L' ');
+		if (n == String32::npos)
 			break;
 		v.push_back(s.substr(0, n));
 		s = s.substr(n + 1);
@@ -326,15 +326,15 @@ std::optional<std::string> nullopt_if_empty(const std::string &arg)
 	return arg;
 }
 
-void register_command(const std::string &cmd, command_handler function, const std::string &arg, const std::string &hlp)
+void register_command(const std::string &cmd, CommandHandler function, const std::string &arg, const std::string &hlp)
 {
 	cmd_t newCmd = {mkws(cmd), function, nullopt_if_empty(arg), nullopt_if_empty(hlp)};
 	cmd_table.push_back(newCmd);
 }
 
-void docommand(conn_t *conn, my_wstring s)
+void docommand(Runtime *conn, String32 s)
 {
-	std::vector<my_wstring> args = tokenize(s);
+	std::vector<String32> args = tokenize(s);
 
 	for (const auto &cmd : cmd_table)
 	{

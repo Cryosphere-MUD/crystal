@@ -52,10 +52,10 @@ typedef char *iconv_inptr_t;
 #undef MIN
 #endif
 
-typedef std::basic_string<wchar_t> my_wstring;
+typedef std::basic_string<wchar_t> String32;
 
-std::string mks(const my_wstring &w);
-my_wstring mkws(const std::string &txt);
+std::string mks(const String32 &w);
+String32 mkws(const std::string &txt);
 
 #define COL_BLACK 0
 #define COL_RED 1
@@ -106,7 +106,7 @@ enum Intensity
 	I_BOLD,
 };
 
-struct cell_t
+struct Cell
 {
 	wchar_t ch;
 	Intensity inten;
@@ -119,7 +119,7 @@ struct cell_t
 	bool os : 1;
 	bool inv : 1;
 	bool ol : 1;
-	void operator=(const cell_t &o)
+	void operator=(const Cell &o)
 	{
 		ch = o.ch;
 		inten = o.inten;
@@ -133,7 +133,7 @@ struct cell_t
 		inv = o.inv;
 		ol = o.ol;
 	}
-	bool operator==(const cell_t &o) const
+	bool operator==(const Cell &o) const
 	{
 		if (ch != o.ch)
 			return false;
@@ -157,49 +157,49 @@ struct cell_t
 			return false;
 		return true;
 	}
-	bool operator!=(const cell_t &o) const { return !operator==(o); }
-	cell_t(wchar_t ch = '\0', Intensity inten = I_NORM, int fc = COL_DEFAULT, int bc = COL_DEFAULT, int scs = 0, int ul = 0, int it = 0,
+	bool operator!=(const Cell &o) const { return !operator==(o); }
+	Cell(wchar_t ch = '\0', Intensity inten = I_NORM, int fc = COL_DEFAULT, int bc = COL_DEFAULT, int scs = 0, int ul = 0, int it = 0,
 	       int fr = 0, int os = 0, int inv = 0, int ol = 0)
 	    : ch(ch), inten(inten), fc(fc), bc(bc), scs(scs), ul(ul), it(it), fr(fr), os(os), inv(inv), ol(ol)
 	{
 	}
 };
 
-extern const cell_t blank;
-extern const cell_t blank;
+extern const Cell blank;
+extern const Cell blank;
 
 #define MAXHEIGHT 200
 #define MAXWIDTH 320
 
-class cellstring
+class CellString
 {
 	size_t els;
 	size_t siz;
-	cell_t *s;
+	Cell *s;
 
       public:
-	cellstring() : els(0), siz(0), s(0) {}
+	CellString() : els(0), siz(0), s(0) {}
 	void erase() { els = 0; }
 	int length() const { return els; }
-	void operator+=(const cell_t &c)
+	void operator+=(const Cell &c)
 	{
 		if ((els + 1) > siz)
 		{
 			siz *= 2;
 			if (siz == 0)
 				siz = 16;
-			s = (cell_t *)realloc(s, sizeof(cell_t) * siz);
+			s = (Cell *)realloc(s, sizeof(Cell) * siz);
 		}
 		s[els] = c;
 		els++;
 	}
-	const cell_t &operator[](size_t i) const
+	const Cell &operator[](size_t i) const
 	{
 		if (i >= els)
 			return blank;
 		return s[i];
 	}
-	~cellstring()
+	~CellString()
 	{
 		if (s)
 			free(s);

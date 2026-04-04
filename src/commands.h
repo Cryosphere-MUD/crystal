@@ -37,14 +37,14 @@
 
 #include "common.h"
 
-typedef std::vector<my_wstring> cmd_args;
+typedef std::vector<String32> CommandArguments;
 
-class conn_t;
+class Runtime;
 
-typedef void (*command_handler)(conn_t *conn, const cmd_args &);
+using CommandHandler = void(*)(Runtime *conn, const CommandArguments &);
 
-void docommand(conn_t *conn, my_wstring s);
+void docommand(Runtime *conn, String32 s);
 
-void register_command(const std::string &cmd, command_handler function, const std::string &arg, const std::string &hlp);
+void register_command(const std::string &cmd, CommandHandler function, const std::string &arg, const std::string &hlp);
 
 #endif

@@ -37,9 +37,9 @@
 #include "io.h"
 #include "telnet.h"
 
-extern mterm tty;
+extern Output tty;
 
-void conn_t::show_lines_at(int from, int to, int num)
+void Runtime::show_lines_at(int from, int to, int num)
 {
 	for (int i = 0; i < num; i++)
 	{
@@ -56,19 +56,19 @@ void conn_t::show_lines_at(int from, int to, int num)
 
 		for (j = 0; j < mw; j++)
 		{
-			cell_t g = grid->get(i + from, j);
+			Cell g = grid->get(i + from, j);
 			tty.wantbuffer[i + to - 1][j] = g;
 		}
 
-		my_wstring s;
+		String32 s;
 		for (int j = 0; j < grid->get_len(i + from); j++)
 			s += grid->get(i + from, j).ch;
 
-		std::set<my_wstring>::iterator it;
+		std::set<String32>::iterator it;
 		for (it = hl_matches.begin(); it != hl_matches.end(); it++)
 		{
 			size_t l = s.find(*it);
-			while (l != my_wstring::npos)
+			while (l != String32::npos)
 			{
 				for (size_t j = 0; j < it->length(); j++)
 					tty.wantbuffer[i + to - 1][j + l].inv = !tty.wantbuffer[i + to - 1][j + l].inv;
@@ -84,14 +84,14 @@ void conn_t::show_lines_at(int from, int to, int num)
 	}
 }
 
-void conn_t::display_buffer()
+void Runtime::display_buffer()
 {
 	if (info_to_stderr)
 		return;
 
-	conn_t *conn = this;
+	Runtime *conn = this;
 
-	grid_t &grid = *conn->grid;
+	ANSIGrid &grid = *conn->grid;
 
 	if (!grid.changed && !conn->overlay->changed)
 		return;
@@ -129,7 +129,7 @@ void conn_t::display_buffer()
 			conn->show_lines_at(start, 1, (tty.HEIGHT - 4));
 			conn->show_lines_at((grid.row - 5) > 0 ? grid.row - 5 : 0, tty.HEIGHT - 4, 5);
 			for (int i = 0; i < tty.WIDTH; i++)
-				tty.wantbuffer[tty.HEIGHT - 5][i] = cell_t('=', I_BOLD, COL_WHITE, COL_RED, 0, 0, 0, 0, 0, 0);
+				tty.wantbuffer[tty.HEIGHT - 5][i] = Cell('=', I_BOLD, COL_WHITE, COL_RED, 0, 0, 0, 0, 0, 0);
 		}
 		else
 		{
@@ -151,7 +151,7 @@ void conn_t::display_buffer()
 		}
 	}
 
-	cellstring crealprompt;
+	CellString crealprompt;
 
 	if (in_commandmode())
 	{
@@ -163,7 +163,7 @@ void conn_t::display_buffer()
 			int s = mbtowc(&c, str, max);
 			if (s <= 0)
 				break;
-			crealprompt += cell_t(c);
+			crealprompt += Cell(c);
 			str += s;
 			max -= s;
 		}
@@ -207,9 +207,9 @@ void conn_t::display_buffer()
 		{
 			if (real_wcwidth(*a) <= wid)
 			{
-				tty.wantbuffer[tty.HEIGHT][i++] = cell_t(*a);
+				tty.wantbuffer[tty.HEIGHT][i++] = Cell(*a);
 				if (real_wcwidth(*a) == 2)
-					tty.wantbuffer[tty.HEIGHT][i++] = cell_t(-*a);
+					tty.wantbuffer[tty.HEIGHT][i++] = Cell(-*a);
 			}
 			else
 				break;
@@ -224,9 +224,9 @@ void conn_t::display_buffer()
 		wid--;
 	}
 	if (alen)
-		tty.wantbuffer[tty.HEIGHT][i++] = cell_t('>');
+		tty.wantbuffer[tty.HEIGHT][i++] = Cell('>');
 	else
-		tty.wantbuffer[tty.HEIGHT][i++] = cell_t(' ');
+		tty.wantbuffer[tty.HEIGHT][i++] = Cell(' ');
 
 	tty.show_want();
 

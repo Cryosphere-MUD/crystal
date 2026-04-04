@@ -44,23 +44,23 @@
 #include <time.h>
 #include <wchar.h>
 
-extern mterm tty;
+extern Output tty;
 
 enum
 {
 	OSC_ESCAPE = 256,
 };
 
-void grid_t::show_batch(const cellstring &batch)
+void ANSIGrid::show_batch(const CellString &batch)
 {
 	for (int i = 0; i < batch.length(); i++)
 		place(&batch[i]);
 }
 
-void grid_t::place(const cell_t *ri)
+void ANSIGrid::place(const Cell *ri)
 {
-	cell_t fi = *ri;
-	cell_t *i = &fi;
+	Cell fi = *ri;
+	Cell *i = &fi;
 
 	if (conn->lp_prompts)
 	{
@@ -107,7 +107,7 @@ void grid_t::place(const cell_t *ri)
 	col++;
 	if (wcwidth(i->ch) == 2)
 	{
-		set(row, col, cell_t(-i->ch));
+		set(row, col, Cell(-i->ch));
 		col++;
 	}
 }
@@ -132,7 +132,7 @@ std::string q(int ch)
 	return a;
 }
 
-void grid_t::osc_end()
+void ANSIGrid::osc_end()
 {
 	if (osc_string.substr(0, 2) == "0;" || osc_string.substr(0, 2) == "2;")
 	{
@@ -169,7 +169,7 @@ std::vector<int> parse(const std::string &s)
 	return result;
 }
 
-void grid_t::wterminal(wchar_t ch)
+void ANSIGrid::wterminal(wchar_t ch)
 {
 	if (mode == 0)
 	{
@@ -227,7 +227,7 @@ void grid_t::wterminal(wchar_t ch)
 			if (scs && (ch < '`' || ch > '~'))
 				scs = 0;
 
-			cell_t a = cell_t(ch, inten, forecol, backcol, scs, ul, it, fr, os, inv, ol);
+			Cell a = Cell(ch, inten, forecol, backcol, scs, ul, it, fr, os, inv, ol);
 			place(&a);
 
 			changed = 1;
@@ -605,18 +605,18 @@ template <class T> std::string esc(const T &data)
 	return out;
 }
 
-void grid_t::infoc(wchar_t w)
+void ANSIGrid::infoc(wchar_t w)
 {
 	if (info_to_stderr)
 		fprintf(stderr, "%lc", w);
 
-	static my_wstring isf = L"";
+	static String32 isf = L"";
 
 	isf += w;
 
 	if (w == '\n')
 	{
-		cellstring q;
+		CellString q;
 		int c = -1;
 		int p = lastprompt;
 		lastprompt = 0;
@@ -630,7 +630,7 @@ void grid_t::infoc(wchar_t w)
 		}
 		for (size_t i = 0; i < isf.length(); i++)
 		{
-			cell_t c = cell_t(isf[i]);
+			Cell c = Cell(isf[i]);
 			place(&c);
 		}
 
@@ -647,7 +647,7 @@ void grid_t::infoc(wchar_t w)
 	}
 }
 
-void grid_t::info(const char *str)
+void ANSIGrid::info(const char *str)
 {
 	int max = strlen(str);
 	while (1)
@@ -662,7 +662,7 @@ void grid_t::info(const char *str)
 	}
 }
 
-void grid_t::info(const wchar_t *w)
+void ANSIGrid::info(const wchar_t *w)
 {
 	while (*w)
 	{
@@ -671,20 +671,20 @@ void grid_t::info(const wchar_t *w)
 	}
 }
 
-void grid_t::info(const my_wstring &str)
+void ANSIGrid::info(const String32 &str)
 {
 	for (size_t i = 0; i < str.length(); i++)
 		infoc(str[i]);
 }
 
-void grid_t::info(const std::string &str)
+void ANSIGrid::info(const std::string &str)
 {
 	for (auto ch: mkws(str))
 		infoc(ch);
 }
 
 
-bool grid_t::file_dump(const std::string &file)
+bool ANSIGrid::file_dump(const std::string &file)
 {
 	FILE *dumpfile = fopen(file.c_str(), "a");
 	if (NULL == dumpfile)

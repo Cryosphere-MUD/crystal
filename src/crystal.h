@@ -45,14 +45,12 @@
 
 using asio::ip::tcp;
 
-struct telnet_state;
-class grid_t;
-class InAddrList;
-typedef std::shared_ptr<InAddrList> InAddrListPtr;
+struct TelnetState;
+class ANSIGrid;
 
-class hlist;
+class CommandHistory;
 
-class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_t>
+class Runtime : public commandeditor_t, public std::enable_shared_from_this<Runtime>
 {
       private:
 	//! the amount we have scrolled to in the buffer
@@ -69,17 +67,13 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 	//! are we quitting?
 	bool quit = false;
 
-      private:
-	InAddrListPtr addrs = nullptr;
-	int addr_i = 0;
-
       public:
-	grid_t *grid = nullptr;
+	ANSIGrid *grid = nullptr;
 
-	grid_t *overlay = nullptr;
-	grid_t *cur_grid = nullptr;
+	ANSIGrid *overlay = nullptr;
+	ANSIGrid *cur_grid = nullptr;
 
-	std::shared_ptr<telnet_state> telnet = nullptr;
+	std::shared_ptr<TelnetState> telnet = nullptr;
 	FILE *logfile = nullptr;
 
 	std::string host;
@@ -104,11 +98,11 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	void show_lines_at(int from, int to, int num);
 
-	conn_t(asio::io_context &io, grid_t *grid);
-	~conn_t();
+	Runtime(asio::io_context &io, ANSIGrid *grid);
+	~Runtime();
 
 	void initbindings();
-	void dispatch_key(const my_wstring &s);
+	void dispatch_key(const String32 &s);
 	void addbinding(const wchar_t *key, const std::string &bind);
 
 	void connect(const std::string &host, const std::string &port, bool ssl);
@@ -135,7 +129,7 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	void do_read_socket();
 
-	std::set<my_wstring> hl_matches;
+	std::set<String32> hl_matches;
 
 	std::array<char, 4096> stdin_raw_;
 	std::array<char, 4096> socket_raw_;

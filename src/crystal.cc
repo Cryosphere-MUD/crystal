@@ -97,8 +97,8 @@
 
 //FILE *logfile = 0;
 
-class conn_t;
-class grid_t;
+class Runtime;
+class ANSIGrid;
 
 #include <widecharwidth/widechar_width.h>
 
@@ -110,7 +110,7 @@ class grid_t;
 #include "scripting.h"
 #include "telnet.h"
 
-mterm tty;
+Output tty;
 
 int real_wcwidth(char32_t ch)
 {
@@ -135,9 +135,9 @@ int real_wcwidth(char32_t ch)
         return width;
 }
 
-const cell_t blank(0);
+const Cell blank(0);
 
-conn_t::conn_t(asio::io_context &io, grid_t *gr)
+Runtime::Runtime(asio::io_context &io, ANSIGrid *gr)
     : io_(io), resolver_(io), ssl_ctx_(asio::ssl::context::tls_client), stdin_(io, ::dup(STDIN_FILENO))
 //   use_ssl_(false)
 {
@@ -145,7 +145,7 @@ conn_t::conn_t(asio::io_context &io, grid_t *gr)
 	ssl_ctx_.set_default_verify_paths();  // use system CA certificates
 
 	cur_grid = grid = gr;
-	overlay = new grid_t();
+	overlay = new ANSIGrid();
 
 	overlay->defbc = 0;
 	overlay->backcol = 0;
@@ -156,21 +156,21 @@ conn_t::conn_t(asio::io_context &io, grid_t *gr)
 		overlay->set_conn(this);
 }
 
-conn_t::~conn_t()
+Runtime::~Runtime()
 {
 	if (overlay)
 		delete overlay;
 }
 
-void conn_t::dofindnext()
+void Runtime::dofindnext()
 {
 	for (int i = hardscroll; i < grid->row; i++)
 	{
-		my_wstring s;
+		String32 s;
 		for (int j = 0; j < grid->get_len(i); j++)
 			s += grid->get(i, j).ch;
 
-		std::set<my_wstring>::iterator it;
+		std::set<String32>::iterator it;
 		for (it = hl_matches.begin(); it != hl_matches.end(); it++)
 		{
 			size_t l = s.find(*it);
@@ -192,7 +192,7 @@ void conn_t::dofindnext()
 	grid->changed = true;
 }
 
-void conn_t::dotoggleoverlay()
+void Runtime::dotoggleoverlay()
 {
 	if (overlay)
 	{
@@ -201,7 +201,7 @@ void conn_t::dotoggleoverlay()
 	}
 }
 
-void conn_t::triggerfn(const std::string &fn)
+void Runtime::triggerfn(const std::string &fn)
 {
 	std::string st = "fn.";
 	st += fn;
@@ -211,7 +211,7 @@ void conn_t::triggerfn(const std::string &fn)
 		telnet->send(st);
 }
 
-void conn_t::doscrollstart()
+void Runtime::doscrollstart()
 {
 	if (grid->row < tty.HEIGHT)
 		return;
@@ -219,19 +219,19 @@ void conn_t::doscrollstart()
 	grid->changed = true;
 }
 
-void conn_t::doscrollend()
+void Runtime::doscrollend()
 {
 	hardscroll = 0;
 	grid->changed = true;
 }
 
-void conn_t::dorefresh()
+void Runtime::dorefresh()
 {
 	grid->changed = true;
 	tty.bad_have = true;
 }
 
-void conn_t::dosuspend()
+void Runtime::dosuspend()
 {
 	kill(0, SIGTSTP);
 
@@ -251,13 +251,13 @@ void conn_t::dosuspend()
 	}
 }
 
-void conn_t::doenter()
+void Runtime::doenter()
 {
-	conn_t *conn = this;
+	Runtime *conn = this;
 
 	if (in_commandmode())
 	{
-		my_wstring s = conn->buffer;
+		String32 s = conn->buffer;
 		conn->doclearline();
 
 		if (s.length() == 0)
@@ -279,7 +279,7 @@ void conn_t::doenter()
 		return;
 	}
 
-	my_wstring wproper = L"";
+	String32 wproper = L"";
 	std::string proper = "";
 
 	for (wchar_t sb : conn->buffer)
@@ -338,12 +338,12 @@ void conn_t::doenter()
 	if (toecho)
 	{
 		// echo the commandline if appropriate
-		my_wstring a;
+		String32 a;
 		for (int i = 0; i < conn->grid->col; i++)
 			a += conn->grid->get(conn->grid->row, i).ch;
 		for (size_t i = 0; i < wproper.length(); i++)
 		{
-			cell_t c = cell_t(wproper[i]);
+			Cell c = Cell(wproper[i]);
 			conn->grid->place(&c);
 		}
 		conn->grid->wantnewline();
@@ -359,7 +359,7 @@ void conn_t::doenter()
 	conn->doclearline();
 }
 
-void conn_t::doscrolldown()
+void Runtime::doscrolldown()
 {
 	if (hardscroll)
 		hardscroll += 10;
@@ -368,7 +368,7 @@ void conn_t::doscrolldown()
 	grid->changed = true;
 }
 
-void conn_t::doscrollup()
+void Runtime::doscrollup()
 {
 	if (grid->row < tty.HEIGHT)
 		return;
@@ -382,16 +382,16 @@ void conn_t::doscrollup()
 	grid->changed = true;
 }
 
-void conn_t::docommandmode()
+void Runtime::docommandmode()
 {
 	if (!in_commandmode())
 		doclearline();
 	set_commandmode(true);
 }
 
-void conn_t::connected()
+void Runtime::connected()
 {
-	conn_t *conn = this;
+	Runtime *conn = this;
 
 	conn->grid->infof(_("/// connected with {}\n"), ssl ? "telnets" : "telnet");
 
@@ -407,7 +407,7 @@ void conn_t::connected()
 	queue_repaint();
 }
 
-bool conn_t::file_log(const std::string &filename)
+bool Runtime::file_log(const std::string &filename)
 {
 	if (logfile)
 	{
@@ -428,9 +428,9 @@ bool conn_t::file_log(const std::string &filename)
 	}
 }
 
-bool conn_t::disconnected(int bts, int pend)
+bool Runtime::disconnected(int bts, int pend)
 {
-	conn_t *conn = this;
+	Runtime *conn = this;
 	tty.title(_("Disconnected - Crystal"));
 	if (conn->grid->col)
 		conn->grid->newline();
@@ -450,7 +450,7 @@ bool conn_t::disconnected(int bts, int pend)
 	return false;
 }
 
-void conn_t::queue_repaint()
+void Runtime::queue_repaint()
 {
 	asio::post(io_,
 		   [self = shared_from_this()]
@@ -460,16 +460,16 @@ void conn_t::queue_repaint()
 		   });
 }
 
-void do_read(conn_t *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer);
+void do_read(Runtime *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer);
 
-void handle_input(conn_t *conn, const asio::error_code &error, size_t bytes_transferred, asio::posix::stream_descriptor &stream_desc,
+void handle_input(Runtime *conn, const asio::error_code &error, size_t bytes_transferred, asio::posix::stream_descriptor &stream_desc,
 		  std::array<char, 256> &buffer)
 {
 	if (!error)
 	{
 		for (size_t idx = 0; idx < bytes_transferred; idx++)
 		{
-			my_wstring s = tty.convert_input(buffer[idx]);
+			String32 s = tty.convert_input(buffer[idx]);
 			if (s.length())
 				conn->dispatch_key(s);
 			if (!conn->telnet)
@@ -490,14 +490,14 @@ void handle_input(conn_t *conn, const asio::error_code &error, size_t bytes_tran
 	}
 }
 
-void do_read(conn_t *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer)
+void do_read(Runtime *conn, asio::posix::stream_descriptor &stream_desc, std::array<char, 256> &buffer)
 {
 	stream_desc.async_read_some(asio::buffer(buffer),
 				    [conn, &stream_desc, &buffer](const asio::error_code &error, size_t bytes_transferred)
 				    { handle_input(conn, error, bytes_transferred, stream_desc, buffer); });
 }
 
-void conn_t::main_loop(asio::io_context &io_context)
+void Runtime::main_loop(asio::io_context &io_context)
 {
 	grid->changed = true;
 	tty.bad_have = true;
@@ -518,7 +518,7 @@ void conn_t::main_loop(asio::io_context &io_context)
 	stdin_desc.release();
 }
 
-void conn_t::connect(const std::string &host, const std::string &port, bool ssl)
+void Runtime::connect(const std::string &host, const std::string &port, bool ssl)
 {
 	this->host = host;
 	this->port = atoi(port.c_str());
@@ -593,16 +593,16 @@ void conn_t::connect(const std::string &host, const std::string &port, bool ssl)
 	display_buffer();
 }
 
-void conn_t::on_connected()
+void Runtime::on_connected()
 {
 	connected();
 
-	telnet = std::make_shared<telnet_state>(*socket_.get(), ssl_stream_.get());
+	telnet = std::make_shared<TelnetState>(*socket_.get(), ssl_stream_.get());
 
 	do_read_socket();
 }
 
-void conn_t::do_read_socket()
+void Runtime::do_read_socket()
 {
 	auto self = shared_from_this();
 
@@ -629,13 +629,13 @@ void conn_t::do_read_socket()
 		socket_->async_read_some(asio::buffer(socket_raw_), handler);
 }
 
-void conn_t::fail(const std::string &what, asio::error_code ec)
+void Runtime::fail(const std::string &what, asio::error_code ec)
 {
 	grid->infof("/// connection failed: {}\n", ec.message());
 	disconnected(0, 0);
 }
 
-void conn_t::set_commandmode(bool new_command_mode)
+void Runtime::set_commandmode(bool new_command_mode)
 {
 	if (in_commandmode() == new_command_mode)
 		return;

@@ -36,14 +36,14 @@
 #include "common.h"
 #include <map>
 
-struct hlist
+struct CommandHistory
 {
-	std::map<int, my_wstring> hist;
+	std::map<int, String32> hist;
 	int idx;
 	int max;
-	hlist() : idx(0), max(0) {}
+	CommandHistory() : idx(0), max(0) {}
 
-	void insert(const my_wstring &blah)
+	void insert(const String32 &blah)
 	{
 		hist[max] = blah;
 		max++;
@@ -72,16 +72,16 @@ struct hlist
 		return 1;
 	}
 
-	const my_wstring &get()
+	const String32 &get()
 	{
-		static const my_wstring blah = L"";
+		static const String32 blah = L"";
 		if (idx >= max || idx < 0)
 			return blah;
 		return hist[idx];
 	}
 };
 
-extern hlist cmdhist;
+extern CommandHistory cmdhist;
 
 class commandeditor_t
 {
@@ -93,15 +93,15 @@ class commandeditor_t
 
 	virtual void set_commandmode(bool new_command_mode) { _commandmode = new_command_mode; }
 
-	my_wstring buffer;
+	String32 buffer;
 	size_t cursor = 0;
 
-	my_wstring future;
+	String32 future;
 	bool nofuture = true;
 
-	my_wstring cutbuffer;
+	String32 cutbuffer;
 
-	hlist *chist();
+	CommandHistory *chist();
 
 	void doprevhistory();
 	void donexthistory();

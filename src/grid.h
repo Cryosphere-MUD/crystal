@@ -64,12 +64,12 @@ template <class T> bool check_in_range(const T &vec, int index)
 	return index >= 0 && index < vec.size();
 }
 
-typedef std::vector<cell_t> line_t;
+typedef std::vector<Cell> line_t;
 
-class grid_t : public ansi_context
+class ANSIGrid : public ansi_context
 {
       public:
-	conn_t *conn = nullptr;
+	Runtime *conn = nullptr;
 
 	std::vector<line_t> lines;
 
@@ -85,22 +85,22 @@ class grid_t : public ansi_context
 
 	bool changed = false;
 
-	cellstring cstoredprompt;
+	CellString cstoredprompt;
 
-	void set_conn(conn_t *c) { conn = c; }
+	void set_conn(Runtime *c) { conn = c; }
 
-	grid_t(const grid_t &) = delete;
-	grid_t() = default;
+	ANSIGrid(const ANSIGrid &) = delete;
+	ANSIGrid() = default;
 
-	cell_t myblank()
+	Cell myblank()
 	{
-		cell_t b = blank;
+		Cell b = blank;
 		b.fc = deffc;
 		b.bc = defbc;
 		return b;
 	}
 
-	cell_t get(int r, int c)
+	Cell get(int r, int c)
 	{
 		if (!check_in_range(lines, r))
 			return myblank();
@@ -113,7 +113,7 @@ class grid_t : public ansi_context
 
 	void newline()
 	{
-		my_wstring s;
+		String32 s;
 		for (int i = 0; i < get_len(row); i++)
 			s += get(row, i).ch;
 
@@ -144,7 +144,7 @@ class grid_t : public ansi_context
 		return lines[r].size();
 	}
 
-	void set(int r, int c, cell_t ch)
+	void set(int r, int c, Cell ch)
 	{
 		if (check_in_range(lines, r) && c >= 0 && c < MAXWIDTH)
 		{
@@ -157,13 +157,13 @@ class grid_t : public ansi_context
 
 	void wantnewline() { nlw++; }
 
-	void place(const cell_t *ri);
+	void place(const Cell *ri);
 
 	void osc_end();
 
 	void wterminal(wchar_t ch);
 
-	void show_batch(const cellstring &batch);
+	void show_batch(const CellString &batch);
 
 	bool file_dump(const std::string &file);
 
@@ -172,7 +172,7 @@ class grid_t : public ansi_context
 	// messages into the stream.
 	void info(const char *);
 	void info(const wchar_t *);
-	void info(const my_wstring &);
+	void info(const String32 &);
 	void info(const std::string &);
 
 	template<typename... Args>
@@ -184,11 +184,11 @@ class grid_t : public ansi_context
 	void infoc(wchar_t w);
 };
 
-inline void have_prompt(grid_t *grid)
+inline void have_prompt(ANSIGrid *grid)
 {
 	grid->lastprompt = true;
 
-	my_wstring s;
+	String32 s;
 	for (int i = 0; i < grid->get_len(grid->row); i++)
 		s += grid->get(grid->row, i).ch;
 	scripting::doprompt(s);
