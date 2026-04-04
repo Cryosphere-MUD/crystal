@@ -87,6 +87,8 @@ class ANSIGrid : public ANSIContext
 
 	std::vector<Cell> cstoredprompt;
 
+	int nlw = 0;
+
 	void set_conn(Runtime *c) { conn = c; }
 
 	ANSIGrid(const ANSIGrid &) = delete;
@@ -152,8 +154,6 @@ class ANSIGrid : public ANSIContext
 			lines[r][c] = ch;
 		}
 	}
-
-	int nlw = 0;
 
 	void wantnewline() { nlw++; }
 

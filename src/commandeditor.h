@@ -89,10 +89,6 @@ class CommandEditor
 	bool _commandmode = true;
 
       public:
-	bool in_commandmode() const { return _commandmode; }
-
-	virtual void set_commandmode(bool new_command_mode) { _commandmode = new_command_mode; }
-
 	String32 buffer;
 	size_t cursor = 0;
 
@@ -100,6 +96,10 @@ class CommandEditor
 	bool nofuture = true;
 
 	String32 cutbuffer;
+
+	bool in_commandmode() const { return _commandmode; }
+
+	virtual void set_commandmode(bool new_command_mode) { _commandmode = new_command_mode; }
 
 	CommandHistory *chist();
 
