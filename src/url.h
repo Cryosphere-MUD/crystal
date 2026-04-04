@@ -48,7 +48,7 @@ inline bool valid_protocol(const std::string &s)
 	return 0;
 }
 
-struct url
+struct URL
 {
 	std::string protocol;
 	std::string hostname;
@@ -59,7 +59,7 @@ struct url
 	std::string password;
 	bool has_password;
 
-	url(const std::string &url);
+	URL(const std::string &url);
 };
 
 #endif

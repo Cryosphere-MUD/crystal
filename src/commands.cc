@@ -115,7 +115,7 @@ void cmd_connect(Runtime *conn, const CommandArguments &arg)
 	std::string cport = mks(port);
 	std::string chost = mks(host);
 
-	url u = url(chost);
+	URL u{chost};
 	if (cport.length() != 0)
 		u.service = cport;
 

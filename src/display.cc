@@ -37,8 +37,6 @@
 #include "io.h"
 #include "telnet.h"
 
-extern Output tty;
-
 void Runtime::show_lines_at(int from, int to, int num)
 {
 	for (int i = 0; i < num; i++)
