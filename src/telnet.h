@@ -67,7 +67,8 @@ struct MCCP4State
 
 struct telnet_state
 {
-	asio::ip::tcp::socket &s;
+	asio::ip::tcp::socket &raw;
+	asio::ssl::stream<asio::ip::tcp::socket&> *ssl;
 
 	bool gmcp = false;
 	bool will_eor = false;
@@ -79,7 +80,7 @@ struct telnet_state
 	int subneg_type = 0;
 	int will_ttype = 0;
 	int ttype_count = 0;
-	std::string subneg_data;
+	std::string subneg_data = "";
 	bool do_naws = false;
 
 	int compression_mode = 0;
@@ -91,7 +92,7 @@ struct telnet_state
 	MCCP4State mccp4_state;
 #endif
 
-	telnet_state(asio::ip::tcp::socket &sock) : s(sock), subneg_data("")
+	telnet_state(asio::ip::tcp::socket &raw, asio::ssl::stream<asio::ip::tcp::socket&> *ssl) : raw(raw), ssl(ssl)
 	{
 	}
 

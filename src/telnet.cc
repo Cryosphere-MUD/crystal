@@ -107,7 +107,10 @@ void telnet_state::reply(int a, int b, int c)
 	buf[0] = a;
 	buf[1] = b;
 	buf[2] = c;
-	asio::write(s, asio::buffer(buf, 3));
+	if (ssl)
+		asio::write(*ssl, asio::buffer(buf, 3));
+	else
+		asio::write(raw, asio::buffer(buf, 3));
 	debug_fprintf((stderr, "SEND %s %s %s\n", nam(a).c_str(), nam(b).c_str(), nam(c).c_str()));
 }
 
@@ -687,7 +690,10 @@ void telnet_state::send(const std::string &proper)
 		p2 += *b;
 		b++;
 	}
-	asio::write(s, asio::buffer(p2.data(), p2.size()));
+	if (ssl)
+		asio::write(*ssl, asio::buffer(p2.data(), p2.size()));
+	else
+		asio::write(raw, asio::buffer(p2.data(), p2.size()));
 }
 
 void telnet_state::subneg_send(int subneg, const std::string &proper)
@@ -711,5 +717,8 @@ void telnet_state::subneg_send(int subneg, const std::string &proper)
 	s2 += (unsigned char)IAC;
 	s2 += (unsigned char)SE;
 
-	asio::write(s, asio::buffer(s2.data(), s2.size()));
+	if (ssl)
+		asio::write(*ssl, asio::buffer(s2.data(), s2.size()));
+	else
+		asio::write(raw, asio::buffer(s2.data(), s2.size()));
 }

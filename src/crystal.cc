@@ -385,9 +385,7 @@ void conn_t::connected()
 {
 	conn_t *conn = this;
 
-        // std::cerr << "sending to grid " << conn->grid << std::endl;
-
-	conn->grid->infof(_("/// connected with %s\n"), "telnet");
+	conn->grid->infof(_("/// connected with %s\n"), ssl ? "telnets" : "telnet");
 
 	static int printed_escape_line = 0;
 	if (!printed_escape_line)
@@ -431,30 +429,9 @@ bool conn_t::disconnected(int bts, int pend)
 	tty.title(_("Disconnected - Crystal"));
 	if (conn->grid->col)
 		conn->grid->newline();
-#if 0
-	if (bts == -1)
-	{
-		int e = errno;
-		conn->grid->infof(_("/// connection closed : %s.\n"), strerror(e));
-		if (pend && (conn->addr_i < conn->addrs->size()))
-		{
-			conn->addr_i++;
-			if (conn->try_addr(conn->host.c_str(), conn->port, conn->ssl))
-			{
-				conn->display_buffer();
-				conn->grid->changed = true;
-				fflush(stdout);
-				return true;
-			}
-		}
-	}
-	else
-	{
-#endif
-		conn->grid->info(_("/// connection closed by foreign host.\n"));
-#if 0
-	}
-#endif
+
+	conn->grid->info(_("/// connection closed by foreign host.\n"));
+
 	fflush(stdout);
 	asio::error_code ignored;
         socket_.close(ignored);
@@ -596,11 +573,11 @@ void conn_t::connect(const std::string& host, const std::string& port, bool ssl)
     }
 
 
-	   void conn_t::on_connected() {
+    void conn_t::on_connected() {
         // std::cout << "Connected to " << host_ << ":" << port_ << "\n";
         connected();
 
-        telnet = std::make_shared<telnet_state>(socket_);
+	telnet = std::make_shared<telnet_state>(socket_, &ssl_stream_);
 
         do_read_socket();
     }
