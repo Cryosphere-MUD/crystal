@@ -100,6 +100,8 @@
 class conn_t;
 class grid_t;
 
+#include <widecharwidth/widechar_width.h>
+
 #include "commandeditor.h"
 #include "commands.h"
 #include "crystal.h"
@@ -110,18 +112,27 @@ class grid_t;
 
 mterm tty;
 
-extern "C" int mk_wcwidth(wchar_t ucs);
-
-size_t real_wcwidth(wchar_t u)
+int real_wcwidth(char32_t ch)
 {
-	int wid = wcwidth(u);
-	if (wid > 0)
-		return wid;
-	wid = mk_wcwidth(u);
-	if (wid > 0)
-		return wid;
-	wid = 1;
-	return 1;
+        int width = widechar_wcwidth(ch);
+        switch (width)
+        {
+        case widechar_nonprint:
+                return 0;
+        case widechar_combining:
+                return 0;
+        case widechar_ambiguous:
+                return 1;
+        case widechar_private_use:
+                return 1;
+        case widechar_unassigned:
+                return 1;
+        case widechar_widened_in_9:
+                return 2;
+        case widechar_non_character:
+                return 0;
+        }
+        return width;
 }
 
 const cell_t blank(0);

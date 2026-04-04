@@ -96,7 +96,7 @@ constexpr bool is_truecol(unsigned int value)
 
 #define ST 0x9c
 
-size_t real_wcwidth(wchar_t ucs);
+int real_wcwidth(char32_t ucs);
 
 enum Intensity
 {

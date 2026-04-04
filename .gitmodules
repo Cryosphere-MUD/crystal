@@ -7,3 +7,6 @@
 [submodule "vendor/fmt"]
 	path = vendor/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "vendor/widecharwidth"]
+	path = vendor/widecharwidth
+	url = https://github.com/ridiculousfish/widecharwidth
