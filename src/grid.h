@@ -41,6 +41,7 @@
 #include <iostream>
 #include <list>
 #include <vector>
+#include <fmt/format.h>
 
 struct ansi_context
 {
@@ -172,8 +173,12 @@ class grid_t : public ansi_context
 	void info(const char *);
 	void info(const wchar_t *);
 	void info(const my_wstring &);
+	void info(const std::string &);
 
-	void infof(const char *fmt, ...) /* __attribute__ (( format (printf, 2, 3) )) */;
+	template<typename... Args>
+	void infof(const char* format_str, Args&&... args) {
+		info(fmt::format(format_str, std::forward<Args>(args)...));
+	}
 
       private:
 	void infoc(wchar_t w);

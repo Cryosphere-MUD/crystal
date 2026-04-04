@@ -126,7 +126,7 @@ void conn_t::addbinding(const wchar_t *key, const char *cmd)
 
 	if (!handler)
 	{
-		grid->infof(_("/// missing handler for %ls (%s)\n"), key, cmd);
+		grid->infof(_("/// missing handler for {} ({})\n"), mks(key), cmd);
 	}
 	else
 	{
@@ -142,7 +142,7 @@ void conn_t::initbindings()
 		keybinding_method_t handler = initkeys[i].command();
 		if (!handler)
 		{
-			grid->infof(_("/// missing handler for %ls (%s)\n"), initkeys[i].s, initkeys[i].cmdname);
+			grid->infof(_("/// missing handler for {} ({})\n"), mks(initkeys[i].s), initkeys[i].cmdname);
 		}
 		else
 		{
@@ -166,7 +166,7 @@ void conn_t::dispatch_key(const my_wstring &s)
 		if (handler)
 			(this->*handler)();
 		else
-			grid->infof(_("/// missing handler for %ls\n"), s.c_str());
+			grid->infof(_("/// missing handler for {}\n"), mks(s));
 		return;
 	}
 
@@ -182,7 +182,7 @@ void cmd_bind(conn_t *conn, const cmd_args &arg)
 {
 	if (arg.size() != 1 && arg.size() != 3)
 	{
-		conn->grid->infof(_("/// set [option value]\n"));
+		conn->grid->info(_("/// set [option value]\n"));
 		return;
 	}
 
@@ -193,7 +193,7 @@ void cmd_bind(conn_t *conn, const cmd_args &arg)
 			wid = std::max(wid, int(it->first.length()));
 
 		for (std::map<my_wstring, std::string>::const_iterator it = keystr.begin(); it != keystr.end(); it++)
-			conn->grid->infof("%*ls %s\n", wid, it->first.c_str(), it->second.c_str());
+			conn->grid->infof("{:>{}} {}\n", wid, mks(it->first), it->second);
 	}
 	else
 	{

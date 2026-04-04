@@ -32,6 +32,8 @@
 
 #include "commands.h"
 
+#include <fmt/format.h>
+
 #include "crystal.h"
 #include "grid.h"
 #include "telnet.h"
@@ -93,7 +95,7 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 {
 	if (arg.size() != 2 && arg.size() != 3 && arg.size() != 4)
 	{
-		conn->grid->infof(_("/// connect [-s] <host> [port]\n"));
+		conn->grid->info(_("/// connect [-s] <host> [port]\n"));
 		return;
 	}
 
@@ -141,19 +143,19 @@ void cmd_charset(conn_t *conn, const cmd_args &arg)
 {
 	if (arg.size() != 2)
 	{
-		conn->grid->infof(_("/// charset <charset>\n"));
+		conn->grid->info(_("/// charset <charset>\n"));
 		return;
 	}
 
 	conn->mud_cset = mks(arg[1]);
-	conn->grid->infof(_("/// charset '%s' selected\n"), conn->mud_cset.c_str());
+	conn->grid->infof(_("/// charset '%s' selected\n"), conn->mud_cset);
 }
 
 void cmd_dump(conn_t *conn, const cmd_args &arg)
 {
 	if (arg.size() != 2)
 	{
-		conn->grid->infof(_("/// dump <filename>\n"));
+		conn->grid->info(_("/// dump <filename>\n"));
 		return;
 	}
 
@@ -165,7 +167,7 @@ void cmd_log(conn_t *conn, const cmd_args &arg)
 {
 	if (arg.size() != 2)
 	{
-		conn->grid->infof(_("/// log <filename>\n"));
+		conn->grid->info(_("/// log <filename>\n"));
 		return;
 	}
 
@@ -177,7 +179,7 @@ void cmd_dumplog(conn_t *conn, const cmd_args &arg)
 {
 	if (arg.size() != 2)
 	{
-		conn->grid->infof(_("/// dumplog <filename>\n"));
+		conn->grid->info(_("/// dumplog <filename>\n"));
 		return;
 	}
 
@@ -203,14 +205,14 @@ void cmd_set(conn_t *conn, const cmd_args &arg)
 {
 	if (arg.size() != 1 && arg.size() != 3)
 	{
-		conn->grid->infof(_("/// set [option value]\n"));
+		conn->grid->info(_("/// set [option value]\n"));
 		return;
 	}
 
 	bool to = false;
 
 	if (arg.size() == 1)
-		conn->grid->infof(_("/// current options are\n"));
+		conn->grid->info(_("/// current options are\n"));
 	else
 	{
 		if (arg[2] == L"on" || arg[2] == L"yes" || arg[2] == L"true" || arg[2] == L"1")
@@ -219,7 +221,7 @@ void cmd_set(conn_t *conn, const cmd_args &arg)
 			to = false;
 		else
 		{
-			conn->grid->infof(_("/// valid values are 'on' or 'off'\n"));
+			conn->grid->info(_("/// valid values are 'on' or 'off'\n"));
 			return;
 		}
 	}
@@ -229,17 +231,17 @@ void cmd_set(conn_t *conn, const cmd_args &arg)
 	for (const auto &opt : options)
 	{
 		if (arg.size() == 1)
-			conn->grid->infof("///  %s - %s\n", opt.name, conn->*opt.option ? "on" : "off");
+			conn->grid->infof("///  {} - {}\n", opt.name, conn->*opt.option ? "on" : "off");
 		else if (s == opt.name)
 		{
 			conn->*opt.option = to;
-			conn->grid->infof("/// done\n");
+			conn->grid->info("/// done\n");
 			return;
 		}
 	}
 
 	if (arg.size() == 3)
-		conn->grid->infof("/// no option of %ls\n", s.c_str());
+		conn->grid->infof("/// no option of {}\n", s);
 }
 
 struct cmd_t
@@ -286,13 +288,13 @@ void cmd_help(conn_t *conn, const cmd_args &arg)
 		{
 			if (cmd.args)
 				if (cmd.help)
-					conn->grid->infof("// %ls %s - %s\n", cmd.commandname.c_str(), cmd.args, cmd.help);
+					conn->grid->infof("// {} {} - {}\n", mks(cmd.commandname), cmd.args, cmd.help);
 				else
-					conn->grid->infof("// %ls %s\n", cmd.commandname.c_str(), cmd.args);
+					conn->grid->infof("// {} {}\n", mks(cmd.commandname), cmd.args);
 			else if (cmd.help)
-				conn->grid->infof("// %ls - %s\n", cmd.commandname.c_str(), cmd.help);
+				conn->grid->infof("// {} - {}\n", mks(cmd.commandname), cmd.help);
 			else
-				conn->grid->infof("// %ls\n", cmd.commandname.c_str());
+				conn->grid->infof("// {}\n", mks(cmd.commandname));
 			prev_func = cmd.function;
 		}
 	}
@@ -314,17 +316,6 @@ std::vector<my_wstring> tokenize(my_wstring s)
 		v.push_back(s);
 
 	return v;
-}
-
-my_wstring mkws(const char *cmd)
-{
-	my_wstring rval;
-	while (*cmd)
-	{
-		rval += *cmd;
-		cmd++;
-	}
-	return rval;
 }
 
 void register_command(const char *cmd, command_handler function, const char *arg, const char *hlp)

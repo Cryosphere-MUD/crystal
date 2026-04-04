@@ -102,6 +102,10 @@ if(ENABLE_SCRIPTING)
   endif()
 endif()
 
+# Use fmtlib3
+add_subdirectory(vendor/fmt)
+target_link_libraries(crystal PRIVATE fmt::fmt)
+
 target_include_directories(crystal PRIVATE vendor/json/include vendor)
 
 # Manpage installation

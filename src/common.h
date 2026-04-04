@@ -55,7 +55,7 @@ typedef char *iconv_inptr_t;
 typedef std::basic_string<wchar_t> my_wstring;
 
 std::string mks(const my_wstring &w);
-my_wstring mkws(const char *cmd);
+my_wstring mkws(const std::string &txt);
 
 #define COL_BLACK 0
 #define COL_RED 1

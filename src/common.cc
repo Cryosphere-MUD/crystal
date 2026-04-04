@@ -30,22 +30,33 @@
  * files in the program, then also delete it here.
  */
 
+#include <utfcpp/source/utf8/checked.h>
+
 #include "common.h"
 
-std::string mks(const my_wstring &w)
+std::string mks(const my_wstring &txt)
 {
-	std::string s;
-	for (size_t i = 0; i < w.length(); i++)
+	std::string rval;
+	try {
+		utf8::utf32to8(txt.begin(), txt.end(), std::back_inserter(rval));
+	} catch (utf8::invalid_utf8 &e)
 	{
-		wchar_t c = w[i];
-		if (c < 0x80)
-			s += c;
-		else
-		{
-			char t[100];
-			sprintf(t, "%lc", c);
-			s += t;
-		}
+
 	}
-	return s;
+	return rval;
 }
+
+my_wstring mkws(const std::string &txt)
+{
+	my_wstring rval;
+
+	try {
+		utf8::utf8to32(txt.begin(), txt.end(), std::back_inserter(rval));
+	} catch (utf8::invalid_utf8 &e)
+	{
+
+	}
+
+	return rval;
+}
+

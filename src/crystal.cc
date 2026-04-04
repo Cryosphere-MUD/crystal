@@ -236,7 +236,7 @@ void conn_t::dosuspend()
 	if (tty.titleset)
 	{
 		tty.titleset = 0;
-		tty.title("%s", tty.curtitle.c_str());
+		tty.title(tty.curtitle);
 	}
 }
 
@@ -382,19 +382,16 @@ void conn_t::connected()
 {
 	conn_t *conn = this;
 
-	conn->grid->infof(_("/// connected with %s\n"), ssl ? "telnets" : "telnet");
+	conn->grid->infof(_("/// connected with {}\n"), ssl ? "telnets" : "telnet");
 
 	static int printed_escape_line = 0;
 	if (!printed_escape_line)
 	{
-		conn->grid->infof(_("/// escape character is '%s'\n"), "^]");
+		conn->grid->infof(_("/// escape character is '{}'\n"), "^]");
 		printed_escape_line = 1;
 	}
 
-	if (conn->ssl)
-		tty.title(_("telnets://%s:%i - Crystal"), conn->host.c_str(), conn->port);
-	else
-		tty.title(_("telnet://%s:%i - Crystal"), conn->host.c_str(), conn->port);
+	tty.title(fmt::format(_("{}://{}:{} - Crystal"), conn->ssl ? "telnets" : "telnet", conn->host, conn->port));
 
 	queue_repaint();
 }
@@ -410,12 +407,12 @@ bool conn_t::file_log(const char *filename)
 	logfile = fopen(filename, "a");
 	if (!logfile)
 	{
-		grid->infof(_("/// couldn't open '%s' for appending.\n"), filename);
+		grid->infof(_("/// couldn't open '{}' for appending.\n"), filename);
 		return false;
 	}
 	else
 	{
-		grid->infof(_("/// logging to end of '%s'.\n"), filename);
+		grid->infof(_("/// logging to end of '{}'.\n"), filename);
 		return true;
 	}
 }
@@ -526,7 +523,7 @@ void conn_t::connect(const std::string &host, const std::string &port, bool ssl)
 	else
 		ssl_stream_.reset();
 
-	grid->infof("/// resolving %s\n", host.c_str());
+	grid->infof("/// resolving {}\n", host);
 	grid->changed = true;
 
 	resolver_.async_resolve(host, port,
@@ -541,9 +538,9 @@ void conn_t::connect(const std::string &host, const std::string &port, bool ssl)
 					for (auto const &entry : results)
 					{
 						auto endpoint = entry.endpoint();
-						std::string ip = endpoint.address().to_string(); // e.g., "93.184.216.34"
-						unsigned short port = endpoint.port();		 // e.g., 80
-						self->grid->infof("/// connecting to %s:%i\n", ip.c_str(), port);
+						std::string ip = endpoint.address().to_string();
+						unsigned short port = endpoint.port();
+						self->grid->infof("/// connecting to {}:{}\n", ip, port);
 					}
 
 					self->grid->changed = true;
@@ -623,7 +620,7 @@ void conn_t::do_read_socket()
 
 void conn_t::fail(const std::string &what, asio::error_code ec)
 {
-	grid->infof("/// connection failed: %s\n", ec.message().c_str());
+	grid->infof("/// connection failed: {}\n", ec.message());
 	disconnected(0, 0);
 }
 
@@ -631,9 +628,6 @@ void conn_t::set_commandmode(bool new_command_mode)
 {
 	if (in_commandmode() == new_command_mode)
 		return;
-
-	// grid->infof("///set_commandmode called with %i\n", new_command_mode);
-	// display_buffer();
 
 	commandeditor_t::set_commandmode(new_command_mode);
 }
