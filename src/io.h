@@ -40,48 +40,54 @@
 
 #include "common.h"
 
+struct OutputState
+{
+	int ccs = -1;
+	int cfg = -1;
+	int cbg = -1;
+	Intensity cint = I_UNK;
+	int cit = -1;
+	int cfr = -1;
+	int cinv = -1;
+	int cos = -1;
+	int cul = -1;
+	int col = -1;
+	bool died = false;
+};
+
 struct Output
 {
-	bool utf8;
-	bool xterm_title;
-	bool col256;
-	bool knowscroll;
-	std::string curtitle;
-	bool titleset;
+      private:
+	std::string _decodebuffer;
+	Cell havebuffer[MAXHEIGHT][MAXWIDTH];
 
-	int ccs;
-	int cfg;
-	int cbg;
-	Intensity cint;
-	int cit;
-	int cfr;
-	int cinv;
-	int cos;
-	int cul;
-	int col;
-	bool died;
+      public:
+	Cell wantbuffer[MAXHEIGHT][MAXWIDTH];
+	bool bad_have = true;
+	int evillines[MAXHEIGHT];
+
+	bool utf8 = false;
+	bool xterm_title = false;
+	bool col256 = false;
+	bool knowscroll = false;
+	std::string curtitle;
+	bool titleset = false;
+	
+	std::string acsc;
+	bool acsc_set = false;
+
+	int HEIGHT = 24;
+	int WIDTH = 80;
+
+	OutputState state;
 
 	void initcol()
 	{
-		cfg = -1;
-		cbg = -1;
-		cint = I_UNK;
-		cul = -1;
-		col = -1;
-		cit = -1;
-		cfr = -1;
-		cinv = -1;
-		cos = -1;
-		died = false;
+		state = OutputState();
 	}
 
 	Output()
-	    : utf8(false), xterm_title(false), col256(false), knowscroll(false), curtitle(""), titleset(false), acsc(""), acsc_set(0),
-	      bad_have(true)
 	{
-		HEIGHT = 24;
-		WIDTH = 80;
-		initcol();
 		memset(evillines, 0, sizeof(evillines));
 	}
 
@@ -118,15 +124,12 @@ struct Output
 		return def;
 	}
 
-	std::string acsc;
-	int acsc_set;
-
 	void outvtchar(unsigned char w)
 	{
 		if (!acsc_set)
 		{
 			acsc = getinfo("acsc", "");
-			acsc_set = 1;
+			acsc_set = true;
 		}
 		const char *s = acsc.c_str();
 		while (*s)
@@ -159,9 +162,6 @@ struct Output
 		printf("\033[%i;%if", row, col);
 	}
 
-	int HEIGHT;
-	int WIDTH;
-
 	void grabwinsize()
 	{
 		struct winsize wws;
@@ -192,20 +192,12 @@ struct Output
 
 	void plonk(const Cell &g, bool allow_dead);
 
-	Cell wantbuffer[MAXHEIGHT][MAXWIDTH];
-	bool bad_have;
-	int evillines[MAXHEIGHT];
-
 	void show_want();
 
 	String32 convert_input(int i);
 	int getinput();
 	void feed(const std::string &data) { _decodebuffer += data; }
 	String32 decode_feed();
-
-      private:
-	std::string _decodebuffer;
-	Cell havebuffer[MAXHEIGHT][MAXWIDTH];
 };
 
 extern Output tty;
