@@ -48,11 +48,11 @@
 
 #include <map>
 
-hlist cmdhist;
+CommandHistory cmdhist;
 
-hlist *commandeditor_t::chist()
+CommandHistory *commandeditor_t::chist()
 {
-	static hlist hist;
+	static CommandHistory hist;
 
 	if (in_commandmode())
 		return &cmdhist;
@@ -70,13 +70,13 @@ void commandeditor_t::dokillword()
 		while (cursor && !isspace(buffer[cursor - 1]))
 			cursor--;
 
-		my_wstring extra = buffer.substr(orig);
+		String32 extra = buffer.substr(orig);
 		buffer = buffer.substr(0, cursor);
 		buffer += extra;
 	}
 }
 
-extern mterm tty;
+extern Output tty;
 
 void commandeditor_t::dodelete()
 {

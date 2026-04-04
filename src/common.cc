@@ -34,7 +34,7 @@
 
 #include "common.h"
 
-std::string mks(const my_wstring &txt)
+std::string mks(const String32 &txt)
 {
 	std::string rval;
 	try {
@@ -46,9 +46,9 @@ std::string mks(const my_wstring &txt)
 	return rval;
 }
 
-my_wstring mkws(const std::string &txt)
+String32 mkws(const std::string &txt)
 {
-	my_wstring rval;
+	String32 rval;
 
 	try {
 		utf8::utf8to32(txt.begin(), txt.end(), std::back_inserter(rval));

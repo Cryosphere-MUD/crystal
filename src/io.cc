@@ -51,11 +51,11 @@ void truecol_to_str(char *buf, int value)
 	sprintf(buf, "2;%i;%i;%i;", red, green, blue);
 }
 
-my_wstring mterm::decode_feed()
+String32 Output::decode_feed()
 {
 	auto it = _decodebuffer.begin();
 	const auto end = _decodebuffer.end();
-	my_wstring out;
+	String32 out;
 	while (it < end)
 	{
 		try
@@ -71,7 +71,7 @@ my_wstring mterm::decode_feed()
 	return out;
 }
 
-void mterm::plonk(const cell_t &g, bool allow_dead)
+void Output::plonk(const Cell &g, bool allow_dead)
 {
 	if (g.scs != ccs)
 	{
@@ -271,7 +271,7 @@ void mterm::plonk(const cell_t &g, bool allow_dead)
 	return;
 }
 
-void mterm::show_want()
+void Output::show_want()
 {
 
 	int realy = -1;
@@ -355,8 +355,8 @@ void mterm::show_want()
 
 static struct
 {
-	const my_wstring escape_sequence;
-	const my_wstring key_name;
+	const String32 escape_sequence;
+	const String32 key_name;
 } keys[] = {
     {L"\033[A", L"up"},
     {L"\033[B", L"down"},
@@ -551,9 +551,9 @@ static struct
     {L"\033>", L"m->"},
 };
 
-my_wstring mterm::convert_input(int i)
+String32 Output::convert_input(int i)
 {
-	static my_wstring sofar = L"";
+	static String32 sofar = L"";
 
 	if (sofar.empty())
 	{
@@ -579,13 +579,13 @@ my_wstring mterm::convert_input(int i)
 		}
 		if (i < 32)
 		{
-			my_wstring s;
+			String32 s;
 			s += L"c-";
 			s += tolower(i + '@');
 			return s;
 		}
 
-		my_wstring s;
+		String32 s;
 		s += i;
 		return s;
 	}
@@ -614,7 +614,7 @@ my_wstring mterm::convert_input(int i)
 
 		if (sofar.length() == 2 && sofar[0] == '\033')
 		{
-			my_wstring s;
+			String32 s;
 			s += L"m-";
 			s += sofar[1];
 			sofar = L"";

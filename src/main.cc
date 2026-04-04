@@ -93,8 +93,8 @@
 
 //FILE *logfile = 0;
 
-class conn_t;
-class grid_t;
+class Runtime;
+class ANSIGrid;
 
 #include "commandeditor.h"
 #include "commands.h"
@@ -105,15 +105,15 @@ class grid_t;
 #include "telnet.h"
 #include "url.h"
 
-extern mterm tty;
+extern Output tty;
 
-conn_t *cleanupConn;
+Runtime *cleanupConn;
 
 void cleanup()
 {
 	if (cleanupConn)
 	{
-		conn_t &conn = *cleanupConn;
+		Runtime &conn = *cleanupConn;
 
 		if (conn.logfile)
 		{
@@ -150,8 +150,8 @@ int main(int argc, char **argv)
 
 	asio::io_context io_context;
 
-	grid_t grid;
-	auto conn = std::make_shared<conn_t>(io_context, &grid);
+	ANSIGrid grid;
+	auto conn = std::make_shared<Runtime>(io_context, &grid);
 	grid.set_conn(conn.get());
 
 	conn->initbindings();

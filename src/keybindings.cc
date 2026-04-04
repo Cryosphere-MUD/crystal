@@ -39,7 +39,7 @@
 
 #include <iostream>
 
-typedef void (conn_t::*keybinding_method_t)();
+typedef void (Runtime::*keybinding_method_t)();
 
 struct keycommand_t
 {
@@ -57,7 +57,7 @@ struct keycommand_t
 
 std::map<std::string, keybinding_method_t> keycommand_t::_commands;
 
-#define DECLARE_COMMAND(str) keycommand_t str##obj(#str, &conn_t::do##str);
+#define DECLARE_COMMAND(str) keycommand_t str##obj(#str, &Runtime::do##str);
 
 DECLARE_COMMAND(commandmode)
 DECLARE_COMMAND(backspace)
@@ -116,10 +116,10 @@ struct keybinding_t initkeys[] = {
     keybinding_t(L"fn.12", "toggleoverlay")
 };
 
-std::map<my_wstring, keybinding_method_t> keys;
-std::map<my_wstring, std::string> keystr;
+std::map<String32, keybinding_method_t> keys;
+std::map<String32, std::string> keystr;
 
-void conn_t::addbinding(const wchar_t *key, const std::string &cmd)
+void Runtime::addbinding(const wchar_t *key, const std::string &cmd)
 {
 	keybinding_t binding(key, cmd);
 	keybinding_method_t handler = binding.command();
@@ -135,7 +135,7 @@ void conn_t::addbinding(const wchar_t *key, const std::string &cmd)
 	}
 }
 
-void conn_t::initbindings()
+void Runtime::initbindings()
 {
 	for (const auto &binding: initkeys)
 	{
@@ -152,7 +152,7 @@ void conn_t::initbindings()
 	}
 }
 
-void conn_t::dispatch_key(const my_wstring &s)
+void Runtime::dispatch_key(const String32 &s)
 {
 	if (s.length() == 1)
 	{
@@ -178,7 +178,7 @@ void conn_t::dispatch_key(const my_wstring &s)
 	}
 }
 
-void cmd_bind(conn_t *conn, const cmd_args &arg)
+void cmd_bind(Runtime *conn, const CommandArguments &arg)
 {
 	if (arg.size() != 1 && arg.size() != 3)
 	{
@@ -189,10 +189,10 @@ void cmd_bind(conn_t *conn, const cmd_args &arg)
 	if (arg.size() == 1)
 	{
 		int wid = 0;
-		for (std::map<my_wstring, std::string>::const_iterator it = keystr.begin(); it != keystr.end(); it++)
+		for (std::map<String32, std::string>::const_iterator it = keystr.begin(); it != keystr.end(); it++)
 			wid = std::max(wid, int(it->first.length()));
 
-		for (std::map<my_wstring, std::string>::const_iterator it = keystr.begin(); it != keystr.end(); it++)
+		for (std::map<String32, std::string>::const_iterator it = keystr.begin(); it != keystr.end(); it++)
 			conn->grid->infof("{:>{}} {}\n", wid, mks(it->first), it->second);
 	}
 	else

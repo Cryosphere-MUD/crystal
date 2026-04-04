@@ -64,11 +64,11 @@
 
 #undef NEGOTIATE_MXP
 
-extern mterm tty;
+extern Output tty;
 
 std::string nam(int i);
 
-void sendwinsize(conn_t *conn)
+void sendwinsize(Runtime *conn)
 {
 	if (!conn->telnet)
 		return;
@@ -100,7 +100,7 @@ std::string nam(int s)
 	return q;
 }
 
-void telnet_state::reply(int a, int b, int c)
+void TelnetState::reply(int a, int b, int c)
 {
 	char buf[5];
 	buf[0] = a;
@@ -118,7 +118,7 @@ int flag_table[] = {
     0x25b8, 0x25c2, 0x2195, 0x203c, 0x00b6, 0x00a7, 0x25ac, 0x21a8, 0x2191, 0x2193, 0x2192, 0x2190, 0x221f, 0x2194, 0x25b2, 0x25bc,
 };
 
-void decode(conn_t *conn, grid_t *grid, int ch)
+void decode(Runtime *conn, ANSIGrid *grid, int ch)
 {
 	if (conn->mud_cset == "ISO-8859-1")
 	{
@@ -176,7 +176,7 @@ void decode(conn_t *conn, grid_t *grid, int ch)
 	return;
 }
 
-void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
+void TelnetState::handle_read(Runtime *conn, unsigned char *bytes, size_t len)
 {
 	for (int i = 0; i < len; i++)
 	{
@@ -284,7 +284,7 @@ void telnet_state::handle_read(conn_t *conn, unsigned char *bytes, size_t len)
 }
 
 #ifdef MCCP
-void telnet_state::handle_compress2(conn_t *conn)
+void TelnetState::handle_compress2(Runtime *conn)
 {
 	compression_mode = TELOPT_COMPRESS2;
 	zlib_state = {};
@@ -293,7 +293,7 @@ void telnet_state::handle_compress2(conn_t *conn)
 #endif
 
 #ifdef MCCP4
-void telnet_state::handle_compress4(conn_t *conn)
+void TelnetState::handle_compress4(Runtime *conn)
 {
 	if (subneg_data[0] == MCCP4_BEGIN_ENCODING)
 	{
@@ -314,7 +314,7 @@ void telnet_state::handle_compress4(conn_t *conn)
 }
 #endif
 
-void telnet_state::handle_ttype(conn_t *conn)
+void TelnetState::handle_ttype(Runtime *conn)
 {
 	std::string str;
 	str += (char)TELQUAL_IS;
@@ -353,7 +353,7 @@ void telnet_state::handle_ttype(conn_t *conn)
 	subneg_send(TELOPT_TTYPE, str);
 }
 
-void telnet_state::handle_mplex(conn_t *conn)
+void TelnetState::handle_mplex(Runtime *conn)
 {
 	if (subneg_data.length() == 2)
 	{
@@ -389,7 +389,7 @@ void telnet_state::handle_mplex(conn_t *conn)
 	}
 }
 
-void telnet_state::tstack(conn_t *conn, int ch)
+void TelnetState::tstack(Runtime *conn, int ch)
 {
 	if (mode == IAC)
 	{
@@ -678,7 +678,7 @@ void telnet_state::tstack(conn_t *conn, int ch)
 	}
 }
 
-void telnet_state::send(const std::string &proper)
+void TelnetState::send(const std::string &proper)
 {
 	std::string p2;
 	const unsigned char *b = (const unsigned char *)proper.c_str();
@@ -695,7 +695,7 @@ void telnet_state::send(const std::string &proper)
 		asio::write(raw, asio::buffer(p2.data(), p2.size()));
 }
 
-void telnet_state::subneg_send(int subneg, const std::string &proper)
+void TelnetState::subneg_send(int subneg, const std::string &proper)
 {
 	std::string s2;
 	s2 += (unsigned char)IAC;

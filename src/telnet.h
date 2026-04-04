@@ -64,7 +64,7 @@ struct MCCP4State
 
 #endif
 
-struct telnet_state
+struct TelnetState
 {
 	asio::ip::tcp::socket &raw;
 	asio::ssl::stream<asio::ip::tcp::socket &> *ssl;
@@ -91,25 +91,25 @@ struct telnet_state
 	MCCP4State mccp4_state;
 #endif
 
-	telnet_state(asio::ip::tcp::socket &raw, asio::ssl::stream<asio::ip::tcp::socket &> *ssl) : raw(raw), ssl(ssl) {}
+	TelnetState(asio::ip::tcp::socket &raw, asio::ssl::stream<asio::ip::tcp::socket &> *ssl) : raw(raw), ssl(ssl) {}
 
-	~telnet_state() {}
+	~TelnetState() {}
 
-	void tstack(conn_t *conn, int ch);
+	void tstack(Runtime *conn, int ch);
 
-	void handle_ttype(conn_t *conn);
+	void handle_ttype(Runtime *conn);
 
-	void handle_mplex(conn_t *conn);
+	void handle_mplex(Runtime *conn);
 
 #ifdef MCCP
-	void handle_compress2(conn_t *conn);
+	void handle_compress2(Runtime *conn);
 #endif
 
 #ifdef MCCP4
-	void handle_compress4(conn_t *conn);
+	void handle_compress4(Runtime *conn);
 #endif
 
-	void handle_read(conn_t *, unsigned char *, size_t);
+	void handle_read(Runtime *, unsigned char *, size_t);
 
 	void send(const std::string &s);
 
@@ -118,6 +118,6 @@ struct telnet_state
 	void subneg_send(int neg, const std::string &data);
 };
 
-void sendwinsize(conn_t *);
+void sendwinsize(Runtime *);
 
 #endif

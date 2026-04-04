@@ -43,13 +43,13 @@ namespace scripting {
 void start(void)
 {
 }
-void set_grid(grid_t *)
+void set_grid(ANSIGrid *)
 {
 }
-void doprompt(const my_wstring &s)
+void doprompt(const String32 &s)
 {
 }
-void dotrigger(const my_wstring &s)
+void dotrigger(const String32 &s)
 {
 }
 int count_timers()
@@ -78,7 +78,7 @@ bool badlua = false;
 
 namespace scripting {
 
-grid_t *ergrid = nullptr;
+ANSIGrid *ergrid = nullptr;
 
 void set_lua_error(lua_State *L, const char *errorString)
 {
@@ -142,7 +142,7 @@ int count_timers()
 	return timers.end() != timers.begin();
 }
 
-void set_grid(grid_t *g)
+void set_grid(ANSIGrid *g)
 {
 	ergrid = g;
 }
@@ -163,7 +163,7 @@ void dotimers()
 
 void tomud_echo(std::string proper)
 {
-	conn_t *conn = ergrid->conn;
+	Runtime *conn = ergrid->conn;
 
 	if (conn->grid->cstoredprompt.length())
 	{
@@ -176,12 +176,12 @@ void tomud_echo(std::string proper)
 
 	if (!(conn->telnet && conn->telnet->will_echo))
 	{
-		my_wstring a;
+		String32 a;
 		for (int i = 0; i < conn->grid->col; i++)
 			a += conn->grid->get(conn->grid->row, i).ch;
 		for (size_t i = 0; i < proper.length(); i++)
 		{
-			cell_t c = proper[i];
+			Cell c = proper[i];
 			conn->grid->place(&c);
 		}
 		conn->grid->wantnewline();
@@ -255,7 +255,7 @@ std::string trig = "", prompt = "", host = "";
 
 static bool triggered = false;
 
-void dotrigger(const my_wstring &s)
+void dotrigger(const String32 &s)
 {
 	if (!l)
 		return;
@@ -275,7 +275,7 @@ void dotrigger(const my_wstring &s)
 	kill_if_bad();
 }
 
-void doprompt(const my_wstring &s)
+void doprompt(const String32 &s)
 {
 	if (!l)
 		return;
@@ -315,9 +315,9 @@ static int lua_bind_key(lua_State *L)
 		set_lua_error(L, "Bad arg 2 to bind_key");
 	const char *key = lua_tostring(L, 1);
 	const char *cmd = lua_tostring(L, 2);
-	conn_t *conn = ergrid->conn;
+	Runtime *conn = ergrid->conn;
 
-	my_wstring wkey;
+	String32 wkey;
 	while (*key)
 	{
 		wkey += *key;
@@ -340,7 +340,7 @@ static int lua_register_host(lua_State *L)
 
 static std::map<std::wstring, std::string> lua_command_functions;
 
-static void lua_command_handler(conn_t *conn, const cmd_args &args)
+static void lua_command_handler(Runtime *conn, const CommandArguments &args)
 {
 	if (!l)
 		return;
@@ -383,7 +383,7 @@ static int lua_quit(lua_State *L)
 		set_lua_error(L, "Bad arg 1 to register_command");
 	long num = lua_tonumber(L, 1);
 	exitValue = num;
-	conn_t *conn = ergrid->conn;
+	Runtime *conn = ergrid->conn;
 	conn->quit = true;
 	return 0;
 }
