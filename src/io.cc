@@ -76,9 +76,9 @@ void mterm::plonk(const cell_t &g, bool allow_dead)
 	if (g.scs != ccs)
 	{
 		if (g.scs)
-			printf("%s", getinfo("smacs", "\033(0").c_str()); // setmode alternate character set
+			emit(getinfo("smacs", "\033(0")); // setmode alternate character set
 		else
-			printf("%s", getinfo("rmacs", "\033(B").c_str()); // resetmode alternate character set
+			emit(getinfo("rmacs", "\033(B")); // resetmode alternate character set
 
 		ccs = g.scs;
 	}
@@ -245,7 +245,7 @@ void mterm::plonk(const cell_t &g, bool allow_dead)
 	{
 		if (!died)
 		{
-			printf("%s", getinfo("el", "\033[K").c_str()); // clear to end of line
+			emit(getinfo("el", "\033[K")); // clear to end of line
 			died = 1;
 		}
 	}
@@ -331,14 +331,14 @@ void mterm::show_want()
 				{
 					realy = wanty;
 					realx = wantx;
-					printf("\033[%i;%if", wanty, wantx);
+					move_cursor(wanty, wantx);
 				}
 				else if (realx != wantx)
 				{
 					if (wantx == (realx + 1))
 						printf("\033[C");
 					else
-						printf("\033[%i;%if", wanty, wantx);
+						move_cursor(wanty, wantx);
 					realx = wantx;
 				}
 

@@ -59,7 +59,7 @@ struct url
 	std::string password;
 	bool has_password;
 
-	url(const char *);
+	url(const std::string &url);
 };
 
 #endif

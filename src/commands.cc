@@ -33,6 +33,7 @@
 #include "commands.h"
 
 #include <fmt/format.h>
+#include <optional>
 
 #include "crystal.h"
 #include "grid.h"
@@ -114,7 +115,7 @@ void cmd_connect(conn_t *conn, const cmd_args &arg)
 	std::string cport = mks(port);
 	std::string chost = mks(host);
 
-	url u = url(chost.c_str());
+	url u = url(chost);
 	if (cport.length() != 0)
 		u.service = cport;
 
@@ -160,7 +161,7 @@ void cmd_dump(conn_t *conn, const cmd_args &arg)
 	}
 
 	std::string cfilename = mks(arg[1]);
-	conn->grid->file_dump(cfilename.c_str());
+	conn->grid->file_dump(cfilename);
 }
 
 void cmd_log(conn_t *conn, const cmd_args &arg)
@@ -172,7 +173,7 @@ void cmd_log(conn_t *conn, const cmd_args &arg)
 	}
 
 	std::string cfilename = mks(arg[1]);
-	conn->file_log(cfilename.c_str());
+	conn->file_log(cfilename);
 }
 
 void cmd_dumplog(conn_t *conn, const cmd_args &arg)
@@ -184,8 +185,8 @@ void cmd_dumplog(conn_t *conn, const cmd_args &arg)
 	}
 
 	std::string cfilename = mks(arg[1]);
-	if (conn->grid->file_dump(cfilename.c_str()))
-		conn->file_log(cfilename.c_str());
+	if (conn->grid->file_dump(cfilename))
+		conn->file_log(cfilename);
 }
 
 struct option_t
@@ -248,19 +249,19 @@ struct cmd_t
 {
 	my_wstring commandname;
 	command_handler function;
-	const char *args;
-	const char *help;
+	std::optional<std::string> args;
+	std::optional<std::string> help;
 };
 
 std::vector<cmd_t> cmd_table = {
     cmd_t{L"connect", cmd_connect, "<host> [port]", "connects to given host"},
     {L"open", cmd_connect},
-    {L"close", cmd_close, NULL, "cuts connection"},
+    {L"close", cmd_close, std::nullopt, "cuts connection"},
 
-    {L"quit", cmd_quit, NULL, "quits crystal"},
-    {L"exit", cmd_quit, NULL, NULL},
+    {L"quit", cmd_quit, std::nullopt, "quits crystal"},
+    {L"exit", cmd_quit, std::nullopt, std::nullopt},
 
-    {L"compress", cmd_compress, NULL, "show compression status"},
+    {L"compress", cmd_compress, std::nullopt, "show compression status"},
 
     {L"dump", cmd_dump, "<filename>", "dump scrollback to file"},
     {L"log", cmd_log, "<filename>", "log to file"},
@@ -269,14 +270,14 @@ std::vector<cmd_t> cmd_table = {
     {L"match", cmd_match, "[pattern]", "highlight text matching pattern"},
     {L"charset", cmd_charset, "<charset>", "talk to mud with given charset"},
 #ifdef HAVE_LUA
-    {L"reload", cmd_reload, NULL, "reload config file"},
+    {L"reload", cmd_reload, std::nullopt, "reload config file"},
 #endif
-    {L"help", cmd_help, NULL, "brief summary of commands"},
+    {L"help", cmd_help, std::nullopt, "brief summary of commands"},
 
     {L"set", cmd_set, "[option value]", "shows current options or sets one"},
     {L"bind", cmd_bind, "[key value]", "shows or sets current keyboard bindings"},
 
-    {L"z", cmd_z, NULL, "suspend"},
+    {L"z", cmd_z, std::nullopt, "suspend"},
 };
 
 void cmd_help(conn_t *conn, const cmd_args &arg)
@@ -288,11 +289,11 @@ void cmd_help(conn_t *conn, const cmd_args &arg)
 		{
 			if (cmd.args)
 				if (cmd.help)
-					conn->grid->infof("// {} {} - {}\n", mks(cmd.commandname), cmd.args, cmd.help);
+					conn->grid->infof("// {} {} - {}\n", mks(cmd.commandname), cmd.args.value(), cmd.help.value());
 				else
-					conn->grid->infof("// {} {}\n", mks(cmd.commandname), cmd.args);
+					conn->grid->infof("// {} {}\n", mks(cmd.commandname), cmd.args.value());
 			else if (cmd.help)
-				conn->grid->infof("// {} - {}\n", mks(cmd.commandname), cmd.help);
+				conn->grid->infof("// {} - {}\n", mks(cmd.commandname), cmd.help.value());
 			else
 				conn->grid->infof("// {}\n", mks(cmd.commandname));
 			prev_func = cmd.function;
@@ -318,9 +319,16 @@ std::vector<my_wstring> tokenize(my_wstring s)
 	return v;
 }
 
-void register_command(const char *cmd, command_handler function, const char *arg, const char *hlp)
+std::optional<std::string> nullopt_if_empty(const std::string &arg)
 {
-	cmd_t newCmd = {mkws(cmd), function, arg, hlp};
+	if (arg.empty())
+		return std::nullopt;
+	return arg;
+}
+
+void register_command(const std::string &cmd, command_handler function, const std::string &arg, const std::string &hlp)
+{
+	cmd_t newCmd = {mkws(cmd), function, nullopt_if_empty(arg), nullopt_if_empty(hlp)};
 	cmd_table.push_back(newCmd);
 }
 

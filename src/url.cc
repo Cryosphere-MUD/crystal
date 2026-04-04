@@ -3,20 +3,18 @@
 #include "scripting.h"
 #include "url.h"
 
-int count_chars(const char *s, char ch)
+size_t count_chars(const std::string &s, char to_count)
 {
-	int c = 0;
-	while (*s)
-	{
-		if (*s == ch)
-			c++;
-		s++;
-	}
-	return c;
+	size_t count = 0;
+	for (auto ch : s)
+		if (ch == to_count)
+			count++;
+	return count;
 }
 
-url::url(const char *s) : has_username(false), has_password(false)
+url::url(const std::string &url) : has_username(false), has_password(false)
 {
+	const char *s = url.c_str();
 	protocol = "telnet";
 	service = "telnet";
 
@@ -36,7 +34,6 @@ url::url(const char *s) : has_username(false), has_password(false)
 
 	if (const char *u = strchr(s, '@'))
 	{
-		printf("We have a username part.\n");
 		username = std::string(s, u - s);
 		has_username = true;
 		if (username.find(':') != std::string::npos)

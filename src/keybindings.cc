@@ -47,12 +47,12 @@ struct keycommand_t
 	static std::map<std::string, keybinding_method_t> _commands;
 
       public:
-	keycommand_t(const char *cmdname, keybinding_method_t method) //: cmdname(cmdname), method(method)
+	keycommand_t(const std::string &cmdname, keybinding_method_t method) //: cmdname(cmdname), method(method)
 	{
 		_commands[cmdname] = method;
 	}
 
-	static keybinding_method_t findcommand(const char *cmd) { return _commands[cmd]; }
+	static keybinding_method_t findcommand(const std::string &cmd) { return _commands[cmd]; }
 };
 
 std::map<std::string, keybinding_method_t> keycommand_t::_commands;
@@ -89,14 +89,14 @@ DECLARE_COMMAND(enter)
 struct keybinding_t
 {
 	const wchar_t *s;
-	const char *cmdname;
+	std::string cmdname;
 
-	keybinding_t(const wchar_t *s, const char *cmdname) : s(s), cmdname(cmdname) {}
+	keybinding_t(const wchar_t *s, const std::string &cmdname) : s(s), cmdname(cmdname) {}
 
-	keybinding_method_t command() { return keycommand_t::findcommand(cmdname); }
+	keybinding_method_t command() const { return keycommand_t::findcommand(cmdname); }
 };
 
-struct keybinding_t initkeys[34] = {
+struct keybinding_t initkeys[] = {
     keybinding_t(L"c-]", "commandmode"),     keybinding_t(L"backspace", "backspace"),
     keybinding_t(L"tab", "findnext"),	     keybinding_t(L"c-a", "firstchar"),
     keybinding_t(L"c-b", "prevchar"),	     keybinding_t(L"c-c", "clearline"),
@@ -113,13 +113,13 @@ struct keybinding_t initkeys[34] = {
     keybinding_t(L"m->", "scrollend"),	     keybinding_t(L"home", "firstchar"),
     keybinding_t(L"end", "lastchar"),	     keybinding_t(L"delete", "delete"),
     keybinding_t(L"pagedown", "scrolldown"), keybinding_t(L"pageup", "scrollup"),
-    keybinding_t(L"fn.12", "toggleoverlay"), keybinding_t(NULL, NULL),
+    keybinding_t(L"fn.12", "toggleoverlay")
 };
 
 std::map<my_wstring, keybinding_method_t> keys;
 std::map<my_wstring, std::string> keystr;
 
-void conn_t::addbinding(const wchar_t *key, const char *cmd)
+void conn_t::addbinding(const wchar_t *key, const std::string &cmd)
 {
 	keybinding_t binding(key, cmd);
 	keybinding_method_t handler = binding.command();
@@ -137,17 +137,17 @@ void conn_t::addbinding(const wchar_t *key, const char *cmd)
 
 void conn_t::initbindings()
 {
-	for (size_t i = 0; initkeys[i].s; i++)
+	for (const auto &binding: initkeys)
 	{
-		keybinding_method_t handler = initkeys[i].command();
+		keybinding_method_t handler = binding.command();
 		if (!handler)
 		{
-			grid->infof(_("/// missing handler for {} ({})\n"), mks(initkeys[i].s), initkeys[i].cmdname);
+			grid->infof(_("/// missing handler for {} ({})\n"), mks(binding.s), binding.cmdname);
 		}
 		else
 		{
-			keys[initkeys[i].s] = handler;
-			keystr[initkeys[i].s] = initkeys[i].cmdname;
+			keys[binding.s] = handler;
+			keystr[binding.s] = binding.cmdname;
 		}
 	}
 }

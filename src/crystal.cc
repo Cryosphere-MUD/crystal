@@ -201,7 +201,7 @@ void conn_t::dotoggleoverlay()
 	}
 }
 
-void conn_t::triggerfn(const char *fn)
+void conn_t::triggerfn(const std::string &fn)
 {
 	std::string st = "fn.";
 	st += fn;
@@ -407,7 +407,7 @@ void conn_t::connected()
 	queue_repaint();
 }
 
-bool conn_t::file_log(const char *filename)
+bool conn_t::file_log(const std::string &filename)
 {
 	if (logfile)
 	{
@@ -415,7 +415,7 @@ bool conn_t::file_log(const char *filename)
 		fclose(logfile);
 		logfile = NULL;
 	}
-	logfile = fopen(filename, "a");
+	logfile = fopen(filename.c_str(), "a");
 	if (!logfile)
 	{
 		grid->infof(_("/// couldn't open '{}' for appending.\n"), filename);

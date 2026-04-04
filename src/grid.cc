@@ -171,14 +171,6 @@ std::vector<int> parse(const std::string &s)
 
 void grid_t::wterminal(wchar_t ch)
 {
-	// if (last_mode != mode)
-	// {
-	// 	fprintf(stderr, "\nmode: %3s, got:%s.\n", q(mode).c_str(), q(ch).c_str());
-	// 	last_mode = mode;
-	// }
-	// else
-	// 	fprintf(stderr, "%s", q(ch).c_str());
-
 	if (mode == 0)
 	{
 		switch (ch)
@@ -687,14 +679,14 @@ void grid_t::info(const my_wstring &str)
 
 void grid_t::info(const std::string &str)
 {
-	for (auto ch: mkws(str.c_str()))
+	for (auto ch: mkws(str))
 		infoc(ch);
 }
 
 
-bool grid_t::file_dump(const char *file)
+bool grid_t::file_dump(const std::string &file)
 {
-	FILE *dumpfile = fopen(file, "a");
+	FILE *dumpfile = fopen(file.c_str(), "a");
 	if (NULL == dumpfile)
 	{
 		infof(_("/// couldn't open '{}' to dump to\n"), file);

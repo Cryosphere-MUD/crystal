@@ -248,7 +248,7 @@ int main(int argc, char **argv)
 	tty.grabwinsize();
 
 	setupterm(NULL, 0, NULL);
-	printf("%s", tty.getinfo("enacs", "").c_str());
+	tty.emit(tty.getinfo("enacs", ""));
 
 	struct termios ti;
 	tcgetattr(0, &oldti);

@@ -104,9 +104,9 @@ struct mterm
 		}
 	}
 
-	std::string getinfo(const char *name, const char *def = 0)
+	std::string getinfo(const std::string &name, const std::string &def = "")
 	{
-		const char *i = tigetstr((char *)name);
+		const char *i = tigetstr(const_cast<char *>(name.c_str()));
 		if (i && strstr(i, "$<"))
 		{
 			std::string q = i;
@@ -147,6 +147,16 @@ struct mterm
 		}
 
 		printf("%c", '?');
+	}
+
+	void emit(const std::string &txt)
+	{
+		printf("%s", txt.c_str());
+	}
+
+	void move_cursor(int row, int col)
+	{
+		printf("\033[%i;%if", row, col);
 	}
 
 	int HEIGHT;
