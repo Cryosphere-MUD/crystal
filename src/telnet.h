@@ -36,7 +36,7 @@
 #include <arpa/telnet.h>
 
 #include "common.h"
-#include "crystal.h"
+#include "Runtime.h"
 #include "grid.h"
 
 #ifdef HAVE_ZLIB

@@ -30,8 +30,8 @@
  * files in the program, then also delete it here.
  */
 
-#ifndef CRYSTAL_H
-#define CRYSTAL_H
+#ifndef RUNTIME_H
+#define RUNTIME_H
 
 #include <asio.hpp>
 #include <asio/ssl.hpp>
@@ -80,6 +80,28 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 
 	std::string mud_cset = "ISO-8859-1";
 
+	std::set<String32> hl_matches;
+
+	std::array<char, 4096> stdin_raw_;
+	std::array<char, 4096> socket_raw_;
+
+	tcp::resolver resolver_;
+
+	asio::io_context &io_;
+
+	asio::ssl::context ssl_ctx_;
+
+	bool reconnecting = false;
+
+	std::unique_ptr<tcp::socket> socket_;
+	std::unique_ptr<asio::ssl::stream<tcp::socket &>> ssl_stream_;
+	// asio::ssl::stream<tcp::socket&> ssl_stream_;
+
+	asio::posix::stream_descriptor stdin_;
+
+	asio::streambuf socket_buf_;
+	asio::streambuf stdin_buf_;
+
 	Runtime(asio::io_context &io, ANSIGrid *grid);
 	~Runtime();
 
@@ -125,28 +147,6 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 	void set_commandmode(bool new_command_mode) override;
 
 	void do_read_socket();
-
-	std::set<String32> hl_matches;
-
-	std::array<char, 4096> stdin_raw_;
-	std::array<char, 4096> socket_raw_;
-
-	tcp::resolver resolver_;
-
-	asio::io_context &io_;
-
-	asio::ssl::context ssl_ctx_;
-
-	bool reconnecting = false;
-
-	std::unique_ptr<tcp::socket> socket_;
-	std::unique_ptr<asio::ssl::stream<tcp::socket &>> ssl_stream_;
-	// asio::ssl::stream<tcp::socket&> ssl_stream_;
-
-	asio::posix::stream_descriptor stdin_;
-
-	asio::streambuf socket_buf_;
-	asio::streambuf stdin_buf_;
 };
 
 extern int exitValue;

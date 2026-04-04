@@ -29,6 +29,7 @@
  * version.  If you delete this exception statement from all source
  * files in the program, then also delete it here.
  */
+#include <widecharwidth/widechar_width.h>
 
 #include <utfcpp/source/utf8/checked.h>
 
@@ -60,3 +61,25 @@ String32 mkws(const std::string &txt)
 	return rval;
 }
 
+int real_wcwidth(char32_t ch)
+{
+        int width = widechar_wcwidth(ch);
+        switch (width)
+        {
+        case widechar_nonprint:
+                return 0;
+        case widechar_combining:
+                return 0;
+        case widechar_ambiguous:
+                return 1;
+        case widechar_private_use:
+                return 1;
+        case widechar_unassigned:
+                return 1;
+        case widechar_widened_in_9:
+                return 2;
+        case widechar_non_character:
+                return 0;
+        }
+        return width;
+}

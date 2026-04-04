@@ -88,7 +88,7 @@ class CommandEditor
 	//! are we in command mode (true) or mud mode (false)
 	bool _commandmode = true;
 
-      public:
+      protected:
 	String32 buffer;
 	size_t cursor = 0;
 
@@ -96,6 +96,8 @@ class CommandEditor
 	bool nofuture = true;
 
 	String32 cutbuffer;
+
+      public:
 
 	bool in_commandmode() const { return _commandmode; }
 

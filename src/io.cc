@@ -42,6 +42,8 @@
 
 #include "io.h"
 
+Output tty;
+
 void truecol_to_str(char *buf, int value)
 {
 	int red = ((value >> 16) & 0xff);
