@@ -20,7 +20,7 @@ set(SOURCES
 
 # Define headers for IDEs
 set(HEADERS
-  src/Socket.h src/common.h src/crystal.h src/grid.h src/io.h src/telnet.h
+  src/common.h src/crystal.h src/grid.h src/io.h src/telnet.h
   src/scripting.h src/commands.h src/commandeditor.h src/url.h
 )
 
