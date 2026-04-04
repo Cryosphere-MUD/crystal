@@ -149,7 +149,7 @@ void Runtime::display_buffer()
 		}
 	}
 
-	CellString crealprompt;
+	std::vector<Cell> crealprompt;
 
 	if (in_commandmode())
 	{
@@ -161,7 +161,7 @@ void Runtime::display_buffer()
 			int s = mbtowc(&c, str, max);
 			if (s <= 0)
 				break;
-			crealprompt += Cell(c);
+			crealprompt.emplace_back(c);
 			str += s;
 			max -= s;
 		}
@@ -169,14 +169,14 @@ void Runtime::display_buffer()
 	else
 	{
 		for (int i = 0; i < grid.col; i++)
-			crealprompt += grid.get(grid.row, i);
+			crealprompt.push_back(grid.get(grid.row, i));
 
-		if (grid.cstoredprompt.length() && !crealprompt.length())
-			for (int i = 0; i < grid.cstoredprompt.length(); i++)
-				crealprompt += grid.cstoredprompt[i];
+		if (grid.cstoredprompt.size() && !crealprompt.size())
+			for (const auto &cell: grid.cstoredprompt)
+				crealprompt.push_back(cell);
 	}
 
-	int prlen = crealprompt.length();
+	int prlen = crealprompt.size();
 
 	if (prlen > (tty.WIDTH - 20))
 		prlen = (tty.WIDTH - 20);
@@ -191,7 +191,7 @@ void Runtime::display_buffer()
 	wid = tty.WIDTH - 1;
 
 	int i;
-	int pl = crealprompt.length();
+	int pl = crealprompt.size();
 	if (pl > (tty.WIDTH - 20))
 		pl = tty.WIDTH - 20;
 

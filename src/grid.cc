@@ -49,10 +49,10 @@ enum
 	OSC_ESCAPE = 256,
 };
 
-void ANSIGrid::show_batch(const CellString &batch)
+void ANSIGrid::place_batch(const std::vector<Cell> &batch)
 {
-	for (int i = 0; i < batch.length(); i++)
-		place(&batch[i]);
+	for (auto const &cell: batch)
+		place(&cell);
 }
 
 void ANSIGrid::place(const Cell *ri)
@@ -64,9 +64,9 @@ void ANSIGrid::place(const Cell *ri)
 	{
 		if (lastprompt)
 		{
-			cstoredprompt.erase();
+			cstoredprompt.clear();
 			for (int i = 0; i < col; i++)
-				cstoredprompt += get(row, i);
+				cstoredprompt.push_back(get(row, i));
 			col = 0;
 			eraseline(0);
 			lastprompt = 0;
@@ -614,14 +614,14 @@ void ANSIGrid::infoc(wchar_t w)
 
 	if (w == '\n')
 	{
-		CellString q;
+		std::vector<Cell> q;
 		int c = -1;
 		int p = lastprompt;
 		lastprompt = 0;
 		if (col)
 		{
 			for (int i = 0; i < get_len(row); i++)
-				q += get(row, i);
+				q.push_back(get(row, i));
 			c = col;
 			col = 0;
 			eraseline(0);
@@ -634,7 +634,7 @@ void ANSIGrid::infoc(wchar_t w)
 
 		if (c != -1)
 		{
-			for (int i = 0; i < q.length(); i++)
+			for (int i = 0; i < q.size(); i++)
 				place(&q[i]);
 			c = col;
 		}

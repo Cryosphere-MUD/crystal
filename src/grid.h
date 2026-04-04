@@ -85,7 +85,7 @@ class ANSIGrid : public ANSIContext
 
 	bool changed = false;
 
-	CellString cstoredprompt;
+	std::vector<Cell> cstoredprompt;
 
 	void set_conn(Runtime *c) { conn = c; }
 
@@ -163,7 +163,7 @@ class ANSIGrid : public ANSIContext
 
 	void wterminal(wchar_t ch);
 
-	void show_batch(const CellString &batch);
+	void place_batch(const std::vector<Cell> &batch);
 
 	bool file_dump(const std::string &file);
 
