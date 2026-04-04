@@ -94,7 +94,7 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 	void doscrolldown();
 	void doscrollstart();
 	void doscrollend();
-	void triggerfn(const char *which);
+	void triggerfn(const std::string &which);
 	void dofindnext();
 
 	void doenter();
@@ -109,10 +109,10 @@ class conn_t : public commandeditor_t, public std::enable_shared_from_this<conn_
 
 	void initbindings();
 	void dispatch_key(const my_wstring &s);
-	void addbinding(const wchar_t *key, const char *bind);
+	void addbinding(const wchar_t *key, const std::string &bind);
 
 	void connect(const std::string &host, const std::string &port, bool ssl);
-	bool file_log(const char *filename);
+	bool file_log(const std::string &filename);
 	void do_read_from_socket();
 
 	void display_buffer();

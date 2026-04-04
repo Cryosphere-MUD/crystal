@@ -165,7 +165,7 @@ class grid_t : public ansi_context
 
 	void show_batch(const cellstring &batch);
 
-	bool file_dump(const char *file);
+	bool file_dump(const std::string &file);
 
 	// the info functions place characters directly on the grid ignoring the
 	// current ANSI formatting.  These should be used to insert client-originated

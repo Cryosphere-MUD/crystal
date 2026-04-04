@@ -118,7 +118,7 @@ void conn_t::display_buffer()
 		else
 			conn->show_lines_at(start, 1, tty.HEIGHT + 1);
 		tty.show_want();
-		printf("\033[%i;%if", tty.HEIGHT + 1, grid.col + 1);
+		tty.move_cursor(tty.HEIGHT + 1, grid.col + 1);
 		return;
 	}
 
@@ -239,7 +239,7 @@ void conn_t::display_buffer()
 	if ((conn->telnet && conn->telnet->allstars) && !in_commandmode())
 		rcol = 0;
 
-	printf("\033[%i;%if", tty.HEIGHT + 1, rcol - scroll + 1 + prlen);
+	tty.move_cursor(tty.HEIGHT + 1, rcol - scroll + 1 + prlen);
 	grid.changed = false;
 
 	fflush(stdout);

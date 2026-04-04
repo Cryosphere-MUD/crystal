@@ -364,12 +364,14 @@ static int lua_register_command(lua_State *L)
 		set_lua_error(L, "Bad number of args to register_command");
 	if (!lua_isstring(L, 1))
 		set_lua_error(L, "Bad arg 1 to register_command");
+	if (!lua_isstring(L, 2))
+		set_lua_error(L, "Bad arg 2 to register_command");
 	const char *cmd = lua_tostring(L, 1);
 	const char *lua = lua_tostring(L, 2);
 	const char *arg = lua_tostring(L, 3);
 	const char *hlp = lua_tostring(L, 4);
 	lua_command_functions[mkws(cmd)] = lua;
-	register_command(cmd, lua_command_handler, arg, hlp);
+	register_command(cmd, lua_command_handler, arg ? arg : "", hlp ? hlp : "");
 	return 0;
 }
 
