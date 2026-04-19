@@ -45,6 +45,11 @@ inline bool valid_protocol(const std::string &s)
 		return 1;
 #endif
 
+#ifdef HAVE_LIBSSH2
+	if (s == "ssh")
+		return 1;
+#endif
+
 	return 0;
 }
 

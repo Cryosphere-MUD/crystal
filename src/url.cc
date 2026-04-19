@@ -30,6 +30,9 @@ URL::URL(const std::string &url) : has_username(false), has_password(false)
 	if (protocol == "telnets")
 		service = "telnets";
 
+	if (protocol == "ssh")
+		service = "ssh";
+
 	const char *srv = 0, *lasth = 0;
 
 	if (const char *u = strchr(s, '@'))
