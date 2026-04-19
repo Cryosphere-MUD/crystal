@@ -12,19 +12,30 @@ option(ENABLE_SCRIPTING "Enable Lua scripting support" ON)
 
 # Define executable sources
 set(SOURCES
-  src/main.cc src/keybindings.cc src/Runtime.cc 
+  src/main.cc src/keybindings.cc src/Runtime.cc
   src/grid.cc src/commandeditor.cc src/display.cc
   src/telnet.cc src/io.cc src/commands.cc src/common.cc
-  src/scripting.cc src/url.cc
+  src/scripting.cc src/url.cc src/ssh.cc
 )
 
 # Define headers for IDEs
 set(HEADERS
   src/common.h src/Runtime.h src/grid.h src/io.h src/telnet.h
-  src/scripting.h src/commands.h src/commandeditor.h src/url.h
+  src/scripting.h src/commands.h src/commandeditor.h src/url.h src/ssh.h
 )
 
 add_executable(crystal ${SOURCES} ${HEADERS})
+
+# ASIO (standalone, header-only)
+find_path(ASIO_INCLUDE_DIR asio.hpp
+  HINTS /opt/homebrew/include /usr/local/include /usr/include
+)
+if(ASIO_INCLUDE_DIR)
+  target_include_directories(crystal PRIVATE ${ASIO_INCLUDE_DIR})
+  target_compile_definitions(crystal PRIVATE ASIO_STANDALONE)
+else()
+  message(FATAL_ERROR "asio.hpp not found — install standalone ASIO (e.g. brew install asio)")
+endif()
 
 # Compiler definitions
 target_compile_definitions(crystal PRIVATE
@@ -66,7 +77,7 @@ if (ZSTD_INCLUDE_DIR)
 endif()
 
 if(Zstd_FOUND)
-  target_link_libraries(crystal PRIVATE -lzstd)
+  target_link_libraries(crystal PRIVATE ${ZSTD_LIBRARY})
   target_compile_definitions(crystal PRIVATE HAVE_ZSTD)
 else()
   message(WARNING "zstd not found - MCCP4 support will not be built")
@@ -83,6 +94,29 @@ if(OPENSSL_FOUND)
   target_compile_definitions(crystal PRIVATE HAVE_SSL)
 else()
   message(WARNING "OpenSSL not found - SSL support will not be built")
+endif()
+
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+  pkg_check_modules(LIBSSH2 libssh2)
+endif()
+if(NOT LIBSSH2_FOUND)
+  find_path(LIBSSH2_INCLUDE_DIR libssh2.h)
+  find_library(LIBSSH2_LIBRARY NAMES ssh2 libssh2)
+  if(LIBSSH2_INCLUDE_DIR AND LIBSSH2_LIBRARY)
+    set(LIBSSH2_FOUND TRUE)
+    set(LIBSSH2_INCLUDE_DIRS ${LIBSSH2_INCLUDE_DIR})
+    set(LIBSSH2_LIBRARIES ${LIBSSH2_LIBRARY})
+  endif()
+endif()
+if(LIBSSH2_FOUND)
+  target_include_directories(crystal PRIVATE ${LIBSSH2_INCLUDE_DIRS})
+  target_link_directories(crystal PRIVATE ${LIBSSH2_LIBRARY_DIRS})
+  target_link_libraries(crystal PRIVATE ${LIBSSH2_LIBRARIES})
+  target_compile_definitions(crystal PRIVATE HAVE_LIBSSH2)
+  message(STATUS "libssh2 found - SSH support enabled")
+else()
+  message(WARNING "libssh2 not found - SSH support will not be built")
 endif()
 
 # Optional: Lua scripting
