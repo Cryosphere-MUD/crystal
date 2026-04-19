@@ -107,6 +107,7 @@ class ANSIGrid;
 #include "io.h"
 #include "scripting.h"
 #include "telnet.h"
+#include "ssh.h"
 
 const Cell blank(0);
 
@@ -180,8 +181,7 @@ void Runtime::triggerfn(const std::string &fn)
 	st += fn;
 	st += "\r\n";
 
-	if (telnet)
-		telnet->send(st);
+	send_to_server(st);
 }
 
 void Runtime::doscrollstart()
@@ -300,6 +300,11 @@ void Runtime::doenter()
 	if (conn->telnet && conn->telnet->will_echo)
 		tohistory = toecho = false;
 
+#ifdef HAVE_LIBSSH2
+	if (conn->ssh_channel_)
+		toecho = false;
+#endif
+
 	if (tohistory && wproper.length())
 	{
 		// put the commandline in the history if it isn't a password
@@ -322,11 +327,24 @@ void Runtime::doenter()
 		conn->grid->changed = true;
 	}
 
+#ifdef HAVE_LIBSSH2
+	proper += conn->ssh_channel_ ? "\r" : "\r\n";
+#else
 	proper += "\r\n";
+#endif
 
-	// send it
-	if (conn->telnet)
-		conn->telnet->send(proper);
+#ifdef HAVE_LIBSSH2
+	if (conn->ssh_waiting_for_password) {
+		conn->ssh_password = proper.substr(0, proper.size() - 2);
+		conn->doclearline();
+		conn->never_echo = false;
+		conn->ssh_waiting_for_password = false;
+		ssh_continue_auth(conn->shared_from_this());
+		return;
+	}
+#endif
+
+	conn->send_to_server(proper);
 
 	conn->doclearline();
 }
@@ -365,7 +383,8 @@ void Runtime::connected()
 {
 	Runtime *conn = this;
 
-	conn->grid->infof(_("/// connected with {}\n"), ssl ? "telnets" : "telnet");
+	const char *scheme = (conn_type == ConnectionType::TelnetSSL) ? "telnets" : "telnet";
+	conn->grid->infof(_("/// connected with {}\n"), scheme);
 
 	static int printed_escape_line = 0;
 	if (!printed_escape_line)
@@ -374,7 +393,7 @@ void Runtime::connected()
 		printed_escape_line = 1;
 	}
 
-	tty.title(fmt::format(_("{}://{}:{} - Crystal"), conn->ssl ? "telnets" : "telnet", conn->host, conn->port));
+	tty.title(fmt::format(_("{}://{}:{} - Crystal"), scheme, conn->host, conn->port));
 
 	queue_repaint();
 }
@@ -410,6 +429,9 @@ bool Runtime::disconnected(int bts, int pend)
 	conn->grid->info(_("/// connection closed by foreign host.\n"));
 
 	fflush(stdout);
+#ifdef HAVE_LIBSSH2
+	ssh_disconnect(this);
+#endif
 	asio::error_code ignored;
 	socket_->close(ignored);
 	conn->telnet.reset();
@@ -444,7 +466,11 @@ static void handle_input(Runtime *conn, const asio::error_code &error, size_t by
 			String32 s = tty.convert_input(buffer[idx]);
 			if (s.length())
 				conn->dispatch_key(s);
+#ifdef HAVE_LIBSSH2
+			if (!conn->telnet && !conn->ssh_channel_)
+#else
 			if (!conn->telnet)
+#endif
 				conn->set_commandmode(true);
 			conn->grid->changed = 1;
 		}
@@ -490,18 +516,57 @@ void Runtime::main_loop(asio::io_context &io_context)
 	stdin_desc.release();
 }
 
-void Runtime::connect(const std::string &host, const std::string &port, bool ssl)
+void Runtime::send_to_server(const std::string &data)
+{
+#ifdef HAVE_LIBSSH2
+	if (conn_type == ConnectionType::SSH) {
+		ssh_write(shared_from_this(), data);
+		return;
+	}
+#endif
+	if (telnet)
+		telnet->send(data);
+}
+
+void Runtime::on_ssh_connected()
+{
+#ifdef HAVE_LIBSSH2
+	grid->infof(_("/// connected with ssh ({}@{}:{})\n"), ssh_username, host, port);
+	static int printed_escape_line = 0;
+	if (!printed_escape_line)
+	{
+		grid->infof(_("/// escape character is '{}'\n"), "^]");
+		printed_escape_line = 1;
+	}
+	tty.title(fmt::format(_("ssh://{}@{}:{} - Crystal"), ssh_username, host, port));
+	reconnecting = false;
+	do_read_socket();
+	queue_repaint();
+#endif
+}
+
+void Runtime::connect(const std::string &host, const std::string &port,
+                      ConnectionType type,
+                      const std::string &username,
+                      const std::string &password,
+                      const std::string &key_path)
 {
 	this->host = host;
 	this->port = atoi(port.c_str());
 
-	this->ssl = ssl;
+	this->conn_type = type;
+
+#ifdef HAVE_LIBSSH2
+	this->ssh_username = username;
+	this->ssh_password = password;
+	this->ssh_key_path = key_path;
+#endif
 
 	reconnecting = true;
 
 	socket_ = std::make_unique<tcp::socket>(io_);
 
-	if (ssl)
+	if (type == ConnectionType::TelnetSSL)
 		ssl_stream_ = std::make_unique<asio::ssl::stream<tcp::socket &>>(*socket_, ssl_ctx_);
 	else
 		ssl_stream_.reset();
@@ -538,7 +603,7 @@ void Runtime::connect(const std::string &host, const std::string &port, bool ssl
 									    return self->fail("connect", ec);
 								    }
 
-								    if (self->ssl)
+								    if (self->conn_type == ConnectionType::TelnetSSL)
 								    {
 									    self->ssl_stream_->async_handshake(
 										asio::ssl::stream_base::client,
@@ -553,6 +618,12 @@ void Runtime::connect(const std::string &host, const std::string &port, bool ssl
 											self->reconnecting = false;
 										});
 								    }
+#ifdef HAVE_LIBSSH2
+								    else if (self->conn_type == ConnectionType::SSH)
+								    {
+									    ssh_begin_handshake(self);
+								    }
+#endif
 								    else
 								    {
 									    self->on_connected();
@@ -576,6 +647,13 @@ void Runtime::on_connected()
 
 void Runtime::do_read_socket()
 {
+#ifdef HAVE_LIBSSH2
+	if (conn_type == ConnectionType::SSH) {
+		ssh_do_read(shared_from_this());
+		return;
+	}
+#endif
+
 	auto self = shared_from_this();
 
 	auto handler = [self](auto ec, std::size_t n)
@@ -595,7 +673,7 @@ void Runtime::do_read_socket()
 		self->do_read_socket();
 	};
 
-	if (ssl)
+	if (conn_type == ConnectionType::TelnetSSL)
 		ssl_stream_->async_read_some(asio::buffer(socket_raw_), handler);
 	else
 		socket_->async_read_some(asio::buffer(socket_raw_), handler);

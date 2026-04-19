@@ -36,6 +36,10 @@
 #include <asio.hpp>
 #include <asio/ssl.hpp>
 
+#ifdef HAVE_LIBSSH2
+#include <libssh2.h>
+#endif
+
 #include <memory>
 #include <set>
 #include <string>
@@ -74,11 +78,23 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 	std::shared_ptr<TelnetState> telnet = nullptr;
 	FILE *logfile = nullptr;
 
+	enum class ConnectionType { Telnet, TelnetSSL, SSH };
+
 	std::string host;
 	int port = 0;
-	bool ssl = false;
+	ConnectionType conn_type = ConnectionType::Telnet;
 
 	std::string mud_cset = "ISO-8859-1";
+
+#ifdef HAVE_LIBSSH2
+	std::string ssh_username;
+	std::string ssh_password;
+	std::string ssh_key_path;
+	LIBSSH2_SESSION *ssh_session_ = nullptr;
+	LIBSSH2_CHANNEL *ssh_channel_ = nullptr;
+	bool ssh_waiting_for_password = false;
+	std::string ssh_default_key_path;
+#endif
 
 	std::set<String32> hl_matches;
 
@@ -125,7 +141,12 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 	void dispatch_key(const String32 &s);
 	void addbinding(const wchar_t *key, const std::string &bind);
 
-	void connect(const std::string &host, const std::string &port, bool ssl);
+	void connect(const std::string &host, const std::string &port, ConnectionType type,
+	             const std::string &username = "",
+	             const std::string &password = "",
+	             const std::string &key_path = "");
+	void send_to_server(const std::string &data);
+	void on_ssh_connected();
 	bool file_log(const std::string &filename);
 	void do_read_from_socket();
 
