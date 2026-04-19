@@ -14,6 +14,9 @@
 
 #include <asio.hpp>
 
+#include <cctype>
+#include <chrono>
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -25,6 +28,83 @@
 #include "io.h"
 
 using asio::ip::tcp;
+
+// ---------------------------------------------------------------------------
+// In-band password prompt detection for SSH shell sessions.
+//
+// SSH has no analogue to telnet's IAC WILL/WONT ECHO, so when a remote
+// shell command like passwd(1) turns off PTY echo, the client sees no
+// signal. Match common prompt tails in the server's output instead:
+// set never_echo on match, clear on the next newline received from the
+// server, and auto-clear after a timeout so a missed newline can't
+// permanently wedge input display.
+// ---------------------------------------------------------------------------
+
+static constexpr size_t kSshTailMax = 48;
+static constexpr auto kNeverEchoTimeout = std::chrono::seconds(60);
+
+static bool tail_ends_with_ci(const std::string &tail, const char *needle)
+{
+    size_t nlen = std::strlen(needle);
+    if (tail.size() < nlen) return false;
+    const char *t = tail.c_str() + (tail.size() - nlen);
+    for (size_t i = 0; i < nlen; i++) {
+        if (std::tolower((unsigned char)t[i]) !=
+            std::tolower((unsigned char)needle[i]))
+            return false;
+    }
+    return true;
+}
+
+static bool looks_like_password_prompt(const std::string &tail)
+{
+    // Trim trailing spaces so "Password: " and "Password:" both match.
+    size_t end = tail.size();
+    while (end > 0 && tail[end - 1] == ' ') end--;
+    std::string trimmed = tail.substr(0, end);
+    return tail_ends_with_ci(trimmed, "password:")
+        || tail_ends_with_ci(trimmed, "passphrase:")
+        || tail_ends_with_ci(trimmed, "new password:")
+        || tail_ends_with_ci(trimmed, "current password:");
+}
+
+static void ssh_watch_for_password_prompt(Runtime *conn, unsigned char byte)
+{
+    if (conn->ssh_waiting_for_password)
+        return;
+
+    if (byte == '\n' || byte == '\r') {
+        if (conn->never_echo_heuristic) {
+            conn->never_echo = false;
+            conn->never_echo_heuristic = false;
+        }
+        conn->ssh_output_tail.clear();
+        return;
+    }
+
+    if (byte < 0x20 || byte >= 0x7f)
+        return;
+
+    conn->ssh_output_tail.push_back((char)byte);
+    if (conn->ssh_output_tail.size() > kSshTailMax)
+        conn->ssh_output_tail.erase(0, conn->ssh_output_tail.size() - kSshTailMax);
+
+    if (!conn->never_echo && looks_like_password_prompt(conn->ssh_output_tail)) {
+        conn->never_echo = true;
+        conn->never_echo_heuristic = true;
+        conn->never_echo_deadline =
+            std::chrono::steady_clock::now() + kNeverEchoTimeout;
+    }
+}
+
+void ssh_check_never_echo_timeout(Runtime *conn)
+{
+    if (conn->never_echo_heuristic &&
+        std::chrono::steady_clock::now() > conn->never_echo_deadline) {
+        conn->never_echo = false;
+        conn->never_echo_heuristic = false;
+    }
+}
 
 // ---------------------------------------------------------------------------
 // libssh2 one-time init
@@ -221,11 +301,14 @@ void ssh_continue_auth(std::shared_ptr<Runtime> self)
 static void ssh_try_password(std::shared_ptr<Runtime> self)
 {
     if (self->ssh_password.empty()) {
-        // Prompt the user
-        self->grid->info(_("Password: "));
+        for (const char *p = _("Password: "); *p; ++p)
+            self->grid->place(Cell((wchar_t)(unsigned char)*p));
         self->grid->changed = true;
         self->never_echo = true;
         self->ssh_waiting_for_password = true;
+        tty.bad_have = true;
+        self->display_buffer();
+        fflush(stdout);
         return;
     }
 
@@ -330,8 +413,11 @@ void ssh_do_read(std::shared_ptr<Runtime> self)
             char buf[4096];
             ssize_t n;
             while ((n = libssh2_channel_read(self->ssh_channel_, buf, sizeof(buf))) > 0) {
-                for (ssize_t i = 0; i < n; i++)
-                    decode(self.get(), self->cur_grid, (unsigned char)buf[i]);
+                for (ssize_t i = 0; i < n; i++) {
+                    unsigned char b = (unsigned char)buf[i];
+                    decode(self.get(), self->cur_grid, b);
+                    ssh_watch_for_password_prompt(self.get(), b);
+                }
             }
 
             if (libssh2_channel_eof(self->ssh_channel_)) {

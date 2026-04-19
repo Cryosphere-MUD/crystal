@@ -36,6 +36,7 @@
 #include "commands.h"
 #include "Runtime.h"
 #include "grid.h"
+#include "ssh.h"
 
 #include <iostream>
 
@@ -154,6 +155,8 @@ void Runtime::initbindings()
 
 void Runtime::dispatch_key(const String32 &s)
 {
+	ssh_check_never_echo_timeout(this);
+
 	if (s.length() == 1)
 	{
 		doinsertchar(s[0]);

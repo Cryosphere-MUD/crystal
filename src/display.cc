@@ -199,7 +199,7 @@ void Runtime::display_buffer()
 		tty.wantbuffer[tty.HEIGHT][i] = crealprompt[i];
 
 	wid -= prlen;
-	if (!(conn->telnet && conn->telnet->allstars) || in_commandmode())
+	if ((!(conn->telnet && conn->telnet->allstars) && !conn->never_echo) || in_commandmode())
 	{
 		while (alen && wid)
 		{
@@ -234,7 +234,7 @@ void Runtime::display_buffer()
 		if (real_wcwidth(txt[i]) == 2)
 			rcol++;
 
-	if ((conn->telnet && conn->telnet->allstars) && !in_commandmode())
+	if (((conn->telnet && conn->telnet->allstars) || conn->never_echo) && !in_commandmode())
 		rcol = 0;
 
 	tty.move_cursor(tty.HEIGHT + 1, rcol - scroll + 1 + prlen);
