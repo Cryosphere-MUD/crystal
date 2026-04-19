@@ -81,6 +81,17 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 
 	enum class ConnectionType { Telnet, TelnetSSL, SSH };
 
+	static ConnectionType type_for_protocol(const std::string &protocol, bool force_tls)
+	{
+		if (protocol == "telnets" || force_tls)
+			return ConnectionType::TelnetSSL;
+#ifdef HAVE_LIBSSH2
+		if (protocol == "ssh")
+			return ConnectionType::SSH;
+#endif
+		return ConnectionType::Telnet;
+	}
+
 	std::string host;
 	int port = 0;
 	ConnectionType conn_type = ConnectionType::Telnet;
@@ -95,8 +106,16 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 	LIBSSH2_CHANNEL *ssh_channel_ = nullptr;
 	bool ssh_waiting_for_password = false;
 
+	//! Serialized outbound byte queue. All writes go through here so that
+	//! overlapping sends can't interleave bytes on the wire.
+	std::string ssh_write_queue;
+	bool ssh_write_active = false;
+
 	//! Rolling tail of recent printable server output, used to detect
 	//! in-band password prompts like "Password:" from the remote shell.
+	//! Note: any server output ending in "password:" will trigger local
+	//! echo suppression. MUD content that happens to end that way will
+	//! be affected until the 60s timeout fires or a newline arrives.
 	std::string ssh_output_tail;
 	//! true when never_echo was set by the prompt-match heuristic
 	//! (as opposed to the SSH auth flow or the /neverecho option).
