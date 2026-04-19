@@ -339,6 +339,9 @@ void Runtime::doenter()
 		conn->doclearline();
 		conn->never_echo = false;
 		conn->ssh_waiting_for_password = false;
+		conn->grid->eraseline(0);
+		conn->grid->col = 0;
+		conn->grid->changed = true;
 		ssh_continue_auth(conn->shared_from_this());
 		return;
 	}
@@ -439,7 +442,10 @@ bool Runtime::disconnected(int bts, int pend)
 	if (!reconnecting)
 		conn->set_commandmode(true);
 
-	queue_repaint();
+	grid->changed = true;
+	tty.bad_have = true;
+	display_buffer();
+	fflush(stdout);
 
 	return false;
 }
@@ -450,6 +456,7 @@ void Runtime::queue_repaint()
 		   [self = shared_from_this()]
 		   {
 			   self->grid->changed = true;
+			   tty.bad_have = true;
 			   self->display_buffer();
 		   });
 }
@@ -467,7 +474,7 @@ static void handle_input(Runtime *conn, const asio::error_code &error, size_t by
 			if (s.length())
 				conn->dispatch_key(s);
 #ifdef HAVE_LIBSSH2
-			if (!conn->telnet && !conn->ssh_channel_)
+			if (!conn->telnet && !conn->ssh_session_)
 #else
 			if (!conn->telnet)
 #endif
@@ -520,7 +527,8 @@ void Runtime::send_to_server(const std::string &data)
 {
 #ifdef HAVE_LIBSSH2
 	if (conn_type == ConnectionType::SSH) {
-		ssh_write(shared_from_this(), data);
+		if (ssh_channel_)
+			ssh_write(shared_from_this(), data);
 		return;
 	}
 #endif

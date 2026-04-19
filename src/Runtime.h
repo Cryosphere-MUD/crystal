@@ -40,6 +40,7 @@
 #include <libssh2.h>
 #endif
 
+#include <chrono>
 #include <memory>
 #include <set>
 #include <string>
@@ -93,6 +94,15 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 	LIBSSH2_SESSION *ssh_session_ = nullptr;
 	LIBSSH2_CHANNEL *ssh_channel_ = nullptr;
 	bool ssh_waiting_for_password = false;
+
+	//! Rolling tail of recent printable server output, used to detect
+	//! in-band password prompts like "Password:" from the remote shell.
+	std::string ssh_output_tail;
+	//! true when never_echo was set by the prompt-match heuristic
+	//! (as opposed to the SSH auth flow or the /neverecho option).
+	bool never_echo_heuristic = false;
+	//! absolute time at which the heuristic never_echo auto-clears.
+	std::chrono::steady_clock::time_point never_echo_deadline;
 #endif
 	std::string ssh_default_key_path;
 

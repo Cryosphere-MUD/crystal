@@ -22,12 +22,14 @@ void ssh_continue_auth(std::shared_ptr<Runtime> self);
 void ssh_do_read(std::shared_ptr<Runtime> self);
 void ssh_write(std::shared_ptr<Runtime> self, const std::string &data);
 void ssh_disconnect(Runtime *self);
+void ssh_check_never_echo_timeout(Runtime *conn);
 
 #else
 
 // Stub so callers compile cleanly without libssh2
 class Runtime;
 inline void ssh_disconnect(Runtime *) {}
+inline void ssh_check_never_echo_timeout(Runtime *) {}
 
 #endif
 
