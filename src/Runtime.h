@@ -93,8 +93,8 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 	LIBSSH2_SESSION *ssh_session_ = nullptr;
 	LIBSSH2_CHANNEL *ssh_channel_ = nullptr;
 	bool ssh_waiting_for_password = false;
-	std::string ssh_default_key_path;
 #endif
+	std::string ssh_default_key_path;
 
 	std::set<String32> hl_matches;
 
