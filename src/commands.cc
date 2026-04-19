@@ -136,13 +136,7 @@ void cmd_connect(Runtime *conn, const CommandArguments &arg)
 	if (cport.length() != 0)
 		u.service = cport;
 
-	Runtime::ConnectionType type = Runtime::ConnectionType::Telnet;
-	if (u.protocol == "telnets" || force_tls)
-		type = Runtime::ConnectionType::TelnetSSL;
-#ifdef HAVE_LIBSSH2
-	if (u.protocol == "ssh")
-		type = Runtime::ConnectionType::SSH;
-#endif
+	Runtime::ConnectionType type = Runtime::type_for_protocol(u.protocol, force_tls);
 
 	conn->connect(u.hostname, u.service, type,
 	              u.has_username ? u.username : "",
