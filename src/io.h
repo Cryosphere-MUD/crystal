@@ -175,8 +175,8 @@ struct Output
 	void getterm()
 	{
 		const char *t = getenv("TERM");
-		if (t && (strcmp(t, "xterm") == 0 || strcmp(t, "rxvt") == 0 || strcmp(t, "xterm-color") == 0 || strcmp(t, "screen") == 0) ||
-		    strncmp(t, "xterm-", 5) == 0)
+		if (t && (strcmp(t, "xterm") == 0 || strcmp(t, "rxvt") == 0 || strcmp(t, "xterm-color") == 0 || strcmp(t, "screen") == 0 ||
+		    strncmp(t, "xterm-", 6) == 0))
 		{
 			xterm_title = 1;
 			knowscroll = 0;
