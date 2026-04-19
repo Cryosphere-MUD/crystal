@@ -119,5 +119,6 @@ struct TelnetState
 };
 
 void sendwinsize(Runtime *);
+void decode(Runtime *conn, ANSIGrid *grid, int ch);
 
 #endif

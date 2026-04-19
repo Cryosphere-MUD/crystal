@@ -68,6 +68,13 @@ std::string nam(int i);
 
 void sendwinsize(Runtime *conn)
 {
+#ifdef HAVE_LIBSSH2
+	if (conn->conn_type == Runtime::ConnectionType::SSH && conn->ssh_channel_) {
+		libssh2_channel_request_pty_size(conn->ssh_channel_, tty.WIDTH, tty.HEIGHT + 1);
+		return;
+	}
+#endif
+
 	if (!conn->telnet)
 		return;
 

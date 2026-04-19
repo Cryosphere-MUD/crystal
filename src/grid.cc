@@ -335,6 +335,13 @@ void ANSIGrid::wterminal(wchar_t ch)
 			return;
 		}
 
+		/* DEC private mode prefix (ESC[?Nh / ESC[?Nl) */
+		if (ch == '?' && param_string.empty())
+		{
+			csi_private = true;
+			return;
+		}
+
 		auto params = parse(param_string);
 
 		if (ch == 'A')
@@ -428,7 +435,7 @@ void ANSIGrid::wterminal(wchar_t ch)
 				/* request of cursor position */
 				char blah[1024];
 				sprintf(blah, "\033[%i;%iR", row, col);
-				conn->telnet->send(blah);
+				conn->send_to_server(blah);
 			}
 		}
 
@@ -575,6 +582,7 @@ void ANSIGrid::wterminal(wchar_t ch)
 		{
 			mode = 0;
 			param_string.clear();
+			csi_private = false;
 		}
 
 		return;
