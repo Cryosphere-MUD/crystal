@@ -121,9 +121,11 @@ void cleanup()
 			conn.logfile = 0;
 		}
 
-		tcsetattr(0, TCSADRAIN, &oldti);
+		/* reset colors, show cursor, clear scroll region, move to a clean line */
+		printf("\033[0m\033[?25h\033[r\033[999;1H\n");
+		fflush(stdout);
 
-		printf("\n");
+		tcsetattr(0, TCSADRAIN, &oldti);
 
 		cleanupConn = 0;
 	}
@@ -173,15 +175,18 @@ int main(int argc, char **argv)
 
 	if (argv[1] && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")))
 	{
-		printf("Usage: crystal [-n] [-s] <hostname> <port>\n");
+		printf("Usage: crystal [-n] [-s] [-i keyfile] <hostname> [port]\n");
 		printf("       crystal [-n] telnets://hostname:port/\n");
+		printf("       crystal [-n] ssh://user@hostname:port/\n");
 		printf("Options:\n");
 		printf("       -n never echo locally.\n");
 		printf("       -s use TLS.\n");
+		printf("       -i use specified SSH identity key file.\n");
 		return 0;
 	}
 
 	bool force_tls = false;
+	std::string key_path;
 
 	while (argv[1])
 	{
@@ -197,6 +202,13 @@ int main(int argc, char **argv)
 			force_tls = true;
 			argv++;
 			argc--;
+			continue;
+		}
+		if (strcmp(argv[1], "-i") == 0 && argv[2])
+		{
+			key_path = argv[2];
+			argv += 2;
+			argc -= 2;
 			continue;
 		}
 		break;
@@ -224,14 +236,18 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 
-		// int port = lookup_service(u.service);
-		// if (port == -1)
-		// {
-		// 	fprintf(stderr, _("%s: Bad port - '%s'.\n"), pname, u.service.c_str());
-		// 	exit(1);
-		// }
+		Runtime::ConnectionType type = Runtime::ConnectionType::Telnet;
+		if (u.protocol == "telnets" || force_tls)
+			type = Runtime::ConnectionType::TelnetSSL;
+#ifdef HAVE_LIBSSH2
+		if (u.protocol == "ssh")
+			type = Runtime::ConnectionType::SSH;
+#endif
 
-		conn->connect(u.hostname, u.service, u.protocol == "telnets");
+		conn->connect(u.hostname, u.service, type,
+		              u.has_username ? u.username : "",
+		              u.has_password ? u.password : "",
+		              key_path.empty() ? conn->ssh_default_key_path : key_path);
 		// if (!conn->telnet)
 		// 	exit(1);
 

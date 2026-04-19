@@ -94,23 +94,40 @@ void cmd_compress(Runtime *conn, const CommandArguments &arg)
 
 void cmd_connect(Runtime *conn, const CommandArguments &arg)
 {
-	if (arg.size() != 2 && arg.size() != 3 && arg.size() != 4)
+	if (arg.size() < 2 || arg.size() > 5)
 	{
-		conn->grid->info(_("/// connect [-s] <host> [port]\n"));
+		conn->grid->info(_("/// connect [-s] [-i keyfile] <host> [port]\n"));
 		return;
 	}
 
 	bool force_tls = false;
+	std::string key_path;
 	int cmd_root = 1;
 
-	if (arg[cmd_root] == L"-s")
+	while (cmd_root < (int)arg.size()) {
+		if (arg[cmd_root] == L"-s") {
+			force_tls = true;
+			cmd_root++;
+			continue;
+		}
+#ifdef HAVE_LIBSSH2
+		if (arg[cmd_root] == L"-i" && cmd_root + 1 < (int)arg.size()) {
+			key_path = mks(arg[cmd_root + 1]);
+			cmd_root += 2;
+			continue;
+		}
+#endif
+		break;
+	}
+
+	if (cmd_root >= (int)arg.size())
 	{
-		force_tls = true;
-		cmd_root = 2;
+		conn->grid->info(_("/// connect [-s] [-i keyfile] <host> [port]\n"));
+		return;
 	}
 
 	String32 host = arg[cmd_root];
-	String32 port = arg.size() == cmd_root + 2 ? arg[cmd_root + 1] : L"";
+	String32 port = (int)arg.size() == cmd_root + 2 ? arg[cmd_root + 1] : L"";
 
 	std::string cport = mks(port);
 	std::string chost = mks(host);
@@ -119,7 +136,18 @@ void cmd_connect(Runtime *conn, const CommandArguments &arg)
 	if (cport.length() != 0)
 		u.service = cport;
 
-	conn->connect(u.hostname, u.service, u.protocol == "telnets" || force_tls);
+	Runtime::ConnectionType type = Runtime::ConnectionType::Telnet;
+	if (u.protocol == "telnets" || force_tls)
+		type = Runtime::ConnectionType::TelnetSSL;
+#ifdef HAVE_LIBSSH2
+	if (u.protocol == "ssh")
+		type = Runtime::ConnectionType::SSH;
+#endif
+
+	conn->connect(u.hostname, u.service, type,
+	              u.has_username ? u.username : "",
+	              u.has_password ? u.password : "",
+	              key_path.empty() ? conn->ssh_default_key_path : key_path);
 }
 
 String32 join_from(const CommandArguments &args, int from)
