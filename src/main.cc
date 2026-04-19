@@ -121,7 +121,11 @@ void cleanup()
 			conn.logfile = 0;
 		}
 
-		/* reset colors, show cursor, clear scroll region, move to a clean line */
+		/* Reset colors, show cursor, clear scroll region, move to a clean line.
+		 * These escapes are emitted before restoring termios — ANSI sequences
+		 * don't require cooked mode, and writing them after TCSADRAIN risks
+		 * the terminal interpreting them against the newly-restored line
+		 * discipline. */
 		printf("\033[0m\033[?25h\033[r\033[999;1H\n");
 		fflush(stdout);
 
@@ -236,13 +240,7 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 
-		Runtime::ConnectionType type = Runtime::ConnectionType::Telnet;
-		if (u.protocol == "telnets" || force_tls)
-			type = Runtime::ConnectionType::TelnetSSL;
-#ifdef HAVE_LIBSSH2
-		if (u.protocol == "ssh")
-			type = Runtime::ConnectionType::SSH;
-#endif
+		Runtime::ConnectionType type = Runtime::type_for_protocol(u.protocol, force_tls);
 
 		conn->connect(u.hostname, u.service, type,
 		              u.has_username ? u.username : "",
