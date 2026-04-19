@@ -335,7 +335,10 @@ void Runtime::doenter()
 
 #ifdef HAVE_LIBSSH2
 	if (conn->ssh_waiting_for_password) {
-		conn->ssh_password = proper.substr(0, proper.size() - 2);
+		std::string pw = proper;
+		while (!pw.empty() && (pw.back() == '\r' || pw.back() == '\n'))
+			pw.pop_back();
+		conn->ssh_password = pw;
 		conn->doclearline();
 		conn->never_echo = false;
 		conn->ssh_waiting_for_password = false;

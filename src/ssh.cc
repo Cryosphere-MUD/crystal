@@ -23,6 +23,9 @@
 #include <vector>
 #include <functional>
 
+#include <pwd.h>
+#include <unistd.h>
+
 #include "Runtime.h"
 #include "telnet.h"
 #include "io.h"
@@ -149,11 +152,20 @@ static void ssh_retry(std::shared_ptr<Runtime> self,
 // Host key verification (accept-new policy using ~/.ssh/known_hosts)
 // ---------------------------------------------------------------------------
 
-static std::string known_hosts_path()
+static std::string home_dir()
 {
     const char *home = getenv("HOME");
-    if (!home) home = "/root";
-    return std::string(home) + "/.ssh/known_hosts";
+    if (home && *home) return home;
+    struct passwd *pw = getpwuid(getuid());
+    if (pw && pw->pw_dir && *pw->pw_dir) return pw->pw_dir;
+    return {};
+}
+
+static std::string known_hosts_path()
+{
+    std::string home = home_dir();
+    if (home.empty()) return {};
+    return home + "/.ssh/known_hosts";
 }
 
 static bool ssh_verify_hostkey(Runtime *self)
@@ -166,10 +178,15 @@ static bool ssh_verify_hostkey(Runtime *self)
         return false;
     }
 
+    std::string kh_path = known_hosts_path();
+    if (kh_path.empty()) {
+        self->grid->info(_("/// SSH: no home directory available; refusing to verify host key\n"));
+        return false;
+    }
+
     LIBSSH2_KNOWNHOSTS *kh = libssh2_knownhost_init(self->ssh_session_);
     if (!kh) return false;
 
-    std::string kh_path = known_hosts_path();
     libssh2_knownhost_readfile(kh, kh_path.c_str(), LIBSSH2_KNOWNHOST_FILE_OPENSSH);
 
     struct libssh2_knownhost *found = nullptr;
@@ -187,7 +204,7 @@ static bool ssh_verify_hostkey(Runtime *self)
     if (check == LIBSSH2_KNOWNHOST_CHECK_NOTFOUND) {
         // First connection to this host: add the key and proceed (accept-new policy,
         // equivalent to OpenSSH StrictHostKeyChecking=accept-new).
-        int kh_keytype;
+        int kh_keytype = 0;
         switch (keytype) {
             case LIBSSH2_HOSTKEY_TYPE_RSA: kh_keytype = LIBSSH2_KNOWNHOST_KEY_SSHRSA;  break;
             case LIBSSH2_HOSTKEY_TYPE_DSS: kh_keytype = LIBSSH2_KNOWNHOST_KEY_SSHDSS;  break;
@@ -199,7 +216,14 @@ static bool ssh_verify_hostkey(Runtime *self)
 #ifdef LIBSSH2_KNOWNHOST_KEY_ED25519
             case LIBSSH2_HOSTKEY_TYPE_ED25519:   kh_keytype = LIBSSH2_KNOWNHOST_KEY_ED25519;   break;
 #endif
-            default: kh_keytype = LIBSSH2_KNOWNHOST_KEY_SSHRSA; break;
+            default: break;
+        }
+        if (kh_keytype == 0) {
+            // Caching with the wrong algorithm would cause every future connection
+            // to report a bogus mismatch. Refuse rather than mislabel the entry.
+            libssh2_knownhost_free(kh);
+            self->grid->infof(_("/// SSH: unsupported host key type ({}); refusing to cache\n"), keytype);
+            return false;
         }
         libssh2_knownhost_addc(kh,
             self->host.c_str(), nullptr,
@@ -285,10 +309,10 @@ static std::vector<std::string> candidate_keys(const std::string &override_path)
         keys.push_back(override_path);
         return keys;
     }
-    const char *home = getenv("HOME");
-    if (!home) return keys;
+    std::string home = home_dir();
+    if (home.empty()) return keys;
     for (const char *name : {"id_ed25519", "id_ecdsa", "id_rsa"}) {
-        keys.push_back(std::string(home) + "/.ssh/" + name);
+        keys.push_back(home + "/.ssh/" + name);
     }
     return keys;
 }
@@ -403,7 +427,13 @@ void ssh_begin_handshake(std::shared_ptr<Runtime> self)
 
 void ssh_do_read(std::shared_ptr<Runtime> self)
 {
-    self->socket_->async_wait(tcp::socket::wait_read,
+    // libssh2 can need the socket writable to make progress (e.g. during
+    // rekeying). Consult block_directions rather than hardcoding wait_read.
+    int dir = libssh2_session_block_directions(self->ssh_session_);
+    auto wt = (dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
+              ? tcp::socket::wait_write
+              : tcp::socket::wait_read;
+    self->socket_->async_wait(wt,
         [self](asio::error_code ec) {
             if (ec) {
                 self->fail("ssh read", ec);
@@ -418,6 +448,12 @@ void ssh_do_read(std::shared_ptr<Runtime> self)
                     decode(self.get(), self->cur_grid, b);
                     ssh_watch_for_password_prompt(self.get(), b);
                 }
+            }
+
+            if (n < 0 && n != LIBSSH2_ERROR_EAGAIN) {
+                self->grid->infof(_("/// SSH: read failed ({})\n"), (int)n);
+                self->disconnected(0, 0);
+                return;
             }
 
             if (libssh2_channel_eof(self->ssh_channel_)) {
@@ -436,9 +472,17 @@ void ssh_do_read(std::shared_ptr<Runtime> self)
 
 // ---------------------------------------------------------------------------
 // Write
+//
+// All outbound bytes pass through ssh_write_queue so that two overlapping
+// send_to_server calls (e.g. user input racing a triggered alias) cannot
+// interleave bytes on the wire. A single in-flight "pump" drains the queue;
+// new bytes arriving during a drain are appended and picked up on the next
+// pump cycle.
 // ---------------------------------------------------------------------------
 
-static void ssh_write_at(std::shared_ptr<Runtime> self, std::string data, size_t off)
+static void ssh_pump_write(std::shared_ptr<Runtime> self);
+
+static void ssh_write_chunk(std::shared_ptr<Runtime> self, std::string data, size_t off)
 {
     ssize_t w = libssh2_channel_write(
         self->ssh_channel_,
@@ -450,20 +494,51 @@ static void ssh_write_at(std::shared_ptr<Runtime> self, std::string data, size_t
         auto wt = (dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
                   ? tcp::socket::wait_write
                   : tcp::socket::wait_read;
-        self->socket_->async_wait(wt, [self, data, off](asio::error_code ec) {
-            if (!ec) ssh_write_at(self, data, off);
-        });
+        self->socket_->async_wait(wt,
+            [self, data = std::move(data), off](asio::error_code ec) mutable {
+                if (ec) {
+                    self->grid->infof(_("/// SSH: write wait failed ({})\n"), ec.message());
+                    self->ssh_write_active = false;
+                    self->ssh_write_queue.clear();
+                    self->disconnected(0, 0);
+                    return;
+                }
+                ssh_write_chunk(self, std::move(data), off);
+            });
         return;
     }
-    if (w < 0) return;
+    if (w < 0) {
+        self->grid->infof(_("/// SSH: write failed ({})\n"), (int)w);
+        self->ssh_write_active = false;
+        self->ssh_write_queue.clear();
+        self->disconnected(0, 0);
+        return;
+    }
     off += (size_t)w;
-    if (off < data.size())
-        ssh_write_at(self, data, off);
+    if (off < data.size()) {
+        ssh_write_chunk(self, std::move(data), off);
+        return;
+    }
+    ssh_pump_write(self);
+}
+
+static void ssh_pump_write(std::shared_ptr<Runtime> self)
+{
+    if (self->ssh_write_queue.empty()) {
+        self->ssh_write_active = false;
+        return;
+    }
+    std::string chunk;
+    chunk.swap(self->ssh_write_queue);
+    ssh_write_chunk(self, std::move(chunk), 0);
 }
 
 void ssh_write(std::shared_ptr<Runtime> self, const std::string &data)
 {
-    ssh_write_at(self, data, 0);
+    self->ssh_write_queue.append(data);
+    if (self->ssh_write_active) return;
+    self->ssh_write_active = true;
+    ssh_pump_write(self);
 }
 
 // ---------------------------------------------------------------------------
@@ -482,6 +557,11 @@ void ssh_disconnect(Runtime *self)
         libssh2_session_free(self->ssh_session_);
         self->ssh_session_ = nullptr;
     }
+    self->ssh_write_queue.clear();
+    self->ssh_write_active = false;
+    self->ssh_waiting_for_password = false;
+    self->ssh_output_tail.clear();
+    self->never_echo_heuristic = false;
 }
 
 #endif // HAVE_LIBSSH2
