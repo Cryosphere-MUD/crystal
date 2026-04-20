@@ -1,6 +1,6 @@
 /*
  * Crystal Mud Client
- * Copyright (C) Abigail Brady, Paul Lettington, Owen Cliffe, Stuart Brady
+ * Copyright (C) Phil Christensen
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
