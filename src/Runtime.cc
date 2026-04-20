@@ -392,12 +392,7 @@ void Runtime::connected()
 	const char *scheme = (conn_type == ConnectionType::TelnetSSL) ? "telnets" : "telnet";
 	conn->grid->infof(_("/// connected with {}\n"), scheme);
 
-	static int printed_escape_line = 0;
-	if (!printed_escape_line)
-	{
-		conn->grid->infof(_("/// escape character is '{}'\n"), "^]");
-		printed_escape_line = 1;
-	}
+	print_escape_line();
 
 	tty.title(fmt::format(_("{}://{}:{} - Crystal"), scheme, conn->host, conn->port));
 
@@ -526,6 +521,17 @@ void Runtime::main_loop(asio::io_context &io_context)
 	stdin_desc.release();
 }
 
+
+void Runtime::print_escape_line()
+{
+	static int printed_escape_line = 0;
+	if (!printed_escape_line)
+	{
+		grid->infof(_("/// escape character is '{}'\n"), "^]");
+		printed_escape_line = 1;
+	}
+}
+
 void Runtime::send_to_server(const std::string &data)
 {
 #ifdef HAVE_LIBSSH2
@@ -543,12 +549,7 @@ void Runtime::on_ssh_connected()
 {
 #ifdef HAVE_LIBSSH2
 	grid->infof(_("/// connected with ssh ({}@{}:{})\n"), ssh_username, host, port);
-	static int printed_escape_line = 0;
-	if (!printed_escape_line)
-	{
-		grid->infof(_("/// escape character is '{}'\n"), "^]");
-		printed_escape_line = 1;
-	}
+	print_escape_line();
 	tty.title(fmt::format(_("ssh://{}@{}:{} - Crystal"), ssh_username, host, port));
 	reconnecting = false;
 	do_read_socket();

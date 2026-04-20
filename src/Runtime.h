@@ -183,6 +183,8 @@ class Runtime : public CommandEditor, public std::enable_shared_from_this<Runtim
 
 	void queue_repaint();
 
+	void print_escape_line();
+
 	bool disconnected(int bts, int pend);
 	void connected();
 
