@@ -50,8 +50,6 @@ struct ANSIContext
 
 	std::string param_string;
 
-	bool csi_private = false;
-
 	std::string osc_string;
 
 	Intensity inten = I_NORM;
